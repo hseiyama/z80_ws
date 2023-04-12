@@ -8,7 +8,7 @@ KISUR	EQU	025Fh
 START:
 	LD	B,0		;B <- 0
 LOOP2:
-	SRL	A		;A <- A<<1
+	SRL	A		;A <- A>>1
 	JR	NC,JP1
 	INC	B		;B <- B+1
 JP1:
