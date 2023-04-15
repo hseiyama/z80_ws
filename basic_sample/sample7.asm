@@ -1,0 +1,60 @@
+;***********************************************************
+;SAMPLE7
+;***********************************************************
+;
+PIOAD1	EQU	0D0h
+PIOAC1	EQU	0D1h
+PIOBD1	EQU	0D2h
+PIOBC1	EQU	0D3h
+;
+	ORG	0000h
+START:
+	LD	SP,0000h	;SP <- 0x0000
+	LD	HL,INTPA	;PIO A CONTROL
+	LD	B,3
+	LD	C,PIOAC1
+	OTIR
+	LD	HL,INTPB	;PIO B CONTROL
+	LD	B,3
+	LD	C,PIOBC1
+	OTIR
+LOOP7:
+	IN	A,(PIOBD1)	;INPUT
+	CALL	CONV
+	OUT	(PIOAD1),A	;OUTPUT
+	JP	LOOP7
+;
+INTPA:
+	DEFB	0CFh		;MODE 3
+	DEFB	00h		;ALL OUTPUT
+	DEFB	07h		;DISENABLE INTERRUPT
+INTPB:
+	DEFB	0CFh		;MODE 3
+	DEFB	0FFh		;ALL INPUT
+	DEFB	07h		;DISENABLE INTERRUPT
+CONV:
+	AND	0Fh		;A <- A&0x0F
+	LD	C,A		;C <- A
+	LD	B,0		;B <- 0
+	LD	HL,TABLE
+	ADD	HL,BC		;HL <- BC
+	LD	A,(HL)		;A <- (HL)
+	RET
+TABLE:
+	DEFB	5Ch
+	DEFB	06h
+	DEFB	58h
+	DEFB	4Fh
+	DEFB	66h
+	DEFB	6Dh
+	DEFB	7Dh
+	DEFB	27h
+	DEFB	7Fh
+	DEFB	6Fh
+	DEFB	77h
+	DEFB	7Ch
+	DEFB	39h
+	DEFB	5Eh
+	DEFB	79h
+	DEFB	71h
+	END

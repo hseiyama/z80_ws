@@ -1,23 +1,19 @@
 ;***********************************************************
-;SAMPLE4
+;SAMPLE5
 ;***********************************************************
 ;
 	ORG	0000h
 START:
 	LD	SP,0000h	;SP <- 0x0000
-	CALL	MCLEAR
+	CALL	MCLR1
 	HALT
 ;
-	ORG	0031h
-MCLEAR:
+	ORG	0040h
+MCLR1:
 	LD	HL,0100h	;HL <- 0x0100
-	LD	BC,0300h	;BC <- 0x0300
-ZEROM:
+	LD	DE,0101h	;DE <- 0x0101
+	LD	BC,767		;BC <- 767
 	LD	(HL),0		;(HL) <- 0
-	INC	HL		;HL <- HL+1
-	DEC	BC		;BC <- BC-1
-	LD	A,B		;A <- B
-	OR	C		;A <- A|C
-	JR	NZ,ZEROM
+	LDIR
 	RET
 	END
