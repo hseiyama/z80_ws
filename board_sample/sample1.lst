@@ -1,0 +1,66 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample1.asm"
+                        ; date: 2023-05-06 15:32:00
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE 1
+                        ;***********************************************************
+                        ;
+0000:                   PIOAD	EQU	00h
+0001:                   PIOAC	EQU	01h
+0002:                   PIOBD	EQU	02h
+0003:                   PIOBC	EQU	03h
+                        ;
+0000:                   	ORG	0000h
+0000:                   START:
+0000: 310001   [10]     	LD	SP,0100h	;スタックポインタの設定
+                        ;
+0003: 3E4F     [17]     	LD	A,4Fh		;PORTAの設定
+0005: D301     [28]     	OUT	(PIOAC),A	;- モード設定(入力モード)
+0007: 3E03     [35]     	LD	A,03h
+0009: D301     [46]     	OUT	(PIOAC),A	;- 割り込み制御語(割込み無効)
+                        ;
+000B: 3E0F     [53]     	LD	A,0Fh		;PORTBの設定
+000D: D303     [64]     	OUT	(PIOBC),A	;- モード設定(出力モード)
+000F: 3E03     [71]     	LD	A,03h
+0011: D303     [82]     	OUT	(PIOBC),A	;- 割り込み制御語(割込み無効)
+0013:                   LOOP:
+0013: DB00     [11]     	IN	A,(PIOAD)	;PORTAから入力
+0015: D302     [22]     	OUT	(PIOBD),A	;PORTBに出力
+0017: C31300   [32]     	JP	LOOP
+                        	END
+                        ;
+                        ;***********************************************************
+                        ;■動作メモ
+                        ; 1.<ASTB>SW押下後に、PORTAの入力値がPORTBの出力に反映。
+                        ; 2.<ASTB>SW押下時は、常にPORTAの入力値がPORTBの出力に反映。
+                        ; 3.<WAIT>SW押下時に、<ASTB>SW押下すると<ARDY>LEDが点灯->消灯。
+                        ;   <WAIT>SW押下時に、<BSTB>SW押下すると<BRDY>LEDが点灯->消灯。
+                        ;   その後、<WAIT>SW離すと、<ARDY>LEDと<BRDY>LEDが点灯。
+                        ;■結論(PIOの動作)
+                        ; 1.<IN>命令により、<ARDY>LEDが点灯し、<ASTB>SW押下されるまで
+                        ;   入力値は前回値を維持する。
+                        ;   <ASTB>SW押下されると、そのタイミングで入力値を更新する。
+                        ;***********************************************************
+
+
+; +++ segments +++
+
+#CODE          = $0000 =     0,  size = $001A =    26
+
+; +++ global symbols +++
+
+LOOP    = $0013 =    19          sample1.asm:23
+PIOAC   = $0001 =     1          sample1.asm:6
+PIOAD   = $0000 =     0          sample1.asm:5
+PIOBC   = $0003 =     3          sample1.asm:8
+PIOBD   = $0002 =     2          sample1.asm:7
+START   = $0000 =     0          sample1.asm:11 (unused)
+_end    = $001A =    26          sample1.asm:10 (unused)
+_size   = $001A =    26          sample1.asm:10 (unused)
+
+
+total time: 0.0038 sec.
+no errors
