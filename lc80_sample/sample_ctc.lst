@@ -1,0 +1,61 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample_ctc.asm"
+                        ; date: 2023-05-14 22:00:52
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE CTC
+                        ;***********************************************************
+                        ;
+00EC:                   CTC0	EQU	0ECh
+00ED:                   CTC1	EQU	0EDh
+00EE:                   CTC2	EQU	0EEh
+00EF:                   CTC3	EQU	0EFh
+                        ;
+2000:                   	ORG	2000h
+2000:                   START:
+2000: 210E20   [10]     	LD	HL,CTCC	;CTC CONTROL
+2003: 0603     [17]     	LD	B,3
+2005: 0EEC     [24]     	LD	C,CTC0  ;CTC 0
+                        ;	LD	C,CTC1  ;CTC 1
+2007: EDB3     [40|21]  	OTIR
+2009: ED56     [48]     	IM	1
+200B: FB       [52]     	EI
+200C:                   WAIT:
+200C: 18FE     [12]     	JR	WAIT
+200E:                   CTCC:
+200E: 00                	DEFB	00h		;INTTRUPT VECTOR (CTC0)
+                        ;	DEFB	02h		;INTTRUPT VECTOR (CTC1)
+200F: 85                	DEFB	85h		;CHANEL CONTROL
+2010: 10                	DEFB	10h		;TIME CONSTRUCT
+                        ;
+2011: FFFFFFFF          	ORG	2338h
+2015: FF...             
+2338:                   INT:
+2338: FB       [ 4]     	EI
+2339: ED4D     [18]     	RETI
+                        ;
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $033B =   827
+
+; +++ global symbols +++
+
+CTC0    = $00EC =   236          sample_ctc.asm:5
+CTC1    = $00ED =   237          sample_ctc.asm:6 (unused)
+CTC2    = $00EE =   238          sample_ctc.asm:7 (unused)
+CTC3    = $00EF =   239          sample_ctc.asm:8 (unused)
+CTCC    = $200E =  8206          sample_ctc.asm:21
+INT     = $2338 =  9016          sample_ctc.asm:28 (unused)
+START   = $2000 =  8192          sample_ctc.asm:11 (unused)
+WAIT    = $200C =  8204          sample_ctc.asm:19
+_end    = $233B =  9019          sample_ctc.asm:10 (unused)
+_size   = $033B =   827          sample_ctc.asm:10 (unused)
+
+
+total time: 0.0171 sec.
+no errors

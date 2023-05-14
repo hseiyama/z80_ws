@@ -1,0 +1,174 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample_pio.asm"
+                        ; date: 2023-05-14 22:00:18
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE PIO
+                        ;***********************************************************
+                        ;
+                        ;PIO-PORTS:
+00F4:                   SEGMENT	EQU	0F4h		;AUSGABE-PORT SEGMENTANSTEUERUNG
+00F6:                   PIO1AC	EQU	0F6h
+00F5:                   DIGITAP	EQU	0F5h		;B2...B7=DIGITANST. UND TASTENMATRIX
+                        				;B0=TAPE-IN, B1=TAPE-OUT
+00F7:                   PIO1BC	EQU	0F7h
+00F8:                   USERPORT EQU	0F8h		;USER-PORT, FREI VERFUEGBAR
+00FA:                   PI02AC	EQU	0FAh
+00F9:                   KEYIN	EQU	0F9h		;B4...B7=EINGAENGE TASTEN-ABFRAGE
+                        				;B0...B3 FUER USER NUTZBAR
+00FB:                   PIO2BC	EQU	0FBh
+                        ;CTC-ADRESSEN
+00EC:                   CTC0	EQU	0ECh
+00ED:                   CTC1	EQU	0EDh
+00EE:                   CTC2	EQU	0EEh
+00EF:                   CTC3	EQU	0EFh
+                        ;VEREINBARUNGEN BEI ERWEITERUNGEN
+0000:                   INTVEK	EQU	00h		;INT-VECT. FUER CTC
+0023:                   HIINT	EQU	23h		;CPU-I-REG
+                        ;
+2000:                   	ORG	2000h
+2000:                   START:
+2000: CD2020   [17]     	CALL	IOINIT
+2003: 3EFF     [24]     	LD	A,0FFh
+2005: 1EFB     [31]     	LD	E,11111011b	;BITMUSTER FUER DIGITANSTEUERUNG
+2007:                   LOOP:
+2007: CD9020   [17]     	CALL	CONVERT
+200A: CD7020   [34]     	CALL	ONESEG
+200D: CD5020   [51]     	CALL	DISPLAY
+2010: CB13     [59]     	RL	E
+2012: C30720   [69]     	JP	LOOP
+                        ;
+2015: FFFFFFFF          	ORG	2020h
+2019: FF...             
+                        ;---------------------- IO-INITIALISIERUNG -----------
+2020:                   IOINIT:				;PIO-INITIALISIERUNG
+2020: 3ECF     [ 7]     	LD	A,0CFh		;MODE 3
+2022: D3F6     [18]     	OUT	(PIO1AC),A	;SEGMENT-PORT
+2024: 3EFF     [25]     	LD	A,0FFh
+2026: D3F4     [36]     	OUT	(SEGMENT),A	;ALLE SEGMENTE AUSSCHALTEN
+2028: 3E00     [43]     	LD	A,00h		;E-A-DEFINITION
+202A: D3F6     [54]     	OUT	(PIO1AC),A
+                        
+202C: 3ECF     [61]     	LD	A,0CFh		;MODE 3
+202E: D3F7     [72]     	OUT	(PIO1BC),A	;DIGIT-AUSG.
+                        				;B2...B7 = D-LSD,D-MSD,A-LSD...A-MSD
+2030: 3EFF     [79]     	LD	A,0FFh		;ALLE TREIBER SPERREN
+2032: D3F5     [90]     	OUT	(DIGITAP),A
+2034: 3E01     [97]     	LD	A,01h		;B0-EINGANG, B1...B7-AUSGAENGE
+2036: D3F7     [108]    	OUT	(PIO1BC),A
+                        
+2038: 3ECF     [115]    	LD	A,0CFh		;MODE 3
+203A: D3FB     [126]    	OUT	(PIO2BC),A	;TASTEN-EINGAENGE B4...B7
+203C: 3EFF     [133]    	LD	A,0FFh
+203E: D3FB     [144]    	OUT	(PIO2BC),A
+2040: C9       [154]    	RET
+                        ;
+2041: FFFFFFFF          	ORG	2050h
+2045: FF...             
+                        ;---------------------- LED DISPLAY AND KEYIN --------
+2050:                   DISPLAY:			;IN A<-DISPLAY_DATA, E<-BIT_PATTERN
+                        				;OUT A<-KEYIN
+2050: 2F       [ 4]     	CPL
+2051: D3F4     [15]     	OUT	(SEGMENT),A
+2053: 7B       [19]     	LD	A,E		;DIGIT ANSTEUERN
+2054: D3F5     [30]     	OUT	(DIGITAP),A
+2056: 0664     [37]     	LD	B,100		;ZEITVERZOEGERUNG
+2058: 10FE     [45|50]  	DJNZ	$
+205A: DBF9     [56]     	IN	A,(KEYIN)	;TASTENWERT EINLESEN
+205C: 08       [60]     	EX	AF,AF'
+205D: 3EFF     [67]     	LD	A,0FFh
+205F: D3F5     [78]     	OUT	(DIGITAP),A	;ANZEIGE AUS
+2061: 08       [82]     	EX	AF,AF'
+2062: C9       [92]     	RET
+                        ;
+2063: FFFFFFFF          	ORG	2070h
+2067: FF...             
+                        ;--------------------- ONESEG -------------------------
+2070:                   ONESEG:
+2070: E5       [11]     	PUSH	HL
+2071: D5       [22]     	PUSH	DE
+2072: 21B020   [32]     	LD	HL,SEGTAB	;ADR DER SEGMENTTABELLE
+2075: E60F     [39]     	AND	0Fh		;OBERES HALBBYTE AUSBLENDEN
+2077: 5F       [43]     	LD	E,A
+2078: 1600     [50]     	LD	D,0
+207A: 19       [61]     	ADD	HL,DE
+207B: 7E       [68]     	LD	A,(HL)		;KONVERTIERTE ZAHL NACH A
+207C: D1       [78]     	POP	DE
+207D: E1       [88]     	POP	HL
+207E: C9       [98]     	RET
+                        ;
+207F: FFFFFFFF          	ORG	2090h
+2083: FF...             
+                        ;--------------------- CONVERT ------------------------
+2090:                   CONVERT:
+2090: 2F       [ 4]     	CPL
+2091: CB2F     [12]     	SRA	A
+2093: CB2F     [20]     	SRA	A
+2095: CB2F     [28]     	SRA	A
+2097: CB2F     [36]     	SRA	A
+2099: C9       [46]     	RET
+                        ;
+209A: FFFFFFFF          	ORG	20B0h
+209E: FF...             
+                        ;----------------------- CODE FUER HEX-ZIFFERN --------
+20B0:                   SEGTAB:
+20B0: E7                	DEFB	0E7h		;0
+20B1: 21                	DEFB	21h		;1
+20B2: CD                	DEFB	0CDh		;2
+20B3: AD                	DEFB	0ADh		;3
+20B4: 2B                	DEFB	2Bh		;4
+20B5: AE                	DEFB	0AEh		;5
+20B6: EE                	DEFB	0EEh		;6
+20B7: 25                	DEFB	25h		;7
+20B8: EF                	DEFB	0EFh		;8
+20B9: AF                	DEFB	0AFh		;9
+20BA: 6F                	DEFB	6Fh		;A
+20BB: EA                	DEFB	0EAh		;B
+20BC: C6                	DEFB	0C6h		;C
+20BD: E9                	DEFB	0E9h		;D
+20BE: CE                	DEFB	0CEh		;E
+20BF: 4E                	DEFB	4Eh		;F
+                        	END
+                        ;
+                        ;***********************************************************
+                        ;【動作メモ】
+                        ;・7SEG表示は動作する
+                        ;・キー入力の適切な取得ができない (イベント入力かな?)
+                        ;***********************************************************
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $00C0 =   192
+
+; +++ global symbols +++
+
+CONVERT  = $2090 =  8336          sample_pio.asm:95
+CTC0     = $00EC =   236          sample_pio.asm:17 (unused)
+CTC1     = $00ED =   237          sample_pio.asm:18 (unused)
+CTC2     = $00EE =   238          sample_pio.asm:19 (unused)
+CTC3     = $00EF =   239          sample_pio.asm:20 (unused)
+DIGITAP  = $00F5 =   245          sample_pio.asm:8
+DISPLAY  = $2050 =  8272          sample_pio.asm:63
+HIINT    = $0023 =    35          sample_pio.asm:23 (unused)
+INTVEK   = $0000 =     0          sample_pio.asm:22 (unused)
+IOINIT   = $2020 =  8224          sample_pio.asm:39
+KEYIN    = $00F9 =   249          sample_pio.asm:13
+LOOP     = $2007 =  8199          sample_pio.asm:30
+ONESEG   = $2070 =  8304          sample_pio.asm:80
+PI02AC   = $00FA =   250          sample_pio.asm:12 (unused)
+PIO1AC   = $00F6 =   246          sample_pio.asm:7
+PIO1BC   = $00F7 =   247          sample_pio.asm:10
+PIO2BC   = $00FB =   251          sample_pio.asm:15
+SEGMENT  = $00F4 =   244          sample_pio.asm:6
+SEGTAB   = $20B0 =  8368          sample_pio.asm:105
+START    = $2000 =  8192          sample_pio.asm:26 (unused)
+USERPORT = $00F8 =   248          sample_pio.asm:11 (unused)
+_end     = $20C0 =  8384          sample_pio.asm:25 (unused)
+_size    = $00C0 =   192          sample_pio.asm:25 (unused)
+
+
+total time: 0.0086 sec.
+no errors
