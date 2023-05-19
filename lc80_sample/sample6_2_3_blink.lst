@@ -1,0 +1,58 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample6_2_3_blink.asm"
+                        ; date: 2023-05-17 04:47:16
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE 6_2_3_blink
+                        ;***********************************************************
+                        ;例3：点滅ライトの制御
+                        ;OUT LEDをHIGHまたはLOW信号で制御して、このLEDが点滅するようにすることです。
+                        ;***********************************************************
+                        ;
+00F5:                   DIGITAP	EQU	0F5h		;B2...B7=DIGITANST. AND キーマトリックス
+                        				;B0=テープイン, B1=テープアウト
+                        ;
+2000:                   	ORG	2000H
+2000:                   EX03:
+2000: 3EFF     [ 7]     	LD	A,0FFH
+2002: D3F5     [18]     	OUT	(DIGITAP),A
+2004: 0650     [25]     	LD	B,50H
+2006:                   LOOP1:
+2006: CD1820   [17]     	CALL	DELAY
+2009: 10FB     [25|30]  	DJNZ	LOOP1
+200B: 3EFD     [32]     	LD	A,0FDH
+200D: D3F5     [43]     	OUT	(DIGITAP),A
+200F: 0650     [50]     	LD	B,50H
+2011:                   LOOP2:
+2011: CD1820   [17]     	CALL	DELAY
+2014: 10FB     [25|30]  	DJNZ	LOOP2
+2016: 18E8     [37]     	JR	EX03
+2018:                   DELAY:
+2018: 0EFF     [ 7]     	LD	C,0FFH
+201A:                   LOOP3:
+201A: 0D       [ 4]     	DEC	C
+201B: 20FD     [11|16]  	JR	NZ,LOOP3
+201D: C9       [21]     	RET
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $001E =    30
+
+; +++ global symbols +++
+
+DELAY   = $2018 =  8216          sample6_2_3_blink.asm:26
+DIGITAP = $00F5 =   245          sample6_2_3_blink.asm:8
+EX03    = $2000 =  8192          sample6_2_3_blink.asm:12
+LOOP1   = $2006 =  8198          sample6_2_3_blink.asm:16
+LOOP2   = $2011 =  8209          sample6_2_3_blink.asm:22
+LOOP3   = $201A =  8218          sample6_2_3_blink.asm:28
+_end    = $201E =  8222          sample6_2_3_blink.asm:11 (unused)
+_size   = $001E =    30          sample6_2_3_blink.asm:11 (unused)
+
+
+total time: 0.0037 sec.
+no errors

@@ -1,0 +1,68 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample6_2_4_text.asm"
+                        ; date: 2023-05-19 01:00:46
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE 6_2_4_text
+                        ;***********************************************************
+                        ;例4：文字表示 
+                        ;キー「-」を押して、表示を消去します。
+                        ;キー「+」を押すと、"Hello"という文字が表示されます。
+                        ;モニタープログラムでのテキスト定義が使用されます。
+                        ;(テキストは7セグメントディスプレイのコード表（付録参照）に従って構成されています）。
+                        ;***********************************************************
+                        ;
+045A:                   DAK1	EQU	045AH
+0483:                   DAK2	EQU	0483H
+0583:                   DISP3	EQU	0583H
+0589:                   DISP4	EQU	0589H
+                        ;
+2000:                   	ORG	2000H
+2000:                   EX04:
+2000: DD218305 [14]     	LD	IX,DISP3	;テキスト「HALLO」
+2004:                   DISPL1:
+2004: CD5A04   [17]     	CALL	DAK1
+2007: FE11     [24]     	CP	11H		;キー「-」
+2009: 20F9     [31|36]  	JR	NZ,DISPL1
+200B: DD218905 [45]     	LD	IX,DISP4	;空のテキスト
+200F:                   DISPL2:
+200F: CD5A04   [17]     	CALL	DAK1
+2012: FE10     [24]     	CP	10H		;キー「+」
+2014: 20F9     [31|36]  	JR	NZ,DISPL2
+2016: DD218905 [45]     	LD	IX,DISP4
+201A: 0E06     [52]     	LD	C,6
+201C:                   INI1:
+201C: 0620     [ 7]     	LD	B,20H
+201E:                   INI2:
+201E: CD8304   [17]     	CALL	DAK2
+2021: 10FB     [25|30]  	DJNZ	INI2
+2023: DD2B     [35]     	DEC	IX
+2025: 0D       [39]     	DEC	C
+2026: 20F4     [46|51]  	JR	NZ,INI1
+2028: 18D6     [58]     	JR	EX04
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $002A =    42
+
+; +++ global symbols +++
+
+DAK1    = $045A =  1114          sample6_2_4_text.asm:11
+DAK2    = $0483 =  1155          sample6_2_4_text.asm:12
+DISP3   = $0583 =  1411          sample6_2_4_text.asm:13
+DISP4   = $0589 =  1417          sample6_2_4_text.asm:14
+DISPL1  = $2004 =  8196          sample6_2_4_text.asm:19
+DISPL2  = $200F =  8207          sample6_2_4_text.asm:24
+EX04    = $2000 =  8192          sample6_2_4_text.asm:17
+INI1    = $201C =  8220          sample6_2_4_text.asm:30
+INI2    = $201E =  8222          sample6_2_4_text.asm:32
+_end    = $202A =  8234          sample6_2_4_text.asm:16 (unused)
+_size   = $002A =    42          sample6_2_4_text.asm:16 (unused)
+
+
+total time: 0.0036 sec.
+no errors
