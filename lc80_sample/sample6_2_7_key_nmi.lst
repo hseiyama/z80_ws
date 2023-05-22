@@ -1,0 +1,58 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample6_2_7_key_nmi.asm"
+                        ; date: 2023-05-23 00:08:29
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE 6_2_7_key_nmi
+                        ;***********************************************************
+                        ;モニタサブプログラムDAK1はDAK2を使用し、モニタでの用途に応じてキー値を決定します。
+                        ;***********************************************************
+                        ;
+045A:                   DAK1	EQU	045AH
+0483:                   DAK2	EQU	0483H
+04C3:                   DADP	EQU	04C3H
+                        ;
+2000:                   	ORG	2000H
+2000:                   EX07:
+2000: CD8304   [17]     	CALL	DAK2
+2003: 3A0021   [30]     	LD	A,(KEY)
+2006: CDC304   [47]     	CALL	DADP
+2009: 18F5     [59]     	JR	EX07
+                        ;
+200B: FFFFFFFF          	ORG	2100H
+200F: FF...             
+2100:                   KEY:
+2100: 00                	DEFB	0
+                        ;
+2101: FFFFFFFF          	ORG	2340H
+2105: FF...             
+2340:                   NMI:
+2340: F5       [11]     	PUSH	AF
+2341: 3A0021   [24]     	LD	A,(KEY)
+2344: 3C       [28]     	INC	A
+2345: 320021   [41]     	LD	(KEY),A
+2348: F1       [51]     	POP	AF
+2349: ED45     [65]     	RETN
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $034B =   843
+
+; +++ global symbols +++
+
+DADP    = $04C3 =  1219          sample6_2_7_key_nmi.asm:9
+DAK1    = $045A =  1114          sample6_2_7_key_nmi.asm:7 (unused)
+DAK2    = $0483 =  1155          sample6_2_7_key_nmi.asm:8
+EX07    = $2000 =  8192          sample6_2_7_key_nmi.asm:12
+KEY     = $2100 =  8448          sample6_2_7_key_nmi.asm:19
+NMI     = $2340 =  9024          sample6_2_7_key_nmi.asm:23 (unused)
+_end    = $234B =  9035          sample6_2_7_key_nmi.asm:11 (unused)
+_size   = $034B =   843          sample6_2_7_key_nmi.asm:11 (unused)
+
+
+total time: 0.0113 sec.
+no errors

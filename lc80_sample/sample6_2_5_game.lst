@@ -1,0 +1,100 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample6_2_5_game.asm"
+                        ; date: 2023-05-20 15:55:43
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE sample6_2_5_game
+                        ;***********************************************************
+                        ;例5：循環ゲーム
+                        ;表示位置のセグメントを次々に制御する。
+                        ;キー「+」で循環を停止し、他のキー（リセットキーと割り込みキーを除く）で循環を継続する。
+                        ;表では、これが最初に示されます。
+                        ;バイトは表示位置 (OOXX=右、05XX=左) を表し、次のバイトはセグメントの割り当てを表します
+                        ;（ビット0セグメントBなど、記述に従う）。
+                        ;
+                        ;【備考】アセンブルエラーを解消。MEMのサイズは6（SEGの個数）。
+                        ;***********************************************************
+                        ;
+0483:                   DAK2	EQU	0483H
+                        ;
+2000:                   	ORG	2000H
+2000:                   EX05:
+2000: 214020   [10]     	LD	HL,TABLE
+2003: DD210021 [24]     	LD	IX,MEM
+2007:                   LOOP:
+2007: CD3020   [17]     	CALL	CLRDISP
+200A: 5E       [24]     	LD	E,(HL)		;表示位置
+200B: 1C       [28]     	INC	E
+200C: 28F2     [35|40]  	JR	Z,EX05
+200E: 1D       [39]     	DEC	E
+200F: 1600     [46]     	LD	D,0
+2011: DD19     [61]     	ADD	IX,DE
+2013: 23       [67]     	INC	HL
+2014: 7E       [74]     	LD	A,(HL)		;表示データ
+2015: DD7700   [93]     	LD	(IX),A
+2018: DD210021 [107]    	LD	IX,MEM
+201C: 0603     [114]    	LD	B,3
+201E:                   LIGHT:
+201E: CD8304   [17]     	CALL	DAK2
+2021: 3801     [24|29]  	JR	C,LIGHT1
+2023: 4F       [28]     	LD	C,A		;キー値を記憶
+2024:                   LIGHT1:
+2024: 10F8     [ 8|13]  	DJNZ	LIGHT
+2026: 79       [12]     	LD	A,C		;キー値を復帰
+2027: FE0A     [19]     	CP	0AH		;キー「+」と比較
+2029: 2802     [26|31]  	JR	Z,STOP
+202B: 23       [32]     	INC	HL
+202C: 23       [38]     	INC	HL
+202D:                   STOP:
+202D: 2B       [ 6]     	DEC	HL
+202E: 18D7     [18]     	JR	LOOP
+2030:                   CLRDISP:
+2030: 0606     [ 7]     	LD	B,6		;SEGの個数を指定
+2032:                   CLR:
+2032: DD360000 [19]     	LD	(IX+0),00H
+2036: DD23     [29]     	INC	IX
+2038: 10F8     [37|42]  	DJNZ	CLR
+203A: 11FAFF   [47]     	LD	DE,0FFFAH
+203D: DD19     [62]     	ADD	IX,DE
+203F: C9       [72]     	RET
+2040:                   TABLE:
+2040: 0004              	DEFW	0400H
+2042: 0001              	DEFW	0100H
+2044: 0020              	DEFW	2000H
+2046: 0080              	DEFW	8000H
+2048: 0040              	DEFW	4000H
+204A: 0002              	DEFW	0200H
+204C: FF                	DEFB	0FFH
+                        ;
+204D: FFFFFFFF          	ORG	2100H
+2051: FF...             
+2100:                   MEM:
+2100: FFFFFFFF          	DEFS	6
+2104: FFFF              
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $0106 =   262
+
+; +++ global symbols +++
+
+CLR     = $2032 =  8242          sample6_2_5_game.asm:49
+CLRDISP = $2030 =  8240          sample6_2_5_game.asm:47
+DAK2    = $0483 =  1155          sample6_2_5_game.asm:14
+EX05    = $2000 =  8192          sample6_2_5_game.asm:17
+LIGHT   = $201E =  8222          sample6_2_5_game.asm:33
+LIGHT1  = $2024 =  8228          sample6_2_5_game.asm:37
+LOOP    = $2007 =  8199          sample6_2_5_game.asm:20
+MEM     = $2100 =  8448          sample6_2_5_game.asm:66
+STOP    = $202D =  8237          sample6_2_5_game.asm:44
+TABLE   = $2040 =  8256          sample6_2_5_game.asm:56
+_end    = $2106 =  8454          sample6_2_5_game.asm:16 (unused)
+_size   = $0106 =   262          sample6_2_5_game.asm:16 (unused)
+
+
+total time: 0.0079 sec.
+no errors

@@ -1,0 +1,78 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "sample6_2_7_key_ctc.asm"
+                        ; date: 2023-05-22 23:51:40
+                        ; --------------------------------------
+
+
+                        ;***********************************************************
+                        ;SAMPLE 6_2_7_key_ctc
+                        ;***********************************************************
+                        ;モニタサブプログラムDAK1はDAK2を使用し、モニタでの用途に応じてキー値を決定します。
+                        ;***********************************************************
+                        ;
+00EC:                   CTC0	EQU	0ECH
+                        ;
+045A:                   DAK1	EQU	045AH
+0483:                   DAK2	EQU	0483H
+04C3:                   DADP	EQU	04C3H
+                        ;
+2000:                   	ORG	2000H
+2000:                   INIT:
+2000: ED5E     [ 8]     	IM	2
+2002: 3E22     [15]     	LD	A,22H		;INT.TAB H-BYTE
+2004: ED47     [24]     	LD	I,A
+2006: AF       [28]     	XOR	A		;INT.VEC L-BYTE
+2007: D3EC     [39]     	OUT	(CTC0),A
+2009: 3EA5     [46]     	LD	A,0A5H		;INT.TIMER X 256
+200B: D3EC     [57]     	OUT	(CTC0),A
+200D: 3EE9     [64]     	LD	A,0E9H		;TIME CONSTANT
+200F: D3EC     [75]     	OUT	(CTC0),A
+2011: FB       [79]     	EI
+2012:                   EX07:
+2012: CD8304   [17]     	CALL	DAK2
+2015: 3A3020   [30]     	LD	A,(KEY)
+2018: CDC304   [47]     	CALL	DADP
+201B: 18F5     [59]     	JR	EX07
+                        ;
+201D: FFFFFFFF          	ORG	2030H
+2021: FF...             
+2030:                   KEY:
+2030: 00                	DEFB	0
+                        ;
+2031: FFFFFFFF          	ORG	2040H
+2035: FF...             
+2040:                   INT:
+2040: F5       [11]     	PUSH	AF
+2041: 3A3020   [24]     	LD	A,(KEY)
+2044: 3C       [28]     	INC	A
+2045: 323020   [41]     	LD	(KEY),A
+2048: F1       [51]     	POP	AF
+2049: FB       [55]     	EI
+204A: ED4D     [69]     	RETI
+                        ;
+204C: FFFFFFFF          	ORG	2200H		;INT.VEC
+2050: FF...             
+2200: 4020              	DEFW	2040H		;INT.VEC ADDRESS
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $2000 =  8192,  size = $0202 =   514
+
+; +++ global symbols +++
+
+CTC0    = $00EC =   236          sample6_2_7_key_ctc.asm:7
+DADP    = $04C3 =  1219          sample6_2_7_key_ctc.asm:11
+DAK1    = $045A =  1114          sample6_2_7_key_ctc.asm:9 (unused)
+DAK2    = $0483 =  1155          sample6_2_7_key_ctc.asm:10
+EX07    = $2012 =  8210          sample6_2_7_key_ctc.asm:25
+INIT    = $2000 =  8192          sample6_2_7_key_ctc.asm:14 (unused)
+INT     = $2040 =  8256          sample6_2_7_key_ctc.asm:36 (unused)
+KEY     = $2030 =  8240          sample6_2_7_key_ctc.asm:32
+_end    = $2202 =  8706          sample6_2_7_key_ctc.asm:13 (unused)
+_size   = $0202 =   514          sample6_2_7_key_ctc.asm:13 (unused)
+
+
+total time: 0.0048 sec.
+no errors
