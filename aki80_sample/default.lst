@@ -1,0 +1,259 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "default.asm"
+                        ; date: 2023-06-25 17:40:51
+                        ; --------------------------------------
+
+
+                        ;******************************
+                        ;Ｚ８４Ｃ０１５専用セットアップ
+                        ;******************************
+                        ;AKI80スタートアップアセンブラ
+                        
+0000:                   DBUG	EQU	0000H		;Z VISION REMOTEを使用するときは8000H
+                        				;ROMに焼くときは0000H
+                        
+                        ;	パラレルポートI/Oアドレスセット
+001C:                   PIOA	EQU	1CH		;Ａポートデータ
+001E:                   PIOB	EQU	1EH		;Ｂポートデータ
+                        
+                        ;	ＳＩＯポートI/Oアドレスセット
+0018:                   SIOA	EQU	18H		;chA送信/受信バッファ
+001A:                   SIOB	EQU	1AH		;chB送信/受信バッファ
+                        
+                        ;	カウンタタイマI/Oアドレスセット
+0010:                   CTC0	EQU	10H		;CTC0のアドレス
+0011:                   CTC1	EQU	11H		;CTC1のアドレス
+0012:                   CTC2	EQU	12H		;CTC2のアドレス
+0013:                   CTC3	EQU	13H		;CTC3のアドレス
+                        
+                        ;	Ｚ８４Ｃ０１５専用I/Oアドレスセット
+00F0:                   WDM	EQU	0F0H	;WDTER,WDTPR,HALTMR
+00F1:                   WDC	EQU	0F1H	;クリアー(4EH) ディセーブル(B1H)
+00F4:                   DGC	EQU	0F4H	;デイジーチェーン設定(bit0-bit2)
+004E:                   WDCL	EQU	4EH	;ウォッチドッグクリアコマンドデータ
+                        
+                        
+                        ;********************************
+                        ;	Ｉ／Ｏセットデータ
+                        ;********************************
+                        ;適宜変更のこと
+                        
+0000:                   	ORG	DBUG
+0000: C30001   [10]     	JP	START
+0003: CF                PIOACD:	DB	0CFH	;PIOAモードワード			**001111
+0004: 00                	DB	00H	;PIOAデータディレクションワード
+0005: 17                	DB	17H	;PIOAインタラプトコントロールワード	****0111
+0006: 00                	DB	00H	;PIOAインタラプトマスクワード
+0007: E4                	DB	0E4H	;PIOAインタラプトベクタ
+0008:                   PAEND	EQU	$
+0008: CF                PIOBCD:	DB	0CFH	;PIOBモードワード			**001111
+0009: 00                	DB	00H	;PIOBデータディレクションワード
+000A: 17                	DB	17H	;PIOBインタラプトコントロールワード	****0111
+000B: 00                	DB	00H	;PIOBインタラプトマスクワード
+000C: E6                	DB	0E6H	;PIOBインタラプトベクタ
+000D:                   PBEND	EQU	$
+                        
+000D: 18                SIOACD:	DB	18H	;SIOA WR0 チャンネルリセット
+000E: 04                	DB	04H	;SIOA WR0 ポインタ４
+000F: 44                	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+0010: 01                	DB	01H	;SIOA WR0 ポインタ１
+0011: 00                	DB	00H	;SIOA WR1 割り込み制御ウェイト／レディ
+0012: 03                	DB	03H	;SIOA WR0 ポインタ３
+0013: E1                	DB	0E1H	;SIOA WR3 受信バッファ制御情報
+0014: 05                	DB	05H	;SIOA WR0 ポインタ５
+0015: 68                	DB	68H	;SIOA WR5 送信バッファ制御情報
+0016:                   SAEND	EQU	$
+0016: 18                SIOBCD:	DB	18H	;SIOB WR0 チャンネルリセット
+0017: 04                	DB	04H	;SIOB WR0 ポインタ４
+0018: 44                	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+0019: 01                	DB	01H	;SIOB WR0 ポインタ１
+001A: 00                	DB	00H	;SIOB WR1 割り込み制御ウェイト／レディ
+001B: 02                	DB	02H	;SIOB WR0 ポインタ２
+001C: F0                	DB	0F0H	;SIOB WR2 インタラプトベクタ
+001D: 03                	DB	03H	;SIOB WR0 ポインタ３
+001E: E1                	DB	0E1H	;SIOB WR3 受信バッファ制御情報
+001F: 05                	DB	05H	;SIOB WR0 ポインタ５
+0020: 68                	DB	68H	;SIOB WR5 送信バッファ制御情報
+0021:                   SBEND	EQU	$
+                        
+0021: 05                CTC0CD:	DB	05H	;CTC0 チャンネルコントロールワード	*******1
+0022: 00                	DB	00H	;CTC0 タイムコンスタントレジスタ
+0023: E8                	DB	0E8H	;CTC0 インタラプトベクタ		*****000
+0024:                   C0END	EQU	$
+0024: 05                CTC1CD:	DB	05H	;CTC1 チャンネルコントロールワード	*******1
+0025: 00                	DB	00H	;CTC1 タイムコンスタントレジスタ
+0026:                   C1END	EQU	$
+0026: 05                CTC2CD:	DB	05H	;CTC2 チャンネルコントロールワード	*******1
+0027: 00                	DB	00H	;CTC2 タイムコンスタントレジスタ
+0028:                   C2END	EQU	$
+0028: 05                CTC3CD:	DB	05H	;CTC3 チャンネルコントロールワード	*******1
+0029: 00                	DB	00H	;CTC3 タイムコンスタントレジスタ
+002A:                   C3END	EQU	$
+                        
+002A: FB                WDMCD:	DB	0FBH	;ウォッチドッグ，ホルトモード設定	*****011
+002B: 00                DGCCD:	DB	00H	;デイジーチェーン順位設定		00000***
+                        
+                        
+                        ;*****************************
+                        ;	ＩＮＴ処理(IM1)
+                        ;*****************************
+                        
+002C: FFFFFFFF          	ORG	DBUG + 0038H
+0030: FF...             
+0038: FB       [ 4]     	EI
+0039: ED4D     [18]     	RETI
+                        
+                        
+                        ;***********************
+                        ;	ＮＭＩ処理
+                        ;***********************
+                        
+003B: FFFFFFFF          	ORG	DBUG + 0066H
+003F: FF...             
+0066: ED45     [32]     	RETN			;ＮＭＩ禁止
+                        
+                        
+                        ;*******************************
+                        ;	Ｉ／Ｏセットアップ
+                        ;*******************************
+                        
+0068: 210300   [10]     IOSET:	LD	HL, PIOACD		;PIOAコマンドセットアップ
+006B: 0605     [17]     	LD	B, PAEND - PIOACD
+006D: 0E1D     [24]     	LD	C, PIOA + 1		;PIOAコマンドアドレス(1DH)
+006F: EDB3     [40|21]  	OTIR
+0071: 210800   [50]     	LD	HL, PIOBCD		;PIOBコマンドセットアップ
+0074: 0605     [57]     	LD	B, PBEND - PIOBCD
+0076: 0E1F     [64]     	LD	C, PIOB + 1		;PIOBコマンドアドレス(1FH)
+0078: EDB3     [80|21]  	OTIR
+007A: 212100   [90]     	LD	HL, CTC0CD		;CTC0コマンドセットアップ
+007D: 0603     [97]     	LD	B, C0END - CTC0CD
+007F: 0E10     [104]    	LD	C, CTC0
+0081: EDB3     [120|21] 	OTIR
+0083: 212400   [130]    	LD	HL, CTC1CD		;CTC1コマンドセットアップ
+0086: 0602     [137]    	LD	B, C1END - CTC1CD
+0088: 0E11     [144]    	LD	C, CTC1
+008A: EDB3     [160|21] 	OTIR
+008C: 212600   [170]    	LD	HL, CTC2CD		;CTC2コマンドセットアップ
+008F: 0602     [177]    	LD	B, C2END - CTC2CD
+0091: 0E12     [184]    	LD	C, CTC2
+0093: EDB3     [200|21] 	OTIR
+0095: 212800   [210]    	LD	HL, CTC3CD		;CTC3コマンドセットアップ
+0098: 0602     [217]    	LD	B, C3END - CTC3CD
+009A: 0E13     [224]    	LD	C, CTC3
+009C: EDB3     [240|21] 	OTIR
+009E: 210D00   [250]    	LD	HL, SIOACD		;SIOAコマンドセットアップ
+00A1: 0609     [257]    	LD	B, SAEND - SIOACD
+00A3: 0E19     [264]    	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
+00A5: EDB3     [280|21] 	OTIR
+00A7: 211600   [290]    	LD	HL, SIOBCD		;SIOBコマンドセットアップ
+00AA: 060B     [297]    	LD	B, SBEND - SIOBCD
+00AC: 0E1B     [304]    	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
+00AE: EDB3     [320|21] 	OTIR
+00B0: 3A2A00   [333]    	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
+00B3: D3F0     [344]    	OUT	(WDM), A
+00B5: 3A2B00   [357]    	LD	A, (DGCCD)		;割り込み優先順位セット
+00B8: D3F4     [368]    	OUT	(DGC), A
+00BA: 3E4E     [ 7]     WDOG:	LD	A, WDCL			;ウォッチドッグクリア
+00BC: D3F1     [18]     	OUT	(WDC), A
+00BE: C9       [28]     	RET
+                        
+                        
+                        ;**************************************
+                        ;	割り込みアドレス，DWL設定
+                        ;	アドレス値をそのまま記入
+                        ;**************************************
+                        
+00BF: FFFFFFFF          	ORG	DBUG + 00E4H
+00C3: FF...             
+00E4: 0000              	DW	0000H			;PIOA割り込み
+00E6: 0000              	DW	0000H			;PIOB割り込み
+00E8: 0000              	DW	0000H			;CTC0割り込み
+00EA: 0000              	DW	0000H			;CTC1割り込み
+00EC: 0000              	DW	0000H			;CTC2割り込み
+00EE: 0000              	DW	0000H			;CTC3割り込み
+00F0: 0000              	DW	0000H			;SIOBトランスミッタバッファエンプティ
+00F2: 0000              	DW	0000H			;SIOB外部／ステータス割り込み
+00F4: 0000              	DW	0000H			;SIOBレシーバキャラクタアベイラブル
+00F6: 0000              	DW	0000H			;SIOB特殊受信状態
+00F8: 0000              	DW	0000H			;SIOAトランスミッタバッファエンプティ
+00FA: 0000              	DW	0000H			;SIOA外部／ステータス割り込み
+00FC: 0000              	DW	0000H			;SIOAレシーバキャラクタアベイラブル
+00FE: 0000              	DW	0000H			;SIOA特殊受信状態
+                        
+                        
+                        
+                        ;************************************************************************
+                        ;	　　　　　　　　　　　メインルーチンスタート
+                        ;************************************************************************
+                        
+                        
+                        	ORG	DBUG + 0100H
+                        	
+0100: F3       [ 4]     START:	DI				;セットアップ中、割り込み不可
+0101: ED5E     [12]     	IM	2			;割り込みモード２
+0103: 3E00     [19]     	LD	A, DBUG / 100H		;割り込み上位ベクタロード
+0105: ED47     [28]     	LD	I, A
+0107: 310000   [38]     	LD	SP, 0000H		;スタックポインタ FFFFHから
+                        
+010A: 210080   [48]     	LD	HL, 8000H		;外部I/O使用時のRESET待ち
+010D: 2B       [ 6]     WAIT:	DEC	HL
+010E: 7C       [10]     	LD	A, H
+010F: B5       [14]     	OR	L
+0110: 20FB     [21|26]  	JR	NZ, WAIT
+                        
+0112: CD6800   [38]     	CALL	IOSET
+0115: FB       [42]     	EI
+                        
+                        	;ここからプログラムを書く
+                        
+                        	END
+                        		
+
+
+; +++ segments +++
+
+#CODE          = $0000 =     0,  size = $0116 =   278
+
+; +++ global symbols +++
+
+C0END   = $0024 =    36          default.asm:76
+C1END   = $0026 =    38          default.asm:79
+C2END   = $0028 =    40          default.asm:82
+C3END   = $002A =    42          default.asm:85
+CTC0    = $0010 =    16          default.asm:18
+CTC0CD  = $0021 =    33          default.asm:73
+CTC1    = $0011 =    17          default.asm:19
+CTC1CD  = $0024 =    36          default.asm:77
+CTC2    = $0012 =    18          default.asm:20
+CTC2CD  = $0026 =    38          default.asm:80
+CTC3    = $0013 =    19          default.asm:21
+CTC3CD  = $0028 =    40          default.asm:83
+DBUG    = $0000 =     0          default.asm:6
+DGC     = $00F4 =   244          default.asm:26
+DGCCD   = $002B =    43          default.asm:88
+IOSET   = $0068 =   104          default.asm:112
+PAEND   = $0008 =     8          default.asm:42
+PBEND   = $000D =    13          default.asm:48
+PIOA    = $001C =    28          default.asm:10
+PIOACD  = $0003 =     3          default.asm:37
+PIOB    = $001E =    30          default.asm:11
+PIOBCD  = $0008 =     8          default.asm:43
+SAEND   = $0016 =    22          default.asm:59
+SBEND   = $0021 =    33          default.asm:71
+SIOA    = $0018 =    24          default.asm:14
+SIOACD  = $000D =    13          default.asm:50
+SIOB    = $001A =    26          default.asm:15
+SIOBCD  = $0016 =    22          default.asm:60
+START   = $0100 =   256          default.asm:183
+WAIT    = $010D =   269          default.asm:190
+WDC     = $00F1 =   241          default.asm:25
+WDCL    = $004E =    78          default.asm:27
+WDM     = $00F0 =   240          default.asm:24
+WDMCD   = $002A =    42          default.asm:87
+WDOG    = $00BA =   186          default.asm:148 (unused)
+_end    = $0116 =   278          default.asm:35 (unused)
+_size   = $0116 =   278          default.asm:35 (unused)
+
+
+total time: 0.0098 sec.
+no errors
