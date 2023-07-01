@@ -187,7 +187,7 @@ WDOG:	LD	A, WDCL			;ウォッチドッグクリア
 ;************************************************************************
 
 	ORG	DBUG + 0100H
-	
+
 START:	DI				;セットアップ中、割り込み不可
 	IM	2			;割り込みモード２
 	LD	A, DBUG / 100H		;割り込み上位ベクタロード
@@ -205,13 +205,27 @@ START:	DI				;セットアップ中、割り込み不可
 
 	;ここからプログラムを書く
 	IN	A, (PIOA)
+	LD	(VALUE), A
 LOOP:
+	LD	A, (VALUE)
 	OUT	(PIOB), A
 	JR	LOOP
 
 INTCT1:
+	PUSH	AF
+	LD	A, (VALUE)
 	INC	A
+	LD	(VALUE), A
+	POP	AF
 	EI
 	RETI
+
+;**************************************
+;	ＲＡＭ配置
+;**************************************
+
+	ORG	8000H
+
+VALUE:	DEFB	00H
 
 	END
