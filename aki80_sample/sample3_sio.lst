@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "sample3_sio.asm"
-                        ; date: 2023-07-06 01:59:13
+                        ; date: 2023-07-06 02:38:40
                         ; --------------------------------------
 
 
@@ -81,13 +81,13 @@
 001D:                   SBEND	EQU	$
                         
 001D:                   CTC0CD:
-001D: 25                	DB	25H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
-001E: F4                	DB	244	;CTC0 タイムコンスタントレジスタ	(192.1Hz)
+001D: A5                	DB	0A5H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
+001E: F0                	DB	240	;CTC0 タイムコンスタントレジスタ	(200Hz: 5ms周期)
 001F: E8                	DB	0E8H	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
 0020:                   C0END	EQU	$
 0020:                   CTC1CD:
 0020: C5                	DB	0C5H	;CTC1 チャンネルコントロールワード	*******1 (カウンタモード)
-0021: C0                	DB	192	;CTC1 タイムコンスタントレジスタ	(0.999s: 16*12)
+0021: C8                	DB	200	;CTC1 タイムコンスタントレジスタ	(1Hz: 1s周期)
 0022:                   C1END	EQU	$
 0022:                   CTC2CD:
 0022: 05                	DB	05H	;CTC2 チャンネルコントロールワード	*******1
@@ -176,8 +176,8 @@
 00C4: FF...             
 00E4: 0000              	DW	0000H			;PIOA割り込み
 00E6: 0000              	DW	0000H			;PIOB割り込み
-00E8: 0000              	DW	0000H			;CTC0割り込み
-00EA: 2001              	DW	INTCT1			;CTC1割り込み
+00E8: 1B01              	DW	INTCT0			;CTC0割り込み
+00EA: 2501              	DW	INTCT1			;CTC1割り込み
 00EC: 0000              	DW	0000H			;CTC2割り込み
 00EE: 0000              	DW	0000H			;CTC3割り込み
 00F0: 0000              	DW	0000H			;SIOBトランスミッタバッファエンプティ
@@ -212,47 +212,53 @@
 010D: FB       [59]     	EI
                         
                         	;ここからプログラムを書く
-010E: DB1C     [70]     	IN	A, (PIOA)
-0110: 320080   [83]     	LD	(VALUE), A
+010E: DB1C     [70]     	IN	A, (PIOA)		;ポートAを入力
+0110: 320080   [83]     	LD	(VALUE), A		;変数を初期化
 0113:                   LOOP:
-0113: 3A0080   [13]     	LD	A, (VALUE)
-0116: D31E     [24]     	OUT	(PIOB), A
-0118: CD3701   [41]     	CALL	RECV			;受信要求 (Aレジスタ)
-011B: CD2C01   [58]     	CALL	SEND			;送信要求 (Aレジスタ)
-011E: 18F3     [70]     	JR	LOOP
+0113: CD3C01   [17]     	CALL	RECV			;受信要求 (Aレジスタ)
+0116: CD3101   [34]     	CALL	SEND			;送信要求 (Aレジスタ)
+0119: 18F8     [46]     	JR	LOOP
                         
-0120:                   INTCT1:
-0120: F5       [11]     	PUSH	AF
-0121: 3A0080   [24]     	LD	A, (VALUE)
-0124: 3C       [28]     	INC	A
-0125: 320080   [41]     	LD	(VALUE), A
-0128: F1       [51]     	POP	AF
-0129: FB       [55]     	EI
-012A: ED4D     [69]     	RETI
+011B:                   INTCT0:					;5ms周期割込み
+011B: F5       [11]     	PUSH	AF
+011C: 3A0080   [24]     	LD	A, (VALUE)
+011F: D31E     [35]     	OUT	(PIOB), A		;ポートBに出力
+0121: F1       [45]     	POP	AF
+0122: FB       [49]     	EI
+0123: ED4D     [63]     	RETI
                         
-012C:                   SEND:
-012C: F5       [11]     	PUSH	AF
-012D:                   SEND1:
-012D: DB19     [11]     	IN	A, (SIOA + 1)		;RR0を読み込む
-012F: CB57     [19]     	BIT	2, A			;送信バッファ・エンプティを確認
-0131: 28FA     [26|31]  	JR	Z, SEND1
-0133: F1       [36]     	POP	AF
-0134: D318     [47]     	OUT	(SIOA), A		;送信
-0136: C9       [57]     	RET
+0125:                   INTCT1:					;1s周期割込み
+0125: F5       [11]     	PUSH	AF
+0126: 3A0080   [24]     	LD	A, (VALUE)
+0129: 3C       [28]     	INC	A			;変数を更新
+012A: 320080   [41]     	LD	(VALUE), A
+012D: F1       [51]     	POP	AF
+012E: FB       [55]     	EI
+012F: ED4D     [69]     	RETI
                         
-0137:                   RECV:
-0137: DB19     [11]     	IN	A, (SIOA + 1)		;RR0を読み込む
-0139: CB47     [19]     	BIT	0, A			;受信チャラクタ・アベイラブルを確認
-013B: 28FA     [26|31]  	JR	Z, RECV
-013D: DB18     [37]     	IN	A, (SIOA)		;受信
-013F: C9       [47]     	RET
+0131:                   SEND:
+0131: F5       [11]     	PUSH	AF
+0132:                   SEND1:
+0132: DB19     [11]     	IN	A, (SIOA + 1)		;RR0を読み込む
+0134: CB57     [19]     	BIT	2, A			;送信バッファ・エンプティを確認
+0136: 28FA     [26|31]  	JR	Z, SEND1
+0138: F1       [36]     	POP	AF
+0139: D318     [47]     	OUT	(SIOA), A		;送信
+013B: C9       [57]     	RET
+                        
+013C:                   RECV:
+013C: DB19     [11]     	IN	A, (SIOA + 1)		;RR0を読み込む
+013E: CB47     [19]     	BIT	0, A			;受信チャラクタ・アベイラブルを確認
+0140: 28FA     [26|31]  	JR	Z, RECV
+0142: DB18     [37]     	IN	A, (SIOA)		;受信
+0144: C9       [47]     	RET
                         
                         ;**************************************
                         ;	ＲＡＭ配置
                         ;**************************************
                         
-0140: FFFFFFFF          	ORG	8000H
-0144: FF...             
+0145: FFFFFFFF          	ORG	8000H
+0149: FF...             
                         
 8000: 00                VALUE:	DEFB	00H
                         
@@ -280,7 +286,8 @@ CTC3CD  = $0024 =    36          sample3_sio.asm:90
 DBUG    = $0000 =     0          sample3_sio.asm:6
 DGC     = $00F4 =   244          sample3_sio.asm:26
 DGCCD   = $0027 =    39          sample3_sio.asm:96
-INTCT1  = $0120 =   288          sample3_sio.asm:215
+INTCT0  = $011B =   283          sample3_sio.asm:213
+INTCT1  = $0125 =   293          sample3_sio.asm:221
 IOSET   = $0069 =   105          sample3_sio.asm:121
 LOOP    = $0113 =   275          sample3_sio.asm:208
 PAEND   = $0006 =     6          sample3_sio.asm:43
@@ -289,17 +296,17 @@ PIOA    = $001C =    28          sample3_sio.asm:10
 PIOACD  = $0003 =     3          sample3_sio.asm:37
 PIOB    = $001E =    30          sample3_sio.asm:11
 PIOBCD  = $0006 =     6          sample3_sio.asm:44
-RECV    = $0137 =   311          sample3_sio.asm:234
+RECV    = $013C =   316          sample3_sio.asm:240
 SAEND   = $0012 =    18          sample3_sio.asm:62
 SBEND   = $001D =    29          sample3_sio.asm:75
-SEND    = $012C =   300          sample3_sio.asm:224
-SEND1   = $012D =   301          sample3_sio.asm:226
+SEND    = $0131 =   305          sample3_sio.asm:230
+SEND1   = $0132 =   306          sample3_sio.asm:232
 SIOA    = $0018 =    24          sample3_sio.asm:14
 SIOACD  = $0009 =     9          sample3_sio.asm:52
 SIOB    = $001A =    26          sample3_sio.asm:15
 SIOBCD  = $0012 =    18          sample3_sio.asm:63
 START   = $0100 =   256          sample3_sio.asm:190
-VALUE   = $8000 = 32768          sample3_sio.asm:247
+VALUE   = $8000 = 32768          sample3_sio.asm:253
 WDC     = $00F1 =   241          sample3_sio.asm:25
 WDCL    = $004E =    78          sample3_sio.asm:27
 WDM     = $00F0 =   240          sample3_sio.asm:24
@@ -309,5 +316,5 @@ _end    = $8001 = 32769          sample3_sio.asm:35 (unused)
 _size   = $8001 = 32769          sample3_sio.asm:35 (unused)
 
 
-total time: 0.1135 sec.
+total time: 0.1176 sec.
 no errors

@@ -75,13 +75,13 @@ SIOBCD:
 SBEND	EQU	$
 
 CTC0CD:
-	DB	25H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
-	DB	244	;CTC0 タイムコンスタントレジスタ	(192.1Hz)
+	DB	0A5H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
+	DB	240	;CTC0 タイムコンスタントレジスタ	(200Hz: 5ms周期)
 	DB	0E8H	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
 C0END	EQU	$
 CTC1CD:
 	DB	0C5H	;CTC1 チャンネルコントロールワード	*******1 (カウンタモード)
-	DB	192	;CTC1 タイムコンスタントレジスタ	(0.999s: 16*12)
+	DB	200	;CTC1 タイムコンスタントレジスタ	(1Hz: 1s周期)
 C1END	EQU	$
 CTC2CD:
 	DB	05H	;CTC2 チャンネルコントロールワード	*******1
@@ -167,7 +167,7 @@ WDOG:	LD	A, WDCL			;ウォッチドッグクリア
 	ORG	DBUG + 00E4H
 	DW	0000H			;PIOA割り込み
 	DW	0000H			;PIOB割り込み
-	DW	0000H			;CTC0割り込み
+	DW	INTCT0			;CTC0割り込み
 	DW	INTCT1			;CTC1割り込み
 	DW	0000H			;CTC2割り込み
 	DW	0000H			;CTC3割り込み
@@ -203,19 +203,25 @@ START:	DI				;セットアップ中、割り込み不可
 	EI
 
 	;ここからプログラムを書く
-	IN	A, (PIOA)
-	LD	(VALUE), A
+	IN	A, (PIOA)		;ポートAを入力
+	LD	(VALUE), A		;変数を初期化
 LOOP:
-	LD	A, (VALUE)
-	OUT	(PIOB), A
 	CALL	RECV			;受信要求 (Aレジスタ)
 	CALL	SEND			;送信要求 (Aレジスタ)
 	JR	LOOP
 
-INTCT1:
+INTCT0:					;5ms周期割込み
 	PUSH	AF
 	LD	A, (VALUE)
-	INC	A
+	OUT	(PIOB), A		;ポートBに出力
+	POP	AF
+	EI
+	RETI
+
+INTCT1:					;1s周期割込み
+	PUSH	AF
+	LD	A, (VALUE)
+	INC	A			;変数を更新
 	LD	(VALUE), A
 	POP	AF
 	EI
