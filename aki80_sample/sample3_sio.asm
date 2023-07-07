@@ -37,9 +37,9 @@ WDCL	EQU	4EH	;ウォッチドッグクリアコマンドデータ
 PIOACD:
 	DB	0CFH	;PIOAモードワード			**001111 (モード3)
 	DB	0FFH	;PIOAデータディレクションワード		(全ビット入力)
-	DB	07H	;PIOAインタラプトコントロールワード	****0111 (割込み無効)
-;	DB	00H	;PIOAインタラプトマスクワード		(未使用)
-;	DB	0E4H	;PIOAインタラプトベクタ			(未使用)
+	DB	97H	;PIOAインタラプトコントロールワード	****0111 (割込み有効)
+	DB	0FEH	;PIOAインタラプトマスクワード
+	DB	0E4H	;PIOAインタラプトベクタ
 PAEND	EQU	$
 PIOBCD:
 	DB	0CFH	;PIOBモードワード			**001111 (モード3)
@@ -54,7 +54,7 @@ SIOACD:
 	DB	04H	;SIOA WR0 ポインタ４
 	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
 	DB	01H	;SIOA WR0 ポインタ１
-	DB	00H	;SIOA WR1 割り込み制御ウェイト／レディ
+	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ
 	DB	03H	;SIOA WR0 ポインタ３
 	DB	0C1H	;SIOA WR3 受信バッファ制御情報
 	DB	05H	;SIOA WR0 ポインタ５
@@ -65,7 +65,7 @@ SIOBCD:
 	DB	04H	;SIOB WR0 ポインタ４
 	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
 	DB	01H	;SIOB WR0 ポインタ１
-	DB	00H	;SIOB WR1 割り込み制御ウェイト／レディ
+	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ
 	DB	02H	;SIOB WR0 ポインタ２
 	DB	0F0H	;SIOB WR2 インタラプトベクタ
 	DB	03H	;SIOB WR0 ポインタ３
@@ -118,7 +118,8 @@ DGCCD:	DB	00H	;デイジーチェーン順位設定		00000***
 ;	Ｉ／Ｏセットアップ
 ;*******************************
 
-IOSET:	LD	HL, PIOACD		;PIOAコマンドセットアップ
+IOSET:
+	LD	HL, PIOACD		;PIOAコマンドセットアップ
 	LD	B, PAEND - PIOACD
 	LD	C, PIOA + 1		;PIOAコマンドアドレス(1DH)
 	OTIR
@@ -165,7 +166,7 @@ WDOG:	LD	A, WDCL			;ウォッチドッグクリア
 ;**************************************
 
 	ORG	DBUG + 00E4H
-	DW	0000H			;PIOA割り込み
+	DW	INTPA			;PIOA割り込み
 	DW	0000H			;PIOB割り込み
 	DW	INTCT0			;CTC0割り込み
 	DW	INTCT1			;CTC1割り込み
@@ -175,10 +176,10 @@ WDOG:	LD	A, WDCL			;ウォッチドッグクリア
 	DW	0000H			;SIOB外部／ステータス割り込み
 	DW	0000H			;SIOBレシーバキャラクタアベイラブル
 	DW	0000H			;SIOB特殊受信状態
-	DW	0000H			;SIOAトランスミッタバッファエンプティ
+	DW	INTSA0			;SIOAトランスミッタバッファエンプティ
 	DW	0000H			;SIOA外部／ステータス割り込み
-	DW	0000H			;SIOAレシーバキャラクタアベイラブル
-	DW	0000H			;SIOA特殊受信状態
+	DW	INTSA2			;SIOAレシーバキャラクタアベイラブル
+	DW	INTSA3			;SIOA特殊受信状態
 
 
 ;************************************************************************
@@ -206,11 +207,9 @@ START:	DI				;セットアップ中、割り込み不可
 	IN	A, (PIOA)		;ポートAを入力
 	LD	(VALUE), A		;変数を初期化
 LOOP:
-	CALL	RECV			;受信要求 (Aレジスタ)
-	CALL	SEND			;送信要求 (Aレジスタ)
 	JR	LOOP
 
-INTCT0:					;5ms周期割込み
+INTCT0:					;CTC0割り込み (5ms周期)
 	PUSH	AF
 	LD	A, (VALUE)
 	OUT	(PIOB), A		;ポートBに出力
@@ -218,11 +217,47 @@ INTCT0:					;5ms周期割込み
 	EI
 	RETI
 
-INTCT1:					;1s周期割込み
+INTCT1:					;CTC1割り込み (1s周期)
 	PUSH	AF
 	LD	A, (VALUE)
 	INC	A			;変数を更新
 	LD	(VALUE), A
+	POP	AF
+	EI
+	RETI
+
+INTSA0:					;SIOAトランスミッタバッファエンプティ
+	PUSH	AF
+	CALL	DISATX			;送信割り込み禁止
+	LD	A, (VALUE)
+	ADD	A, 10H			;変数を更新
+	LD	(VALUE), A
+	POP	AF
+	EI
+	RETI
+
+INTSA2:					;SIOAレシーバキャラクタアベイラブル
+	PUSH	AF
+	CALL	EISATX			;送信割り込み許可
+	IN	A, (SIOA)		;受信
+	CALL	SEND			;送信要求 (Aレジスタ)
+	POP	AF
+	EI
+	RETI
+
+INTSA3:					;SIOA特殊受信状態
+	PUSH	AF
+	LD	A, 0AAH			;変数を更新
+	OUT	(PIOB), A		;ポートBに出力
+	POP	AF
+	HALT
+	EI
+	RETI
+
+INTPA:					;PIOA割り込み
+	PUSH	AF
+	IN	A, (PIOA)		;ポートAを入力
+	LD	(VALUE), A		;変数を再設定
 	POP	AF
 	EI
 	RETI
@@ -237,11 +272,22 @@ SEND1:
 	OUT	(SIOA), A		;送信
 	RET
 
-RECV:
-	IN	A, (SIOA + 1)		;RR0を読み込む
-	BIT	0, A			;受信チャラクタ・アベイラブルを確認
-	JR	Z, RECV
-	IN	A, (SIOA)		;受信
+EISATX:					;送信割り込み許可
+	PUSH	AF
+	LD	A, 01H			;SIOA WR0 (レジスタ1)
+	OUT	(SIOA + 1), A
+	LD	A, 12H			;SIOA WR1 (送信割り込み可)
+	OUT	(SIOA + 1), A
+	POP	AF
+	RET
+
+DISATX:					;送信割り込み禁止
+	PUSH	AF
+	LD	A, 01H			;SIOA WR0 (レジスタ1)
+	OUT	(SIOA + 1), A
+	LD	A, 10H			;SIOA WR1  (送信割り込み不可)
+	OUT	(SIOA + 1), A
+	POP	AF
 	RET
 
 ;**************************************
