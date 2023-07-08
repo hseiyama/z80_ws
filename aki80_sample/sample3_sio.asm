@@ -54,7 +54,7 @@ SIOACD:
 	DB	04H	;SIOA WR0 ポインタ４
 	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
 	DB	01H	;SIOA WR0 ポインタ１
-	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ
+	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ		(受信ｷｬﾗｸﾀ割り込み可)
 	DB	03H	;SIOA WR0 ポインタ３
 	DB	0C1H	;SIOA WR3 受信バッファ制御情報
 	DB	05H	;SIOA WR0 ポインタ５
@@ -65,9 +65,9 @@ SIOBCD:
 	DB	04H	;SIOB WR0 ポインタ４
 	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
 	DB	01H	;SIOB WR0 ポインタ１
-	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ
+	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ		(ｽﾃｰﾀｽ ｱﾌｪｸﾂ ﾍﾞｸﾄﾙ)
 	DB	02H	;SIOB WR0 ポインタ２
-	DB	0F0H	;SIOB WR2 インタラプトベクタ
+	DB	0F0H	;SIOB WR2 インタラプトベクタ			(割り込みﾍﾞｸﾄﾙ)
 	DB	03H	;SIOB WR0 ポインタ３
 	DB	0C1H	;SIOB WR3 受信バッファ制御情報
 	DB	05H	;SIOB WR0 ポインタ５
@@ -285,7 +285,7 @@ DISATX:					;送信割り込み禁止
 	PUSH	AF
 	LD	A, 01H			;SIOA WR0 (レジスタ1)
 	OUT	(SIOA + 1), A
-	LD	A, 10H			;SIOA WR1  (送信割り込み不可)
+	LD	A, 10H			;SIOA WR1 (送信割り込み不可)
 	OUT	(SIOA + 1), A
 	POP	AF
 	RET
