@@ -82,8 +82,8 @@ SIOBD:	equ	1AH		; (Ch.B not supported)
 SIOBC:	equ	1BH		; (Ch.B not supported)
 USE_Z80CTC = 1			; Use Z80 CTC for baudrate generator
 	IF USE_Z80CTC
-CTC0:	EQU	10H
-TC_V:	EQU	4		; 9600bps @ 9.8304MHz
+CTC0:	EQU	13H
+TC_V:	EQU	5		; 9600bps @ 12.228MHz
 	ENDIF			; USE_Z80CTC
 	ENDIF
 
