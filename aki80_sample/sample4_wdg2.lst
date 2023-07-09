@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "sample4_wdg2.asm"
-                        ; date: 2023-07-08 22:34:46
+                        ; date: 2023-07-09 04:12:31
                         ; --------------------------------------
 
 
@@ -162,11 +162,12 @@
 00AF: EDB3     [320|21] 	OTIR
 00B1: 3A2800   [333]    	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
 00B4: D3F0     [344]    	OUT	(WDM), A
-00B6: 3A2900   [357]    	LD	A, (DGCCD)		;割り込み優先順位セット
-00B9: D3F4     [368]    	OUT	(DGC), A
+00B6: 3EB1     [351]    	LD	A, WDDE			;ウォッチディセーブル
+00B8: D3F1     [362]    	OUT	(WDC), A
+00BA: 3A2900   [375]    	LD	A, (DGCCD)		;割り込み優先順位セット
+00BD: D3F4     [386]    	OUT	(DGC), A
                         ;WDOG:	LD	A, WDCL			;ウォッチドッグクリア
-00BB: 3EB1     [375]    	LD	A, WDDE			;ウォッチディセーブル
-00BD: D3F1     [386]    	OUT	(WDC), A
+                        ;	OUT	(WDC), A
 00BF: C9       [396]    	RET
                         
                         
@@ -334,16 +335,16 @@ CTC3CD  = $0026 =    38          sample4_wdg2.asm:91
 DBUG    = $0000 =     0          sample4_wdg2.asm:6
 DGC     = $00F4 =   244          sample4_wdg2.asm:26
 DGCCD   = $0029 =    41          sample4_wdg2.asm:97
-DISATX  = $0172 =   370          sample4_wdg2.asm:286
-EISATX  = $0167 =   359          sample4_wdg2.asm:277
-INTCT0  = $0115 =   277          sample4_wdg2.asm:214
-INTCT1  = $011F =   287          sample4_wdg2.asm:222
-INTPA   = $0152 =   338          sample4_wdg2.asm:259
-INTSA0  = $012B =   299          sample4_wdg2.asm:231
-INTSA2  = $013B =   315          sample4_wdg2.asm:241
-INTSA3  = $0148 =   328          sample4_wdg2.asm:250
+DISATX  = $0172 =   370          sample4_wdg2.asm:287
+EISATX  = $0167 =   359          sample4_wdg2.asm:278
+INTCT0  = $0115 =   277          sample4_wdg2.asm:215
+INTCT1  = $011F =   287          sample4_wdg2.asm:223
+INTPA   = $0152 =   338          sample4_wdg2.asm:260
+INTSA0  = $012B =   299          sample4_wdg2.asm:232
+INTSA2  = $013B =   315          sample4_wdg2.asm:242
+INTSA3  = $0148 =   328          sample4_wdg2.asm:251
 IOSET   = $0069 =   105          sample4_wdg2.asm:122
-LOOP    = $0113 =   275          sample4_wdg2.asm:211
+LOOP    = $0113 =   275          sample4_wdg2.asm:212
 PAEND   = $0008 =     8          sample4_wdg2.asm:44
 PBEND   = $000B =    11          sample4_wdg2.asm:51
 PIOA    = $001C =    28          sample4_wdg2.asm:10
@@ -352,14 +353,14 @@ PIOB    = $001E =    30          sample4_wdg2.asm:11
 PIOBCD  = $0008 =     8          sample4_wdg2.asm:45
 SAEND   = $0014 =    20          sample4_wdg2.asm:63
 SBEND   = $001F =    31          sample4_wdg2.asm:76
-SEND    = $015C =   348          sample4_wdg2.asm:267
-SEND1   = $015D =   349          sample4_wdg2.asm:269
+SEND    = $015C =   348          sample4_wdg2.asm:268
+SEND1   = $015D =   349          sample4_wdg2.asm:270
 SIOA    = $0018 =    24          sample4_wdg2.asm:14
 SIOACD  = $000B =    11          sample4_wdg2.asm:53
 SIOB    = $001A =    26          sample4_wdg2.asm:15
 SIOBCD  = $0014 =    20          sample4_wdg2.asm:64
-START   = $0100 =   256          sample4_wdg2.asm:193
-VALUE   = $8000 = 32768          sample4_wdg2.asm:301
+START   = $0100 =   256          sample4_wdg2.asm:194
+VALUE   = $8000 = 32768          sample4_wdg2.asm:302
 WDC     = $00F1 =   241          sample4_wdg2.asm:25
 WDCL    = $004E =    78          sample4_wdg2.asm:27 (unused)
 WDDE    = $00B1 =   177          sample4_wdg2.asm:28
@@ -369,5 +370,5 @@ _end    = $8001 = 32769          sample4_wdg2.asm:36 (unused)
 _size   = $8001 = 32769          sample4_wdg2.asm:36 (unused)
 
 
-total time: 0.1186 sec.
+total time: 0.1116 sec.
 no errors

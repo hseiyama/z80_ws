@@ -25,7 +25,7 @@ WDM	EQU	0F0H	;WDTER,WDTPR,HALTMR
 WDC	EQU	0F1H	;クリアー(4EH) ディセーブル(B1H)
 DGC	EQU	0F4H	;デイジーチェーン設定(bit0-bit2)
 WDCL	EQU	4EH	;ウォッチドッグクリアコマンドデータ
-WDDE	EQU	0B1H	;ウォッチディセーブルコマンドデータ
+HMCR	EQU	0DBH	;ホルトモードコントロールコマンドデータ
 
 
 ;********************************
@@ -76,7 +76,7 @@ SIOBCD:
 SBEND	EQU	$
 
 CTC0CD:
-	DB	0A5H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
+	DB	25H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
 	DB	240	;CTC0 タイムコンスタントレジスタ	(200Hz: 5ms周期)
 	DB	0E8H	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
 C0END	EQU	$
@@ -93,8 +93,13 @@ CTC3CD:
 	DB	5	;CTC3 タイムコンスタントレジスタ	(153.6kHz)
 C3END	EQU	$
 
-WDMCD:	DB	1BH	;ウォッチドッグ，ホルトモード設定	*****011 (ディセーブル)
-DGCCD:	DB	00H	;デイジーチェーン順位設定		00000***
+WDMCD:
+;	DB	0F3H	;ウォッチドッグ，ホルトモード設定	*****011 (STOPモード)
+;	DB	0E3H	;ウォッチドッグ，ホルトモード設定	*****011 (IDLE1モード)
+;	DB	0EBH	;ウォッチドッグ，ホルトモード設定	*****011 (IDLE2モード)
+	DB	0FBH	;ウォッチドッグ，ホルトモード設定	*****011 (RUNモード)
+DGCCD:
+	DB	00H	;デイジーチェーン順位設定		00000*** (CTC > SIO > PIO)
 
 
 ;*****************************
@@ -111,7 +116,13 @@ DGCCD:	DB	00H	;デイジーチェーン順位設定		00000***
 ;***********************
 
 	ORG	DBUG + 0066H
-	HALT
+	PUSH	AF
+	LD	A, 55H
+	OUT	(PIOB), A		;ポートBに出力
+	LD	A, '2'
+	CALL	SEND			;送信要求 (Aレジスタ)
+	POP	AF
+;	HALT
 	RETN			;ＮＭＩ禁止
 
 
@@ -152,14 +163,14 @@ IOSET:
 	LD	B, SBEND - SIOBCD
 	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
 	OTIR
+	LD	A, HMCR			;ホルトモードコントロール
+	OUT	(WDC), A
 	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
 	OUT	(WDM), A
-	LD	A, WDDE			;ウォッチディセーブル
-	OUT	(WDC), A
 	LD	A, (DGCCD)		;割り込み優先順位セット
 	OUT	(DGC), A
-;WDOG:	LD	A, WDCL			;ウォッチドッグクリア
-;	OUT	(WDC), A
+WDOG:	LD	A, WDCL			;ウォッチドッグクリア
+	OUT	(WDC), A
 	RET
 
 
@@ -171,7 +182,7 @@ IOSET:
 	ORG	DBUG + 00E4H
 	DW	INTPA			;PIOA割り込み
 	DW	0000H			;PIOB割り込み
-	DW	INTCT0			;CTC0割り込み
+	DW	0000H			;CTC0割り込み
 	DW	INTCT1			;CTC1割り込み
 	DW	0000H			;CTC2割り込み
 	DW	0000H			;CTC3割り込み
@@ -207,39 +218,50 @@ START:	DI				;セットアップ中、割り込み不可
 	EI
 
 	;ここからプログラムを書く
+	XOR	A			;A=0
+	LD	(FLAG), A		;FLAGを初期化
 	IN	A, (PIOA)		;ポートAを入力
-	LD	(VALUE), A		;変数を初期化
+	LD	(VALUE), A		;VALUEを初期化
+	LD	A, '0'
+	CALL	SEND			;送信要求 (Aレジスタ)
 LOOP:
+	CALL	SLEEP			;省電力モード移行判定
+	CALL	WDOG			;ウォッチドッグクリア
 	JR	LOOP
 
-INTCT0:					;CTC0割り込み (5ms周期)
-	PUSH	AF
-	LD	A, (VALUE)
-	OUT	(PIOB), A		;ポートBに出力
-	POP	AF
-	EI
-	RETI
+;CTC0割り込み (5ms周期)
+;INTCT0:
+;	PUSH	AF
+;	LD	A, (VALUE)
+;	OUT	(PIOB), A		;ポートBに出力
+;	POP	AF
+;	EI
+;	RETI
 
-INTCT1:					;CTC1割り込み (1s周期)
+;CTC1割り込み (1s周期)
+INTCT1:
 	PUSH	AF
 	LD	A, (VALUE)
-	INC	A			;変数を更新
+	INC	A			;VALUEを更新
 	LD	(VALUE), A
 	POP	AF
+	CALL	POUT			;ポート出力
 	EI
 	RETI
 
-INTSA0:					;SIOAトランスミッタバッファエンプティ
+;SIOAトランスミッタバッファエンプティ
+INTSA0:
 	PUSH	AF
 	CALL	DISATX			;送信割り込み禁止
 	LD	A, (VALUE)
-	ADD	A, 10H			;変数を更新
+	ADD	A, 10H			;VALUEを更新
 	LD	(VALUE), A
 	POP	AF
 	EI
 	RETI
 
-INTSA2:					;SIOAレシーバキャラクタアベイラブル
+;SIOAレシーバキャラクタアベイラブル
+INTSA2:
 	PUSH	AF
 	CALL	EISATX			;送信割り込み許可
 	IN	A, (SIOA)		;受信
@@ -248,23 +270,38 @@ INTSA2:					;SIOAレシーバキャラクタアベイラブル
 	EI
 	RETI
 
-INTSA3:					;SIOA特殊受信状態
+;SIOA特殊受信状態
+INTSA3:
 	PUSH	AF
-	LD	A, 0AAH			;変数を更新
+	LD	A, 0AAH
 	OUT	(PIOB), A		;ポートBに出力
 	POP	AF
-	HALT
 	EI
+	HALT				;HALT (割り込み許可)
+					;【注意】割込み処理中のHALTは復帰できない。
+					;　※タイマ割込み、NMIは機能せず
 	RETI
 
-INTPA:					;PIOA割り込み
+;PIOA割り込み
+INTPA:
 	PUSH	AF
-	IN	A, (PIOA)		;ポートAを入力
-	LD	(VALUE), A		;変数を再設定
+;	IN	A, (PIOA)		;ポートAを入力
+;	LD	(VALUE), A		;VALUEを再設定
+	LD	A, 0CCH			;
+	LD	(FLAG), A		;FLAG=0xCC
 	POP	AF
 	EI
 	RETI
 
+;ポート出力
+POUT:
+	PUSH	AF
+	LD	A, (VALUE)
+	OUT	(PIOB), A		;ポートBに出力
+	POP	AF
+	RET
+
+;送信要求 (Aレジスタ)
 SEND:
 	PUSH	AF
 SEND1:
@@ -275,7 +312,8 @@ SEND1:
 	OUT	(SIOA), A		;送信
 	RET
 
-EISATX:					;送信割り込み許可
+;送信割り込み許可
+EISATX:
 	PUSH	AF
 	LD	A, 01H			;SIOA WR0 (レジスタ1)
 	OUT	(SIOA + 1), A
@@ -284,7 +322,8 @@ EISATX:					;送信割り込み許可
 	POP	AF
 	RET
 
-DISATX:					;送信割り込み禁止
+;送信割り込み禁止
+DISATX:
 	PUSH	AF
 	LD	A, 01H			;SIOA WR0 (レジスタ1)
 	OUT	(SIOA + 1), A
@@ -293,6 +332,24 @@ DISATX:					;送信割り込み禁止
 	POP	AF
 	RET
 
+;省電力モード移行判定
+SLEEP:
+	PUSH	AF
+	LD	A, (FLAG)
+	CP	A, 0CCH			;FLAG==0xCC
+	JR	NZ, SLEEP1
+	XOR	A			;A=0
+	LD	(FLAG), A		;FLAGを初期化
+	LD	A, 0DBH
+	OUT	(PIOB), A		;ポートBに出力
+	HALT
+	LD	A, '1'
+	CALL	SEND			;送信要求 (Aレジスタ)
+SLEEP1:
+	POP	AF
+	RET
+
+
 ;**************************************
 ;	ＲＡＭ配置
 ;**************************************
@@ -300,5 +357,6 @@ DISATX:					;送信割り込み禁止
 	ORG	8000H
 
 VALUE:	DEFB	00H
+FLAG:	DEFB	00H
 
 	END
