@@ -42,6 +42,9 @@ TARGET:	equ	"Z80"
 	ORG	0038H
 	JP	RST38H
 
+	ORG	0066H
+	JP	RAM_B+0066H
+
 	;;
 	;; Entry point
 	;;
