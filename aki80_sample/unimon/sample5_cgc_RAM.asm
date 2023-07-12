@@ -50,30 +50,30 @@ PIOBCD:
 ;	DB	0E6H	;PIOBインタラプトベクタ			(未使用)
 PBEND	EQU	$
 
-SIOACD:
-	DB	18H	;SIOA WR0 チャンネルリセット
-	DB	04H	;SIOA WR0 ポインタ４
-	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
-	DB	01H	;SIOA WR0 ポインタ１
-	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ		(受信ｷｬﾗｸﾀ割り込み可)
-	DB	03H	;SIOA WR0 ポインタ３
-	DB	0C1H	;SIOA WR3 受信バッファ制御情報
-	DB	05H	;SIOA WR0 ポインタ５
-	DB	68H	;SIOA WR5 送信バッファ制御情報
-SAEND	EQU	$
-SIOBCD:
-	DB	18H	;SIOB WR0 チャンネルリセット
-	DB	04H	;SIOB WR0 ポインタ４
-	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
-	DB	01H	;SIOB WR0 ポインタ１
-	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ		(ｽﾃｰﾀｽ ｱﾌｪｸﾂ ﾍﾞｸﾄﾙ)
-	DB	02H	;SIOB WR0 ポインタ２
-	DB	0F0H	;SIOB WR2 インタラプトベクタ			(割り込みﾍﾞｸﾄﾙ)
-	DB	03H	;SIOB WR0 ポインタ３
-	DB	0C1H	;SIOB WR3 受信バッファ制御情報
-	DB	05H	;SIOB WR0 ポインタ５
-	DB	68H	;SIOB WR5 送信バッファ制御情報
-SBEND	EQU	$
+;SIOACD:
+;	DB	18H	;SIOA WR0 チャンネルリセット
+;	DB	04H	;SIOA WR0 ポインタ４
+;	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+;	DB	01H	;SIOA WR0 ポインタ１
+;	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ		(受信ｷｬﾗｸﾀ割り込み可)
+;	DB	03H	;SIOA WR0 ポインタ３
+;	DB	0C1H	;SIOA WR3 受信バッファ制御情報
+;	DB	05H	;SIOA WR0 ポインタ５
+;	DB	68H	;SIOA WR5 送信バッファ制御情報
+;SAEND	EQU	$
+;SIOBCD:
+;	DB	18H	;SIOB WR0 チャンネルリセット
+;	DB	04H	;SIOB WR0 ポインタ４
+;	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+;	DB	01H	;SIOB WR0 ポインタ１
+;	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ		(ｽﾃｰﾀｽ ｱﾌｪｸﾂ ﾍﾞｸﾄﾙ)
+;	DB	02H	;SIOB WR0 ポインタ２
+;	DB	0F0H	;SIOB WR2 インタラプトベクタ			(割り込みﾍﾞｸﾄﾙ)
+;	DB	03H	;SIOB WR0 ポインタ３
+;	DB	0C1H	;SIOB WR3 受信バッファ制御情報
+;	DB	05H	;SIOB WR0 ポインタ５
+;	DB	68H	;SIOB WR5 送信バッファ制御情報
+;SBEND	EQU	$
 
 CTC0CD:
 	DB	25H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
@@ -120,7 +120,9 @@ DGCCD:
 	LD	A, 55H
 	OUT	(PIOB), A		;ポートBに出力
 	LD	A, '2'
-	CALL	SEND			;送信要求 (Aレジスタ)
+;	CALL	SEND			;送信要求 (Aレジスタ)
+	LD	C, 02H
+	RST	30H			;CONOUT
 	POP	AF
 ;	HALT
 	RETN			;ＮＭＩ禁止
@@ -155,14 +157,14 @@ IOSET:
 	LD	B, C3END - CTC3CD
 	LD	C, CTC3
 	OTIR
-	LD	HL, SIOACD		;SIOAコマンドセットアップ
-	LD	B, SAEND - SIOACD
-	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
-	OTIR
-	LD	HL, SIOBCD		;SIOBコマンドセットアップ
-	LD	B, SBEND - SIOBCD
-	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
-	OTIR
+;	LD	HL, SIOACD		;SIOAコマンドセットアップ
+;	LD	B, SAEND - SIOACD
+;	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
+;	OTIR
+;	LD	HL, SIOBCD		;SIOBコマンドセットアップ
+;	LD	B, SBEND - SIOBCD
+;	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
+;	OTIR
 	LD	A, HMCR			;ホルトモードコントロール
 	OUT	(WDC), A
 	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
@@ -190,10 +192,10 @@ WDOG:	LD	A, WDCL			;ウォッチドッグクリア
 	DW	0000H			;SIOB外部／ステータス割り込み
 	DW	0000H			;SIOBレシーバキャラクタアベイラブル
 	DW	0000H			;SIOB特殊受信状態
-	DW	INTSA0			;SIOAトランスミッタバッファエンプティ
+	DW	0000H			;SIOAトランスミッタバッファエンプティ
 	DW	0000H			;SIOA外部／ステータス割り込み
-	DW	INTSA2			;SIOAレシーバキャラクタアベイラブル
-	DW	INTSA3			;SIOA特殊受信状態
+	DW	0000H			;SIOAレシーバキャラクタアベイラブル
+	DW	0000H			;SIOA特殊受信状態
 
 
 ;************************************************************************
@@ -223,8 +225,21 @@ START:	DI				;セットアップ中、割り込み不可
 	IN	A, (PIOA)		;ポートAを入力
 	LD	(VALUE), A		;VALUEを初期化
 	LD	A, '0'
-	CALL	SEND			;送信要求 (Aレジスタ)
+;	CALL	SEND			;送信要求 (Aレジスタ)
+	LD	C, 02H
+	RST	30H			;CONOUT
 LOOP:
+	LD	C, 05H
+	RST	30H			;CONST
+	JR	Z, LOOP1
+	LD	C, 04H
+	RST	30H			;CONIN
+	LD	C, 02H
+	RST	30H			;CONOUT
+	LD	A, (VALUE)
+	ADD	A, 10H			;VALUEを更新
+	LD	(VALUE), A
+LOOP1:
 	CALL	SLEEP			;省電力モード移行判定
 	CALL	WDOG			;ウォッチドッグクリア
 	JR	LOOP
@@ -250,37 +265,38 @@ INTCT1:
 	RETI
 
 ;SIOAトランスミッタバッファエンプティ
-INTSA0:
-	PUSH	AF
-	CALL	DISATX			;送信割り込み禁止
-	LD	A, (VALUE)
-	ADD	A, 10H			;VALUEを更新
-	LD	(VALUE), A
-	POP	AF
-	EI
-	RETI
+;INTSA0:
+;	PUSH	AF
+;	CALL	DISATX			;送信割り込み禁止
+;	LD	A, (VALUE)
+;	ADD	A, 10H			;VALUEを更新
+;	LD	(VALUE), A
+;	POP	AF
+;	EI
+;	RETI
 
 ;SIOAレシーバキャラクタアベイラブル
-INTSA2:
-	PUSH	AF
-	CALL	EISATX			;送信割り込み許可
-	IN	A, (SIOA)		;受信
-	CALL	SEND			;送信要求 (Aレジスタ)
-	POP	AF
-	EI
-	RETI
+;INTSA2:
+;	PUSH	AF
+;	CALL	EISATX			;送信割り込み許可
+;	IN	A, (SIOA)		;受信
+;	INC	A
+;	CALL	SEND			;送信要求 (Aレジスタ)
+;	POP	AF
+;	EI
+;	RETI
 
 ;SIOA特殊受信状態
-INTSA3:
-	PUSH	AF
-	LD	A, 0AAH
-	OUT	(PIOB), A		;ポートBに出力
-	POP	AF
-	EI
-	HALT				;HALT (割り込み許可)
-					;【注意】割込み処理中のHALTは復帰できない。
-					;　※タイマ割込み、NMIでは機能せず (RESETは有効)
-	RETI
+;INTSA3:
+;	PUSH	AF
+;	LD	A, 0AAH
+;	OUT	(PIOB), A		;ポートBに出力
+;	POP	AF
+;	EI
+;	HALT				;HALT (割り込み許可)
+;					;【注意】割込み処理中のHALTは復帰できない。
+;					;　※タイマ割込み、NMIでは機能せず (RESETは有効)
+;	RETI
 
 ;PIOA割り込み
 INTPA:
@@ -302,35 +318,35 @@ POUT:
 	RET
 
 ;送信要求 (Aレジスタ)
-SEND:
-	PUSH	AF
-SEND1:
-	IN	A, (SIOA + 1)		;RR0を読み込む
-	BIT	2, A			;送信バッファ・エンプティを確認
-	JR	Z, SEND1
-	POP	AF
-	OUT	(SIOA), A		;送信
-	RET
+;SEND:
+;	PUSH	AF
+;SEND1:
+;	IN	A, (SIOA + 1)		;RR0を読み込む
+;	BIT	2, A			;送信バッファ・エンプティを確認
+;	JR	Z, SEND1
+;	POP	AF
+;	OUT	(SIOA), A		;送信
+;	RET
 
 ;送信割り込み許可
-EISATX:
-	PUSH	AF
-	LD	A, 01H			;SIOA WR0 (レジスタ1)
-	OUT	(SIOA + 1), A
-	LD	A, 12H			;SIOA WR1 (送信割り込み可)
-	OUT	(SIOA + 1), A
-	POP	AF
-	RET
+;EISATX:
+;	PUSH	AF
+;	LD	A, 01H			;SIOA WR0 (レジスタ1)
+;	OUT	(SIOA + 1), A
+;	LD	A, 12H			;SIOA WR1 (送信割り込み可)
+;	OUT	(SIOA + 1), A
+;	POP	AF
+;	RET
 
 ;送信割り込み禁止
-DISATX:
-	PUSH	AF
-	LD	A, 01H			;SIOA WR0 (レジスタ1)
-	OUT	(SIOA + 1), A
-	LD	A, 10H			;SIOA WR1 (送信割り込み不可)
-	OUT	(SIOA + 1), A
-	POP	AF
-	RET
+;DISATX:
+;	PUSH	AF
+;	LD	A, 01H			;SIOA WR0 (レジスタ1)
+;	OUT	(SIOA + 1), A
+;	LD	A, 10H			;SIOA WR1 (送信割り込み不可)
+;	OUT	(SIOA + 1), A
+;	POP	AF
+;	RET
 
 ;省電力モード移行判定
 SLEEP:
@@ -344,7 +360,9 @@ SLEEP:
 	OUT	(PIOB), A		;ポートBに出力
 	HALT
 	LD	A, '1'
-	CALL	SEND			;送信要求 (Aレジスタ)
+;	CALL	SEND			;送信要求 (Aレジスタ)
+	LD	C, 02H
+	RST	30H			;CONOUT
 SLEEP1:
 	POP	AF
 	RET

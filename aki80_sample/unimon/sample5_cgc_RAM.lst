@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "sample5_cgc_RAM.asm"
-                        ; date: 2023-07-09 16:39:00
+                        ; date: 2023-07-12 22:35:39
                         ; --------------------------------------
 
 
@@ -56,64 +56,64 @@
                         ;	DB	0E6H	;PIOBインタラプトベクタ			(未使用)
 800B:                   PBEND	EQU	$
                         
-800B:                   SIOACD:
-800B: 18                	DB	18H	;SIOA WR0 チャンネルリセット
-800C: 04                	DB	04H	;SIOA WR0 ポインタ４
-800D: 44                	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
-800E: 01                	DB	01H	;SIOA WR0 ポインタ１
-800F: 10                	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ		(受信ｷｬﾗｸﾀ割り込み可)
-8010: 03                	DB	03H	;SIOA WR0 ポインタ３
-8011: C1                	DB	0C1H	;SIOA WR3 受信バッファ制御情報
-8012: 05                	DB	05H	;SIOA WR0 ポインタ５
-8013: 68                	DB	68H	;SIOA WR5 送信バッファ制御情報
-8014:                   SAEND	EQU	$
-8014:                   SIOBCD:
-8014: 18                	DB	18H	;SIOB WR0 チャンネルリセット
-8015: 04                	DB	04H	;SIOB WR0 ポインタ４
-8016: 44                	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
-8017: 01                	DB	01H	;SIOB WR0 ポインタ１
-8018: 04                	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ		(ｽﾃｰﾀｽ ｱﾌｪｸﾂ ﾍﾞｸﾄﾙ)
-8019: 02                	DB	02H	;SIOB WR0 ポインタ２
-801A: F0                	DB	0F0H	;SIOB WR2 インタラプトベクタ			(割り込みﾍﾞｸﾄﾙ)
-801B: 03                	DB	03H	;SIOB WR0 ポインタ３
-801C: C1                	DB	0C1H	;SIOB WR3 受信バッファ制御情報
-801D: 05                	DB	05H	;SIOB WR0 ポインタ５
-801E: 68                	DB	68H	;SIOB WR5 送信バッファ制御情報
-801F:                   SBEND	EQU	$
+                        ;SIOACD:
+                        ;	DB	18H	;SIOA WR0 チャンネルリセット
+                        ;	DB	04H	;SIOA WR0 ポインタ４
+                        ;	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+                        ;	DB	01H	;SIOA WR0 ポインタ１
+                        ;	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ		(受信ｷｬﾗｸﾀ割り込み可)
+                        ;	DB	03H	;SIOA WR0 ポインタ３
+                        ;	DB	0C1H	;SIOA WR3 受信バッファ制御情報
+                        ;	DB	05H	;SIOA WR0 ポインタ５
+                        ;	DB	68H	;SIOA WR5 送信バッファ制御情報
+                        ;SAEND	EQU	$
+                        ;SIOBCD:
+                        ;	DB	18H	;SIOB WR0 チャンネルリセット
+                        ;	DB	04H	;SIOB WR0 ポインタ４
+                        ;	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+                        ;	DB	01H	;SIOB WR0 ポインタ１
+                        ;	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ		(ｽﾃｰﾀｽ ｱﾌｪｸﾂ ﾍﾞｸﾄﾙ)
+                        ;	DB	02H	;SIOB WR0 ポインタ２
+                        ;	DB	0F0H	;SIOB WR2 インタラプトベクタ			(割り込みﾍﾞｸﾄﾙ)
+                        ;	DB	03H	;SIOB WR0 ポインタ３
+                        ;	DB	0C1H	;SIOB WR3 受信バッファ制御情報
+                        ;	DB	05H	;SIOB WR0 ポインタ５
+                        ;	DB	68H	;SIOB WR5 送信バッファ制御情報
+                        ;SBEND	EQU	$
                         
-801F:                   CTC0CD:
-801F: 25                	DB	25H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
-8020: F0                	DB	240	;CTC0 タイムコンスタントレジスタ	(200Hz: 5ms周期)
-8021: E8                	DB	0E8H	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
-8022:                   C0END	EQU	$
-8022:                   CTC1CD:
-8022: C5                	DB	0C5H	;CTC1 チャンネルコントロールワード	*******1 (カウンタモード)
-8023: C8                	DB	200	;CTC1 タイムコンスタントレジスタ	(1Hz: 1s周期)
-8024:                   C1END	EQU	$
-8024:                   CTC2CD:
-8024: 05                	DB	05H	;CTC2 チャンネルコントロールワード	*******1
-8025: 00                	DB	00H	;CTC2 タイムコンスタントレジスタ
-8026:                   C2END	EQU	$
-8026:                   CTC3CD:
-8026: 05                	DB	05H	;CTC3 チャンネルコントロールワード	*******1 (タイマモード)
-8027: 05                	DB	5	;CTC3 タイムコンスタントレジスタ	(153.6kHz)
-8028:                   C3END	EQU	$
+800B:                   CTC0CD:
+800B: 25                	DB	25H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
+800C: F0                	DB	240	;CTC0 タイムコンスタントレジスタ	(200Hz: 5ms周期)
+800D: E8                	DB	0E8H	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
+800E:                   C0END	EQU	$
+800E:                   CTC1CD:
+800E: C5                	DB	0C5H	;CTC1 チャンネルコントロールワード	*******1 (カウンタモード)
+800F: C8                	DB	200	;CTC1 タイムコンスタントレジスタ	(1Hz: 1s周期)
+8010:                   C1END	EQU	$
+8010:                   CTC2CD:
+8010: 05                	DB	05H	;CTC2 チャンネルコントロールワード	*******1
+8011: 00                	DB	00H	;CTC2 タイムコンスタントレジスタ
+8012:                   C2END	EQU	$
+8012:                   CTC3CD:
+8012: 05                	DB	05H	;CTC3 チャンネルコントロールワード	*******1 (タイマモード)
+8013: 05                	DB	5	;CTC3 タイムコンスタントレジスタ	(153.6kHz)
+8014:                   C3END	EQU	$
                         
-8028:                   WDMCD:
+8014:                   WDMCD:
                         ;	DB	0F3H	;ウォッチドッグ，ホルトモード設定	*****011 (STOPモード)
                         ;	DB	0E3H	;ウォッチドッグ，ホルトモード設定	*****011 (IDLE1モード)
                         ;	DB	0EBH	;ウォッチドッグ，ホルトモード設定	*****011 (IDLE2モード)
-8028: FB                	DB	0FBH	;ウォッチドッグ，ホルトモード設定	*****011 (RUNモード)
-8029:                   DGCCD:
-8029: 00                	DB	00H	;デイジーチェーン順位設定		00000*** (CTC > SIO > PIO)
+8014: FB                	DB	0FBH	;ウォッチドッグ，ホルトモード設定	*****011 (RUNモード)
+8015:                   DGCCD:
+8015: 00                	DB	00H	;デイジーチェーン順位設定		00000*** (CTC > SIO > PIO)
                         
                         
                         ;*****************************
                         ;	ＩＮＴ処理(IM1)
                         ;*****************************
                         
-802A: FFFFFFFF          	ORG	DBUG + 0038H
-802E: FF...             
+8016: FFFFFFFF          	ORG	DBUG + 0038H
+801A: FF...             
 8038: FB       [ 4]     	EI
 8039: ED4D     [18]     	RETI
                         
@@ -128,10 +128,12 @@
 8067: 3E55     [36]     	LD	A, 55H
 8069: D31E     [47]     	OUT	(PIOB), A		;ポートBに出力
 806B: 3E32     [54]     	LD	A, '2'
-806D: CD6C81   [71]     	CALL	SEND			;送信要求 (Aレジスタ)
-8070: F1       [81]     	POP	AF
+                        ;	CALL	SEND			;送信要求 (Aレジスタ)
+806D: 0E02     [61]     	LD	C, 02H
+806F: F7       [72]     	RST	30H			;CONOUT
+8070: F1       [82]     	POP	AF
                         ;	HALT
-8071: ED45     [95]     	RETN			;ＮＭＩ禁止
+8071: ED45     [96]     	RETN			;ＮＭＩ禁止
                         
                         
                         ;*******************************
@@ -147,39 +149,39 @@
 807F: 0603     [57]     	LD	B, PBEND - PIOBCD
 8081: 0E1F     [64]     	LD	C, PIOB + 1		;PIOBコマンドアドレス(1FH)
 8083: EDB3     [80|21]  	OTIR
-8085: 211F80   [90]     	LD	HL, CTC0CD		;CTC0コマンドセットアップ
+8085: 210B80   [90]     	LD	HL, CTC0CD		;CTC0コマンドセットアップ
 8088: 0603     [97]     	LD	B, C0END - CTC0CD
 808A: 0E10     [104]    	LD	C, CTC0
 808C: EDB3     [120|21] 	OTIR
-808E: 212280   [130]    	LD	HL, CTC1CD		;CTC1コマンドセットアップ
+808E: 210E80   [130]    	LD	HL, CTC1CD		;CTC1コマンドセットアップ
 8091: 0602     [137]    	LD	B, C1END - CTC1CD
 8093: 0E11     [144]    	LD	C, CTC1
 8095: EDB3     [160|21] 	OTIR
-8097: 212480   [170]    	LD	HL, CTC2CD		;CTC2コマンドセットアップ
+8097: 211080   [170]    	LD	HL, CTC2CD		;CTC2コマンドセットアップ
 809A: 0602     [177]    	LD	B, C2END - CTC2CD
 809C: 0E12     [184]    	LD	C, CTC2
 809E: EDB3     [200|21] 	OTIR
-80A0: 212680   [210]    	LD	HL, CTC3CD		;CTC3コマンドセットアップ
+80A0: 211280   [210]    	LD	HL, CTC3CD		;CTC3コマンドセットアップ
 80A3: 0602     [217]    	LD	B, C3END - CTC3CD
 80A5: 0E13     [224]    	LD	C, CTC3
 80A7: EDB3     [240|21] 	OTIR
-80A9: 210B80   [250]    	LD	HL, SIOACD		;SIOAコマンドセットアップ
-80AC: 0609     [257]    	LD	B, SAEND - SIOACD
-80AE: 0E19     [264]    	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
-80B0: EDB3     [280|21] 	OTIR
-80B2: 211480   [290]    	LD	HL, SIOBCD		;SIOBコマンドセットアップ
-80B5: 060B     [297]    	LD	B, SBEND - SIOBCD
-80B7: 0E1B     [304]    	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
-80B9: EDB3     [320|21] 	OTIR
-80BB: 3EDB     [327]    	LD	A, HMCR			;ホルトモードコントロール
-80BD: D3F1     [338]    	OUT	(WDC), A
-80BF: 3A2880   [351]    	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
-80C2: D3F0     [362]    	OUT	(WDM), A
-80C4: 3A2980   [375]    	LD	A, (DGCCD)		;割り込み優先順位セット
-80C7: D3F4     [386]    	OUT	(DGC), A
-80C9: 3E4E     [ 7]     WDOG:	LD	A, WDCL			;ウォッチドッグクリア
-80CB: D3F1     [18]     	OUT	(WDC), A
-80CD: C9       [28]     	RET
+                        ;	LD	HL, SIOACD		;SIOAコマンドセットアップ
+                        ;	LD	B, SAEND - SIOACD
+                        ;	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
+                        ;	OTIR
+                        ;	LD	HL, SIOBCD		;SIOBコマンドセットアップ
+                        ;	LD	B, SBEND - SIOBCD
+                        ;	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
+                        ;	OTIR
+80A9: 3EDB     [247]    	LD	A, HMCR			;ホルトモードコントロール
+80AB: D3F1     [258]    	OUT	(WDC), A
+80AD: 3A1480   [271]    	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
+80B0: D3F0     [282]    	OUT	(WDM), A
+80B2: 3A1580   [295]    	LD	A, (DGCCD)		;割り込み優先順位セット
+80B5: D3F4     [306]    	OUT	(DGC), A
+80B7: 3E4E     [ 7]     WDOG:	LD	A, WDCL			;ウォッチドッグクリア
+80B9: D3F1     [18]     	OUT	(WDC), A
+80BB: C9       [28]     	RET
                         
                         
                         ;**************************************
@@ -187,22 +189,22 @@
                         ;	アドレス値をそのまま記入
                         ;**************************************
                         
-80CE: FFFFFFFF          	ORG	DBUG + 00E4H
-80D2: FF...             
-80E4: 5A81              	DW	INTPA			;PIOA割り込み
+80BC: FFFFFFFF          	ORG	DBUG + 00E4H
+80C0: FF...             
+80E4: 4681              	DW	INTPA			;PIOA割り込み
 80E6: 0000              	DW	0000H			;PIOB割り込み
 80E8: 0000              	DW	0000H			;CTC0割り込み
-80EA: 2481              	DW	INTCT1			;CTC1割り込み
+80EA: 3781              	DW	INTCT1			;CTC1割り込み
 80EC: 0000              	DW	0000H			;CTC2割り込み
 80EE: 0000              	DW	0000H			;CTC3割り込み
 80F0: 0000              	DW	0000H			;SIOBトランスミッタバッファエンプティ
 80F2: 0000              	DW	0000H			;SIOB外部／ステータス割り込み
 80F4: 0000              	DW	0000H			;SIOBレシーバキャラクタアベイラブル
 80F6: 0000              	DW	0000H			;SIOB特殊受信状態
-80F8: 3381              	DW	INTSA0			;SIOAトランスミッタバッファエンプティ
+80F8: 0000              	DW	0000H			;SIOAトランスミッタバッファエンプティ
 80FA: 0000              	DW	0000H			;SIOA外部／ステータス割り込み
-80FC: 4381              	DW	INTSA2			;SIOAレシーバキャラクタアベイラブル
-80FE: 5081              	DW	INTSA3			;SIOA特殊受信状態
+80FC: 0000              	DW	0000H			;SIOAレシーバキャラクタアベイラブル
+80FE: 0000              	DW	0000H			;SIOA特殊受信状態
                         
                         
                         ;************************************************************************
@@ -232,11 +234,24 @@
 8112: DB1C     [87]     	IN	A, (PIOA)		;ポートAを入力
 8114: 320090   [100]    	LD	(VALUE), A		;VALUEを初期化
 8117: 3E30     [107]    	LD	A, '0'
-8119: CD6C81   [124]    	CALL	SEND			;送信要求 (Aレジスタ)
+                        ;	CALL	SEND			;送信要求 (Aレジスタ)
+8119: 0E02     [114]    	LD	C, 02H
+811B: F7       [125]    	RST	30H			;CONOUT
 811C:                   LOOP:
-811C: CD8D81   [17]     	CALL	SLEEP			;省電力モード移行判定
-811F: CDC980   [34]     	CALL	WDOG			;ウォッチドッグクリア
-8122: 18F8     [46]     	JR	LOOP
+811C: 0E05     [ 7]     	LD	C, 05H
+811E: F7       [18]     	RST	30H			;CONST
+811F: 280E     [25|30]  	JR	Z, LOOP1
+8121: 0E04     [32]     	LD	C, 04H
+8123: F7       [43]     	RST	30H			;CONIN
+8124: 0E02     [50]     	LD	C, 02H
+8126: F7       [61]     	RST	30H			;CONOUT
+8127: 3A0090   [74]     	LD	A, (VALUE)
+812A: C610     [81]     	ADD	A, 10H			;VALUEを更新
+812C: 320090   [94]     	LD	(VALUE), A
+812F:                   LOOP1:
+812F: CD5881   [17]     	CALL	SLEEP			;省電力モード移行判定
+8132: CDB780   [34]     	CALL	WDOG			;ウォッチドッグクリア
+8135: 18E5     [46]     	JR	LOOP
                         
                         ;CTC0割り込み (5ms周期)
                         ;INTCT0:
@@ -248,123 +263,126 @@
                         ;	RETI
                         
                         ;CTC1割り込み (1s周期)
-8124:                   INTCT1:
-8124: F5       [11]     	PUSH	AF
-8125: 3A0090   [24]     	LD	A, (VALUE)
-8128: 3C       [28]     	INC	A			;VALUEを更新
-8129: 320090   [41]     	LD	(VALUE), A
-812C: F1       [51]     	POP	AF
-812D: CD6481   [68]     	CALL	POUT			;ポート出力
-8130: FB       [72]     	EI
-8131: ED4D     [86]     	RETI
+8137:                   INTCT1:
+8137: F5       [11]     	PUSH	AF
+8138: 3A0090   [24]     	LD	A, (VALUE)
+813B: 3C       [28]     	INC	A			;VALUEを更新
+813C: 320090   [41]     	LD	(VALUE), A
+813F: F1       [51]     	POP	AF
+8140: CD5081   [68]     	CALL	POUT			;ポート出力
+8143: FB       [72]     	EI
+8144: ED4D     [86]     	RETI
                         
                         ;SIOAトランスミッタバッファエンプティ
-8133:                   INTSA0:
-8133: F5       [11]     	PUSH	AF
-8134: CD8281   [28]     	CALL	DISATX			;送信割り込み禁止
-8137: 3A0090   [41]     	LD	A, (VALUE)
-813A: C610     [48]     	ADD	A, 10H			;VALUEを更新
-813C: 320090   [61]     	LD	(VALUE), A
-813F: F1       [71]     	POP	AF
-8140: FB       [75]     	EI
-8141: ED4D     [89]     	RETI
+                        ;INTSA0:
+                        ;	PUSH	AF
+                        ;	CALL	DISATX			;送信割り込み禁止
+                        ;	LD	A, (VALUE)
+                        ;	ADD	A, 10H			;VALUEを更新
+                        ;	LD	(VALUE), A
+                        ;	POP	AF
+                        ;	EI
+                        ;	RETI
                         
                         ;SIOAレシーバキャラクタアベイラブル
-8143:                   INTSA2:
-8143: F5       [11]     	PUSH	AF
-8144: CD7781   [28]     	CALL	EISATX			;送信割り込み許可
-8147: DB18     [39]     	IN	A, (SIOA)		;受信
-8149: CD6C81   [56]     	CALL	SEND			;送信要求 (Aレジスタ)
-814C: F1       [66]     	POP	AF
-814D: FB       [70]     	EI
-814E: ED4D     [84]     	RETI
+                        ;INTSA2:
+                        ;	PUSH	AF
+                        ;	CALL	EISATX			;送信割り込み許可
+                        ;	IN	A, (SIOA)		;受信
+                        ;	INC	A
+                        ;	CALL	SEND			;送信要求 (Aレジスタ)
+                        ;	POP	AF
+                        ;	EI
+                        ;	RETI
                         
                         ;SIOA特殊受信状態
-8150:                   INTSA3:
-8150: F5       [11]     	PUSH	AF
-8151: 3EAA     [18]     	LD	A, 0AAH
-8153: D31E     [29]     	OUT	(PIOB), A		;ポートBに出力
-8155: F1       [39]     	POP	AF
-8156: FB       [43]     	EI
-8157: 76       [47]     	HALT				;HALT (割り込み許可)
-                        					;【注意】割込み処理中のHALTは復帰できない。
-                        					;　※タイマ割込み、NMIでは機能せず (RESETは有効)
-8158: ED4D     [61]     	RETI
+                        ;INTSA3:
+                        ;	PUSH	AF
+                        ;	LD	A, 0AAH
+                        ;	OUT	(PIOB), A		;ポートBに出力
+                        ;	POP	AF
+                        ;	EI
+                        ;	HALT				;HALT (割り込み許可)
+                        ;					;【注意】割込み処理中のHALTは復帰できない。
+                        ;					;　※タイマ割込み、NMIでは機能せず (RESETは有効)
+                        ;	RETI
                         
                         ;PIOA割り込み
-815A:                   INTPA:
-815A: F5       [11]     	PUSH	AF
+8146:                   INTPA:
+8146: F5       [11]     	PUSH	AF
                         ;	IN	A, (PIOA)		;ポートAを入力
                         ;	LD	(VALUE), A		;VALUEを再設定
-815B: 3ECC     [18]     	LD	A, 0CCH			;
-815D: 320190   [31]     	LD	(FLAG), A		;FLAG=0xCC
-8160: F1       [41]     	POP	AF
-8161: FB       [45]     	EI
-8162: ED4D     [59]     	RETI
+8147: 3ECC     [18]     	LD	A, 0CCH			;
+8149: 320190   [31]     	LD	(FLAG), A		;FLAG=0xCC
+814C: F1       [41]     	POP	AF
+814D: FB       [45]     	EI
+814E: ED4D     [59]     	RETI
                         
                         ;ポート出力
-8164:                   POUT:
-8164: F5       [11]     	PUSH	AF
-8165: 3A0090   [24]     	LD	A, (VALUE)
-8168: D31E     [35]     	OUT	(PIOB), A		;ポートBに出力
-816A: F1       [45]     	POP	AF
-816B: C9       [55]     	RET
+8150:                   POUT:
+8150: F5       [11]     	PUSH	AF
+8151: 3A0090   [24]     	LD	A, (VALUE)
+8154: D31E     [35]     	OUT	(PIOB), A		;ポートBに出力
+8156: F1       [45]     	POP	AF
+8157: C9       [55]     	RET
                         
                         ;送信要求 (Aレジスタ)
-816C:                   SEND:
-816C: F5       [11]     	PUSH	AF
-816D:                   SEND1:
-816D: DB19     [11]     	IN	A, (SIOA + 1)		;RR0を読み込む
-816F: CB57     [19]     	BIT	2, A			;送信バッファ・エンプティを確認
-8171: 28FA     [26|31]  	JR	Z, SEND1
-8173: F1       [36]     	POP	AF
-8174: D318     [47]     	OUT	(SIOA), A		;送信
-8176: C9       [57]     	RET
+                        ;SEND:
+                        ;	PUSH	AF
+                        ;SEND1:
+                        ;	IN	A, (SIOA + 1)		;RR0を読み込む
+                        ;	BIT	2, A			;送信バッファ・エンプティを確認
+                        ;	JR	Z, SEND1
+                        ;	POP	AF
+                        ;	OUT	(SIOA), A		;送信
+                        ;	RET
                         
                         ;送信割り込み許可
-8177:                   EISATX:
-8177: F5       [11]     	PUSH	AF
-8178: 3E01     [18]     	LD	A, 01H			;SIOA WR0 (レジスタ1)
-817A: D319     [29]     	OUT	(SIOA + 1), A
-817C: 3E12     [36]     	LD	A, 12H			;SIOA WR1 (送信割り込み可)
-817E: D319     [47]     	OUT	(SIOA + 1), A
-8180: F1       [57]     	POP	AF
-8181: C9       [67]     	RET
+                        ;EISATX:
+                        ;	PUSH	AF
+                        ;	LD	A, 01H			;SIOA WR0 (レジスタ1)
+                        ;	OUT	(SIOA + 1), A
+                        ;	LD	A, 12H			;SIOA WR1 (送信割り込み可)
+                        ;	OUT	(SIOA + 1), A
+                        ;	POP	AF
+                        ;	RET
                         
                         ;送信割り込み禁止
-8182:                   DISATX:
-8182: F5       [11]     	PUSH	AF
-8183: 3E01     [18]     	LD	A, 01H			;SIOA WR0 (レジスタ1)
-8185: D319     [29]     	OUT	(SIOA + 1), A
-8187: 3E10     [36]     	LD	A, 10H			;SIOA WR1 (送信割り込み不可)
-8189: D319     [47]     	OUT	(SIOA + 1), A
-818B: F1       [57]     	POP	AF
-818C: C9       [67]     	RET
+                        ;DISATX:
+                        ;	PUSH	AF
+                        ;	LD	A, 01H			;SIOA WR0 (レジスタ1)
+                        ;	OUT	(SIOA + 1), A
+                        ;	LD	A, 10H			;SIOA WR1 (送信割り込み不可)
+                        ;	OUT	(SIOA + 1), A
+                        ;	POP	AF
+                        ;	RET
                         
                         ;省電力モード移行判定
-818D:                   SLEEP:
-818D: F5       [11]     	PUSH	AF
-818E: 3A0190   [24]     	LD	A, (FLAG)
-8191: FECC     [31]     	CP	A, 0CCH			;FLAG==0xCC
-8193: 200E     [38|43]  	JR	NZ, SLEEP1
-8195: AF       [42]     	XOR	A			;A=0
-8196: 320190   [55]     	LD	(FLAG), A		;FLAGを初期化
-8199: 3EDB     [62]     	LD	A, 0DBH
-819B: D31E     [73]     	OUT	(PIOB), A		;ポートBに出力
-819D: 76       [77]     	HALT
-819E: 3E31     [84]     	LD	A, '1'
-81A0: CD6C81   [101]    	CALL	SEND			;送信要求 (Aレジスタ)
-81A3:                   SLEEP1:
-81A3: F1       [10]     	POP	AF
-81A4: C9       [20]     	RET
+8158:                   SLEEP:
+8158: F5       [11]     	PUSH	AF
+8159: 3A0190   [24]     	LD	A, (FLAG)
+815C: FECC     [31]     	CP	A, 0CCH			;FLAG==0xCC
+815E: 200E     [38|43]  	JR	NZ, SLEEP1
+8160: AF       [42]     	XOR	A			;A=0
+8161: 320190   [55]     	LD	(FLAG), A		;FLAGを初期化
+8164: 3EDB     [62]     	LD	A, 0DBH
+8166: D31E     [73]     	OUT	(PIOB), A		;ポートBに出力
+8168: 76       [77]     	HALT
+8169: 3E31     [84]     	LD	A, '1'
+                        ;	CALL	SEND			;送信要求 (Aレジスタ)
+816B: 0E02     [91]     	LD	C, 02H
+816D: F7       [102]    	RST	30H			;CONOUT
+816E:                   SLEEP1:
+816E: F1       [10]     	POP	AF
+816F: C9       [20]     	RET
                         
                         
                         ;**************************************
                         ;	ＲＡＭ配置
                         ;**************************************
                         
-81A5: FFFFFFFF          	ORG	DBUG + 1000H
-81A9: FF...             
+8170: FFFFFFFF          	ORG	DBUG + 1000H
+8174: FF...             
                         
 9000: 00                VALUE:	DEFB	00H
 9001: 00                FLAG:	DEFB	00H
@@ -378,59 +396,49 @@
 
 ; +++ global symbols +++
 
-C0END   = $8022 = 32802          sample5_cgc_RAM.asm:82
-C1END   = $8024 = 32804          sample5_cgc_RAM.asm:86
-C2END   = $8026 = 32806          sample5_cgc_RAM.asm:90
-C3END   = $8028 = 32808          sample5_cgc_RAM.asm:94
+C0END   = $800E = 32782          sample5_cgc_RAM.asm:82
+C1END   = $8010 = 32784          sample5_cgc_RAM.asm:86
+C2END   = $8012 = 32786          sample5_cgc_RAM.asm:90
+C3END   = $8014 = 32788          sample5_cgc_RAM.asm:94
 CTC0    = $0010 =    16          sample5_cgc_RAM.asm:18
-CTC0CD  = $801F = 32799          sample5_cgc_RAM.asm:78
+CTC0CD  = $800B = 32779          sample5_cgc_RAM.asm:78
 CTC1    = $0011 =    17          sample5_cgc_RAM.asm:19
-CTC1CD  = $8022 = 32802          sample5_cgc_RAM.asm:83
+CTC1CD  = $800E = 32782          sample5_cgc_RAM.asm:83
 CTC2    = $0012 =    18          sample5_cgc_RAM.asm:20
-CTC2CD  = $8024 = 32804          sample5_cgc_RAM.asm:87
+CTC2CD  = $8010 = 32784          sample5_cgc_RAM.asm:87
 CTC3    = $0013 =    19          sample5_cgc_RAM.asm:21
-CTC3CD  = $8026 = 32806          sample5_cgc_RAM.asm:91
+CTC3CD  = $8012 = 32786          sample5_cgc_RAM.asm:91
 DBUG    = $8000 = 32768          sample5_cgc_RAM.asm:6
 DGC     = $00F4 =   244          sample5_cgc_RAM.asm:26
-DGCCD   = $8029 = 32809          sample5_cgc_RAM.asm:101
-DISATX  = $8182 = 33154          sample5_cgc_RAM.asm:326
-EISATX  = $8177 = 33143          sample5_cgc_RAM.asm:316
-FLAG    = $9001 = 36865          sample5_cgc_RAM.asm:360
+DGCCD   = $8015 = 32789          sample5_cgc_RAM.asm:101
+FLAG    = $9001 = 36865          sample5_cgc_RAM.asm:378
 HMCR    = $00DB =   219          sample5_cgc_RAM.asm:28
-INTCT1  = $8124 = 33060          sample5_cgc_RAM.asm:242
-INTPA   = $815A = 33114          sample5_cgc_RAM.asm:286
-INTSA0  = $8133 = 33075          sample5_cgc_RAM.asm:253
-INTSA2  = $8143 = 33091          sample5_cgc_RAM.asm:264
-INTSA3  = $8150 = 33104          sample5_cgc_RAM.asm:274
-IOSET   = $8073 = 32883          sample5_cgc_RAM.asm:133
-LOOP    = $811C = 33052          sample5_cgc_RAM.asm:227
+INTCT1  = $8137 = 33079          sample5_cgc_RAM.asm:257
+INTPA   = $8146 = 33094          sample5_cgc_RAM.asm:302
+IOSET   = $8073 = 32883          sample5_cgc_RAM.asm:135
+LOOP    = $811C = 33052          sample5_cgc_RAM.asm:231
+LOOP1   = $812F = 33071          sample5_cgc_RAM.asm:242
 PAEND   = $8008 = 32776          sample5_cgc_RAM.asm:44
 PBEND   = $800B = 32779          sample5_cgc_RAM.asm:51
 PIOA    = $001C =    28          sample5_cgc_RAM.asm:10
 PIOACD  = $8003 = 32771          sample5_cgc_RAM.asm:38
 PIOB    = $001E =    30          sample5_cgc_RAM.asm:11
 PIOBCD  = $8008 = 32776          sample5_cgc_RAM.asm:45
-POUT    = $8164 = 33124          sample5_cgc_RAM.asm:297
-SAEND   = $8014 = 32788          sample5_cgc_RAM.asm:63
-SBEND   = $801F = 32799          sample5_cgc_RAM.asm:76
-SEND    = $816C = 33132          sample5_cgc_RAM.asm:305
-SEND1   = $816D = 33133          sample5_cgc_RAM.asm:307
-SIOA    = $0018 =    24          sample5_cgc_RAM.asm:14
-SIOACD  = $800B = 32779          sample5_cgc_RAM.asm:53
-SIOB    = $001A =    26          sample5_cgc_RAM.asm:15
-SIOBCD  = $8014 = 32788          sample5_cgc_RAM.asm:64
-SLEEP   = $818D = 33165          sample5_cgc_RAM.asm:336
-SLEEP1  = $81A3 = 33187          sample5_cgc_RAM.asm:348
-START   = $8100 = 33024          sample5_cgc_RAM.asm:205
-VALUE   = $9000 = 36864          sample5_cgc_RAM.asm:359
+POUT    = $8150 = 33104          sample5_cgc_RAM.asm:313
+SIOA    = $0018 =    24          sample5_cgc_RAM.asm:14 (unused)
+SIOB    = $001A =    26          sample5_cgc_RAM.asm:15 (unused)
+SLEEP   = $8158 = 33112          sample5_cgc_RAM.asm:352
+SLEEP1  = $816E = 33134          sample5_cgc_RAM.asm:366
+START   = $8100 = 33024          sample5_cgc_RAM.asm:207
+VALUE   = $9000 = 36864          sample5_cgc_RAM.asm:377
 WDC     = $00F1 =   241          sample5_cgc_RAM.asm:25
 WDCL    = $004E =    78          sample5_cgc_RAM.asm:27
 WDM     = $00F0 =   240          sample5_cgc_RAM.asm:24
-WDMCD   = $8028 = 32808          sample5_cgc_RAM.asm:96
-WDOG    = $80C9 = 32969          sample5_cgc_RAM.asm:172
+WDMCD   = $8014 = 32788          sample5_cgc_RAM.asm:96
+WDOG    = $80B7 = 32951          sample5_cgc_RAM.asm:174
 _end    = $9002 = 36866          sample5_cgc_RAM.asm:36 (unused)
 _size   = $1002 =  4098          sample5_cgc_RAM.asm:36 (unused)
 
 
-total time: 0.0257 sec.
+total time: 0.0328 sec.
 no errors
