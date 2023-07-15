@@ -1,0 +1,294 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "unimon2_base.asm"
+                        ; date: 2023-07-16 00:47:08
+                        ; --------------------------------------
+
+
+                        ;******************************
+                        ;Ｚ８４Ｃ０１５専用セットアップ
+                        ;******************************
+                        ;AKI80スタートアップアセンブラ
+                        
+8000:                   DBUG	EQU	8000H		;Universal Monitorを使用するときは8000H
+                        				;ROMに焼くときは0000H
+                        
+                        ;	パラレルポートI/Oアドレスセット
+001C:                   PIOA	EQU	1CH		;Ａポートデータ
+001E:                   PIOB	EQU	1EH		;Ｂポートデータ
+                        
+                        ;	ＳＩＯポートI/Oアドレスセット
+0018:                   SIOA	EQU	18H		;chA送信/受信バッファ
+001A:                   SIOB	EQU	1AH		;chB送信/受信バッファ
+                        
+                        ;	カウンタタイマI/Oアドレスセット
+0010:                   CTC0	EQU	10H		;CTC0のアドレス
+0011:                   CTC1	EQU	11H		;CTC1のアドレス
+0012:                   CTC2	EQU	12H		;CTC2のアドレス
+0013:                   CTC3	EQU	13H		;CTC3のアドレス
+                        
+                        ;	Ｚ８４Ｃ０１５専用I/Oアドレスセット
+00F0:                   WDM	EQU	0F0H	;WDTER,WDTPR,HALTMR
+00F1:                   WDC	EQU	0F1H	;クリアー(4EH) ディセーブル(B1H)
+00F4:                   DGC	EQU	0F4H	;デイジーチェーン設定(bit0-bit2)
+                        ;	Ｚ８４Ｃ０１５専用コマンドデータ
+004E:                   WDCL	EQU	4EH	;ウォッチドッグクリアコマンドデータ
+00B1:                   WDDE	EQU	0B1H	;ウォッチディセーブルコマンドデータ
+00DB:                   HMCR	EQU	0DBH	;ホルトモードコントロールコマンドデータ
+                        
+                        
+                        ;********************************
+                        ;	Ｉ／Ｏセットデータ
+                        ;********************************
+                        ;適宜変更のこと
+                        
+8000:                   	ORG	DBUG
+8000: C30081   [10]     	JP	START
+8003:                   PIOACD:
+8003: CF                	DB	0CFH	;PIOAモードワード			**001111 (モード3)
+8004: FF                	DB	0FFH	;PIOAデータディレクションワード		(全ビット入力)
+8005: 07                	DB	07H	;PIOAインタラプトコントロールワード	****0111 (割込み無効)
+                        ;	DB	0FEH	;PIOAインタラプトマスクワード		(未使用)
+                        ;	DB	0E4H	;PIOAインタラプトベクタ			(未使用)
+8006:                   PAEND	EQU	$
+8006:                   PIOBCD:
+8006: CF                	DB	0CFH	;PIOBモードワード			**001111 (モード3)
+8007: 00                	DB	00H	;PIOBデータディレクションワード		(全ビット出力)
+8008: 07                	DB	07H	;PIOBインタラプトコントロールワード	****0111 (割込み無効)
+                        ;	DB	00H	;PIOBインタラプトマスクワード		(未使用)
+                        ;	DB	0E6H	;PIOBインタラプトベクタ			(未使用)
+8009:                   PBEND	EQU	$
+                        
+                        ;SIOACD:
+                        ;	DB	18H	;SIOA WR0 チャンネルリセット
+                        ;	DB	04H	;SIOA WR0 ポインタ４
+                        ;	DB	44H	;SIOA WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+                        ;	DB	01H	;SIOA WR0 ポインタ１
+                        ;	DB	10H	;SIOA WR1 割り込み制御ウェイト／レディ		(受信ｷｬﾗｸﾀ割り込み可)
+                        ;	DB	03H	;SIOA WR0 ポインタ３
+                        ;	DB	0C1H	;SIOA WR3 受信バッファ制御情報
+                        ;	DB	05H	;SIOA WR0 ポインタ５
+                        ;	DB	68H	;SIOA WR5 送信バッファ制御情報
+                        ;SAEND	EQU	$
+                        ;SIOBCD:
+                        ;	DB	18H	;SIOB WR0 チャンネルリセット
+                        ;	DB	04H	;SIOB WR0 ポインタ４
+                        ;	DB	44H	;SIOB WR4 ｸﾛｯｸ ｼﾝｸﾓｰﾄﾞ ｽﾄｯﾌﾟ ﾋﾞｯﾄ ﾊﾟﾘﾃｨ ｲﾈｰﾌﾞﾙ
+                        ;	DB	01H	;SIOB WR0 ポインタ１
+                        ;	DB	04H	;SIOB WR1 割り込み制御ウェイト／レディ		(ｽﾃｰﾀｽ ｱﾌｪｸﾂ ﾍﾞｸﾄﾙ)
+                        ;	DB	02H	;SIOB WR0 ポインタ２
+                        ;	DB	0F0H	;SIOB WR2 インタラプトベクタ			(割り込みﾍﾞｸﾄﾙ)
+                        ;	DB	03H	;SIOB WR0 ポインタ３
+                        ;	DB	0C1H	;SIOB WR3 受信バッファ制御情報
+                        ;	DB	05H	;SIOB WR0 ポインタ５
+                        ;	DB	68H	;SIOB WR5 送信バッファ制御情報
+                        ;SBEND	EQU	$
+                        
+8009:                   CTC0CD:
+8009: 25                	DB	025H	;CTC0 チャンネルコントロールワード	*******1 (タイマモード)
+800A: F0                	DB	240	;CTC0 タイムコンスタントレジスタ	(200Hz: 5ms周期)
+800B: E8                	DB	0E8H	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
+800C:                   C0END	EQU	$
+800C:                   CTC1CD:
+800C: 45                	DB	045H	;CTC1 チャンネルコントロールワード	*******1 (カウンタモード)
+800D: C8                	DB	200	;CTC1 タイムコンスタントレジスタ	(1Hz: 1s周期)
+800E:                   C1END	EQU	$
+800E:                   CTC2CD:
+800E: 05                	DB	05H	;CTC2 チャンネルコントロールワード	*******1
+800F: 00                	DB	00H	;CTC2 タイムコンスタントレジスタ
+8010:                   C2END	EQU	$
+                        ;CTC3CD:
+                        ;	DB	05H	;CTC3 チャンネルコントロールワード	*******1 (タイマモード)
+                        ;	DB	5	;CTC3 タイムコンスタントレジスタ	(153.6kHz)
+                        ;C3END	EQU	$
+                        
+8010:                   WDMCD:
+                        ;	DB	0F3H	;ウォッチドッグ，ホルトモード設定	*****011 (STOPモード)
+                        ;	DB	0E3H	;ウォッチドッグ，ホルトモード設定	*****011 (IDLE1モード)
+                        ;	DB	0EBH	;ウォッチドッグ，ホルトモード設定	*****011 (IDLE2モード)
+8010: FB                	DB	0FBH	;ウォッチドッグ，ホルトモード設定	*****011 (RUNモード)
+8011:                   DGCCD:
+8011: 00                	DB	00H	;デイジーチェーン順位設定		00000*** (CTC > SIO > PIO)
+                        
+                        
+                        ;*****************************
+                        ;	ＩＮＴ処理(IM1)
+                        ;*****************************
+                        
+8012: FFFFFFFF          	ORG	DBUG + 0038H
+8016: FF...             
+8038:                   INT:
+8038: FB       [ 4]     	EI
+8039: ED4D     [18]     	RETI
+                        
+                        
+                        ;***********************
+                        ;	ＮＭＩ処理
+                        ;***********************
+                        
+803B: FFFFFFFF          	ORG	DBUG + 0066H
+803F: FF...             
+8066:                   NMI:
+8066: F5       [11]     	PUSH	AF
+8067: 3EFF     [18]     	LD	A, 0FFH
+8069: 321D81   [31]     	LD	(DBGC), A		;デバッグ用命令に書換え
+806C: F1       [41]     	POP	AF
+806D: ED45     [55]     	RETN
+                        
+                        
+                        ;*******************************
+                        ;	Ｉ／Ｏセットアップ
+                        ;*******************************
+                        
+806F: FFFFFFFF          	ORG	DBUG + 0080H
+8073: FF...             
+8080:                   IOSET:
+8080: 210380   [10]     	LD	HL, PIOACD		;PIOAコマンドセットアップ
+8083: 0603     [17]     	LD	B, PAEND - PIOACD
+8085: 0E1D     [24]     	LD	C, PIOA + 1		;PIOAコマンドアドレス(1DH)
+8087: EDB3     [40|21]  	OTIR
+8089: 210680   [50]     	LD	HL, PIOBCD		;PIOBコマンドセットアップ
+808C: 0603     [57]     	LD	B, PBEND - PIOBCD
+808E: 0E1F     [64]     	LD	C, PIOB + 1		;PIOBコマンドアドレス(1FH)
+8090: EDB3     [80|21]  	OTIR
+8092: 210980   [90]     	LD	HL, CTC0CD		;CTC0コマンドセットアップ
+8095: 0603     [97]     	LD	B, C0END - CTC0CD
+8097: 0E10     [104]    	LD	C, CTC0
+8099: EDB3     [120|21] 	OTIR
+809B: 210C80   [130]    	LD	HL, CTC1CD		;CTC1コマンドセットアップ
+809E: 0602     [137]    	LD	B, C1END - CTC1CD
+80A0: 0E11     [144]    	LD	C, CTC1
+80A2: EDB3     [160|21] 	OTIR
+80A4: 210E80   [170]    	LD	HL, CTC2CD		;CTC2コマンドセットアップ
+80A7: 0602     [177]    	LD	B, C2END - CTC2CD
+80A9: 0E12     [184]    	LD	C, CTC2
+80AB: EDB3     [200|21] 	OTIR
+                        ;	LD	HL, CTC3CD		;CTC3コマンドセットアップ	[UniMon]競合箇所
+                        ;	LD	B, C3END - CTC3CD
+                        ;	LD	C, CTC3
+                        ;	OTIR
+                        ;	LD	HL, SIOACD		;SIOAコマンドセットアップ	[UniMon]競合箇所
+                        ;	LD	B, SAEND - SIOACD
+                        ;	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
+                        ;	OTIR
+                        ;	LD	HL, SIOBCD		;SIOBコマンドセットアップ	[UniMon]競合箇所
+                        ;	LD	B, SBEND - SIOBCD
+                        ;	LD	C, SIOB + 1		;SIOBコマンドアドレス(1BH)
+                        ;	OTIR
+80AD: 3EDB     [207]    	LD	A, HMCR			;ホルトモードコントロール
+80AF: D3F1     [218]    	OUT	(WDC), A
+80B1: 3A1080   [231]    	LD	A, (WDMCD)		;ウォッチドッグ，ホルトモードセット
+80B4: D3F0     [242]    	OUT	(WDM), A
+80B6: 3A1180   [255]    	LD	A, (DGCCD)		;割り込み優先順位セット
+80B9: D3F4     [266]    	OUT	(DGC), A
+80BB: 3E4E     [ 7]     WDOG:	LD	A, WDCL			;ウォッチドッグクリア
+80BD: D3F1     [18]     	OUT	(WDC), A
+80BF: C9       [28]     	RET
+                        
+                        
+                        ;**************************************
+                        ;	割り込みアドレス，DWL設定
+                        ;	アドレス値をそのまま記入
+                        ;**************************************
+                        
+80C0: FFFFFFFF          	ORG	DBUG + 00E4H
+80C4: FF...             
+80E4: 0000              	DW	0000H			;PIOA割り込み
+80E6: 0000              	DW	0000H			;PIOB割り込み
+80E8: 0000              	DW	0000H			;CTC0割り込み
+80EA: 0000              	DW	0000H			;CTC1割り込み
+80EC: 0000              	DW	0000H			;CTC2割り込み
+80EE: 0000              	DW	0000H			;CTC3割り込み
+80F0: 0000              	DW	0000H			;SIOBトランスミッタバッファエンプティ
+80F2: 0000              	DW	0000H			;SIOB外部／ステータス割り込み
+80F4: 0000              	DW	0000H			;SIOBレシーバキャラクタアベイラブル
+80F6: 0000              	DW	0000H			;SIOB特殊受信状態
+80F8: 0000              	DW	0000H			;SIOAトランスミッタバッファエンプティ
+80FA: 0000              	DW	0000H			;SIOA外部／ステータス割り込み
+80FC: 0000              	DW	0000H			;SIOAレシーバキャラクタアベイラブル
+80FE: 0000              	DW	0000H			;SIOA特殊受信状態
+                        
+                        
+                        ;************************************************************************
+                        ;	メインルーチンスタート
+                        ;************************************************************************
+                        
+                        	ORG	DBUG + 0100H
+                        
+8100: F3       [ 4]     START:	DI				;セットアップ中、割り込み不可
+8101: ED5E     [12]     	IM	2			;割り込みモード２
+8103: 3E80     [19]     	LD	A, DBUG / 100H		;割り込み上位ベクタロード
+8105: ED47     [28]     	LD	I, A
+8107: 310000   [38]     	LD	SP, 0000H		;スタックポインタ FFFFHから
+                        
+810A: CD8080   [55]     	CALL	IOSET
+810D: FB       [59]     	EI
+                        
+                        	;ここからプログラムを書く
+810E:                   LOOP:
+810E: 11E001   [10]     	LD	DE, 01E0H
+8111: CB23     [18]     	SLA	E
+8113: CB12     [26]     	RL	D			;DEを2倍
+8115: 01C00F   [36]     	LD	BC, 0FC0H
+8118: CB38     [44]     	SRL	B
+811A: CB19     [52]     	RR	C			;BCを1/2倍
+811C: 76       [56]     	HALT
+811D: 00       [ 4]     DBGC:	NOP				;[UniMon] デバッグ用ダミー命令
+811E: 18EE     [16]     	JR	LOOP
+                        
+                        
+                        ;**************************************
+                        ;	ＲＡＭ配置
+                        ;**************************************
+                        
+8120: FFFFFFFF          	ORG	DBUG + 1000H
+8124: FF...             
+                        
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $8000 = 32768,  size = $1000 =  4096
+
+; +++ global symbols +++
+
+C0END   = $800C = 32780          unimon2_base.asm:84
+C1END   = $800E = 32782          unimon2_base.asm:88
+C2END   = $8010 = 32784          unimon2_base.asm:92
+CTC0    = $0010 =    16          unimon2_base.asm:18
+CTC0CD  = $8009 = 32777          unimon2_base.asm:80
+CTC1    = $0011 =    17          unimon2_base.asm:19
+CTC1CD  = $800C = 32780          unimon2_base.asm:85
+CTC2    = $0012 =    18          unimon2_base.asm:20
+CTC2CD  = $800E = 32782          unimon2_base.asm:89
+CTC3    = $0013 =    19          unimon2_base.asm:21 (unused)
+DBGC    = $811D = 33053          unimon2_base.asm:225
+DBUG    = $8000 = 32768          unimon2_base.asm:6
+DGC     = $00F4 =   244          unimon2_base.asm:26
+DGCCD   = $8011 = 32785          unimon2_base.asm:103
+HMCR    = $00DB =   219          unimon2_base.asm:30
+INT     = $8038 = 32824          unimon2_base.asm:112 (unused)
+IOSET   = $8080 = 32896          unimon2_base.asm:135
+LOOP    = $810E = 33038          unimon2_base.asm:217
+NMI     = $8066 = 32870          unimon2_base.asm:122 (unused)
+PAEND   = $8006 = 32774          unimon2_base.asm:46
+PBEND   = $8009 = 32777          unimon2_base.asm:53
+PIOA    = $001C =    28          unimon2_base.asm:10
+PIOACD  = $8003 = 32771          unimon2_base.asm:40
+PIOB    = $001E =    30          unimon2_base.asm:11
+PIOBCD  = $8006 = 32774          unimon2_base.asm:47
+SIOA    = $0018 =    24          unimon2_base.asm:14 (unused)
+SIOB    = $001A =    26          unimon2_base.asm:15 (unused)
+START   = $8100 = 33024          unimon2_base.asm:207
+WDC     = $00F1 =   241          unimon2_base.asm:25
+WDCL    = $004E =    78          unimon2_base.asm:28
+WDDE    = $00B1 =   177          unimon2_base.asm:29 (unused)
+WDM     = $00F0 =   240          unimon2_base.asm:24
+WDMCD   = $8010 = 32784          unimon2_base.asm:98
+WDOG    = $80BB = 32955          unimon2_base.asm:174 (unused)
+_end    = $9000 = 36864          unimon2_base.asm:38 (unused)
+_size   = $1000 =  4096          unimon2_base.asm:38 (unused)
+
+
+total time: 0.0219 sec.
+no errors
