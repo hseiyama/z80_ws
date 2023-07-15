@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "unimon1_dbg.asm"
-                        ; date: 2023-07-15 04:43:32
+                        ; date: 2023-07-16 00:24:02
                         ; --------------------------------------
 
 
@@ -130,22 +130,24 @@
 8066:                   NMI:
 8066: F5       [11]     	PUSH	AF
 8067: C5       [22]     	PUSH	BC
-8068: 3E32     [29]     	LD	A, '2'
-806A: 0E02     [36]     	LD	C, 02H
-806C: F7       [47]     	RST	30H			;[UniMon] CONOUT
-806D: 3EFF     [54]     	LD	A, 0FFH
-806F: 321F81   [67]     	LD	(DBGP), A		;デバッグ用命令に書換え
-8072: C1       [77]     	POP	BC
-8073: F1       [87]     	POP	AF
-8074: ED45     [101]    	RETN
+8068: E5       [33]     	PUSH	HL
+8069: 218D81   [43]     	LD	HL, MSGNM
+806C: 0E03     [50]     	LD	C, 03H
+806E: F7       [61]     	RST	30H			;[UniMon] STROUT
+806F: 3EFF     [68]     	LD	A, 0FFH
+8071: 322581   [81]     	LD	(DBGP), A		;デバッグ用命令に書換え
+8074: E1       [91]     	POP	HL
+8075: C1       [101]    	POP	BC
+8076: F1       [111]    	POP	AF
+8077: ED45     [125]    	RETN
                         
                         
                         ;*******************************
                         ;	Ｉ／Ｏセットアップ
                         ;*******************************
                         
-8076: FFFFFFFF          	ORG	DBUG + 0080H
-807A: FF...             
+8079: FFFFFFFF          	ORG	DBUG + 0080H
+807D: FFFFFF            
 8080:                   IOSET:
 8080: 210380   [10]     	LD	HL, PIOACD		;PIOAコマンドセットアップ
 8083: 0605     [17]     	LD	B, PAEND - PIOACD
@@ -197,10 +199,10 @@
                         
 80C0: FFFFFFFF          	ORG	DBUG + 00E4H
 80C4: FF...             
-80E4: 5381              	DW	INTPA			;PIOA割り込み
+80E4: 5881              	DW	INTPA			;PIOA割り込み
 80E6: 0000              	DW	0000H			;PIOB割り込み
-80E8: 3D81              	DW	INTCT0			;CTC0割り込み
-80EA: 4781              	DW	INTCT1			;CTC1割り込み
+80E8: 4281              	DW	INTCT0			;CTC0割り込み
+80EA: 4C81              	DW	INTCT1			;CTC1割り込み
 80EC: 0000              	DW	0000H			;CTC2割り込み
 80EE: 0000              	DW	0000H			;CTC3割り込み
 80F0: 0000              	DW	0000H			;SIOBトランスミッタバッファエンプティ
@@ -231,78 +233,105 @@
                         	;ここからプログラムを書く
 810E: DB1C     [70]     	IN	A, (PIOA)		;ポートAを入力
 8110: 320090   [83]     	LD	(VALUE), A		;VALUEを初期化
-8113: 3E30     [90]     	LD	A, '0'
-8115: 0E02     [97]     	LD	C, 02H
-8117: F7       [108]    	RST	30H			;[UniMon] CONOUT
-8118:                   LOOP:
-8118: CD2381   [17]     	CALL	LPBK			;ループバック
-811B: CDBB80   [34]     	CALL	WDOG			;ウォッチドッグクリア
-811E: F3       [38]     	DI
-811F: 00       [ 4]     DBGP:	NOP				;[UniMon] デバッグ用ダミー命令
-8120: FB       [ 8]     	EI
-8121: 18F5     [20]     	JR	LOOP
+8113: 216C81   [93]     	LD	HL, MSGST
+8116: 0E03     [100]    	LD	C, 03H
+8118: F7       [111]    	RST	30H			;[UniMon] STROUT
+8119:                   LOOP:
+8119: CD2881   [17]     	CALL	LPBK			;ループバック
+811C: CDBB80   [34]     	CALL	WDOG			;ウォッチドッグクリア
+811F: CD2481   [51]     	CALL	DEBUG			;デバッグ用ルーチン
+8122: 18F5     [63]     	JR	LOOP
+                        
+                        ;デバッグ用ルーチン
+8124:                   DEBUG:
+8124: F3       [ 4]     	DI
+8125: 00       [ 4]     DBGP:	NOP				;[UniMon] デバッグ用ダミー命令
+8126: FB       [ 8]     	EI
+8127: C9       [18]     	RET
                         
                         ;ループバック
-8123:                   LPBK:
-8123: F5       [11]     	PUSH	AF
-8124: C5       [22]     	PUSH	BC
-8125: 0E05     [29]     	LD	C, 05H
-8127: F7       [40]     	RST	30H			;[UniMon] CONST
-8128: 2810     [47|52]  	JR	Z, LPBKE
-812A: 0E04     [54]     	LD	C, 04H
-812C: F7       [65]     	RST	30H			;[UniMon] CONIN
-812D: 0E02     [72]     	LD	C, 02H
-812F: F7       [83]     	RST	30H			;[UniMon] CONOUT
-8130: F3       [87]     	DI				;割り込み禁止
-8131: 3A0090   [100]    	LD	A, (VALUE)
-8134: C610     [107]    	ADD	A, 10H			;VALUEを更新
-8136: 320090   [120]    	LD	(VALUE), A
-8139: FB       [124]    	EI				;割り込み許可
-813A:                   LPBKE:
-813A: C1       [10]     	POP	BC
-813B: F1       [20]     	POP	AF
-813C: C9       [30]     	RET
+8128:                   LPBK:
+8128: F5       [11]     	PUSH	AF
+8129: C5       [22]     	PUSH	BC
+812A: 0E05     [29]     	LD	C, 05H
+812C: F7       [40]     	RST	30H			;[UniMon] CONST
+812D: 2810     [47|52]  	JR	Z, LPBKE
+812F: 0E04     [54]     	LD	C, 04H
+8131: F7       [65]     	RST	30H			;[UniMon] CONIN
+8132: 0E02     [72]     	LD	C, 02H
+8134: F7       [83]     	RST	30H			;[UniMon] CONOUT
+8135: F3       [87]     	DI				;割り込み禁止
+8136: 3A0090   [100]    	LD	A, (VALUE)
+8139: C610     [107]    	ADD	A, 10H			;VALUEを更新
+813B: 320090   [120]    	LD	(VALUE), A
+813E: FB       [124]    	EI				;割り込み許可
+813F:                   LPBKE:
+813F: C1       [10]     	POP	BC
+8140: F1       [20]     	POP	AF
+8141: C9       [30]     	RET
                         
                         ;CTC0割り込み (5ms周期)
-813D:                   INTCT0:
-813D: F5       [11]     	PUSH	AF
-813E: 3A0090   [24]     	LD	A, (VALUE)
-8141: D31E     [35]     	OUT	(PIOB), A		;ポートBに出力
-8143: F1       [45]     	POP	AF
-8144: FB       [49]     	EI
-8145: ED4D     [63]     	RETI
+8142:                   INTCT0:
+8142: F5       [11]     	PUSH	AF
+8143: 3A0090   [24]     	LD	A, (VALUE)
+8146: D31E     [35]     	OUT	(PIOB), A		;ポートBに出力
+8148: F1       [45]     	POP	AF
+8149: FB       [49]     	EI
+814A: ED4D     [63]     	RETI
                         
                         ;CTC1割り込み (1s周期)
-8147:                   INTCT1:
-8147: F5       [11]     	PUSH	AF
-8148: 3A0090   [24]     	LD	A, (VALUE)
-814B: 3C       [28]     	INC	A			;VALUEを更新
-814C: 320090   [41]     	LD	(VALUE), A
-814F: F1       [51]     	POP	AF
-8150: FB       [55]     	EI
-8151: ED4D     [69]     	RETI
+814C:                   INTCT1:
+814C: F5       [11]     	PUSH	AF
+814D: 3A0090   [24]     	LD	A, (VALUE)
+8150: 3C       [28]     	INC	A			;VALUEを更新
+8151: 320090   [41]     	LD	(VALUE), A
+8154: F1       [51]     	POP	AF
+8155: FB       [55]     	EI
+8156: ED4D     [69]     	RETI
                         
                         ;PIOA割り込み
-8153:                   INTPA:
-8153: F5       [11]     	PUSH	AF
-8154: C5       [22]     	PUSH	BC
-8155: DB1C     [33]     	IN	A, (PIOA)		;ポートAを入力
-8157: 320090   [46]     	LD	(VALUE), A		;VALUEを更新
-815A: 3E31     [53]     	LD	A, '1'
-815C: 0E02     [60]     	LD	C, 02H
-815E: F7       [71]     	RST	30H			;[UniMon] CONOUT
-815F: C1       [81]     	POP	BC
-8160: F1       [91]     	POP	AF
-8161: FB       [95]     	EI
-8162: ED4D     [109]    	RETI
+8158:                   INTPA:
+8158: F5       [11]     	PUSH	AF
+8159: C5       [22]     	PUSH	BC
+815A: E5       [33]     	PUSH	HL
+815B: DB1C     [44]     	IN	A, (PIOA)		;ポートAを入力
+815D: 320090   [57]     	LD	(VALUE), A		;VALUEを更新
+8160: 217D81   [67]     	LD	HL, MSGEX
+8163: 0E03     [74]     	LD	C, 03H
+8165: F7       [85]     	RST	30H			;[UniMon] STROUT
+8166: E1       [95]     	POP	HL
+8167: C1       [105]    	POP	BC
+8168: F1       [115]    	POP	AF
+8169: FB       [119]    	EI
+816A: ED4D     [133]    	RETI
                         
+                        ;文字列定義
+000D:                   CR	EQU	0x0D
+000A:                   LF	EQU	0x0A
+                        
+816C:                   MSGST:
+816C: 3E537461          	DEFB	">StartProgram.",CR,LF,00H
+8170: 72745072          
+8174: 6F677261          
+8178: 6D2E0D0A          
+817C: 00                
+817D:                   MSGEX:
+817D: 3E455849          	DEFB	">EXInterrupt.",CR,LF,00H
+8181: 6E746572          
+8185: 72757074          
+8189: 2E0D0A00          
+818D:                   MSGNM:
+818D: 3E4E4D49          	DEFB	">NMInterrupt.",CR,LF,00H
+8191: 6E746572          
+8195: 72757074          
+8199: 2E0D0A00          
                         
                         ;**************************************
                         ;	ＲＡＭ配置
                         ;**************************************
                         
-8164: FFFFFFFF          	ORG	DBUG + 1000H
-8168: FF...             
+819D: FFFFFFFF          	ORG	DBUG + 1000H
+81A1: FF...             
                         
 9000: 00                VALUE:	DEFB	00H
                         
@@ -319,6 +348,7 @@ C0END   = $800E = 32782          unimon1_dbg.asm:84
 C1END   = $8010 = 32784          unimon1_dbg.asm:88
 C2END   = $8012 = 32786          unimon1_dbg.asm:92
 C3END   = $8014 = 32788          unimon1_dbg.asm:96 (unused)
+CR      = $000D =    13          unimon1_dbg.asm:299
 CTC0    = $0010 =    16          unimon1_dbg.asm:18
 CTC0CD  = $800B = 32779          unimon1_dbg.asm:80
 CTC1    = $0011 =    17          unimon1_dbg.asm:19
@@ -327,19 +357,24 @@ CTC2    = $0012 =    18          unimon1_dbg.asm:20
 CTC2CD  = $8010 = 32784          unimon1_dbg.asm:89
 CTC3    = $0013 =    19          unimon1_dbg.asm:21 (unused)
 CTC3CD  = $8012 = 32786          unimon1_dbg.asm:93 (unused)
-DBGP    = $811F = 33055          unimon1_dbg.asm:231
+DBGP    = $8125 = 33061          unimon1_dbg.asm:238
 DBUG    = $8000 = 32768          unimon1_dbg.asm:6
+DEBUG   = $8124 = 33060          unimon1_dbg.asm:236
 DGC     = $00F4 =   244          unimon1_dbg.asm:26
 DGCCD   = $8015 = 32789          unimon1_dbg.asm:103
 HMCR    = $00DB =   219          unimon1_dbg.asm:30
 INT     = $8038 = 32824          unimon1_dbg.asm:112 (unused)
-INTCT0  = $813D = 33085          unimon1_dbg.asm:257
-INTCT1  = $8147 = 33095          unimon1_dbg.asm:266
-INTPA   = $8153 = 33107          unimon1_dbg.asm:276
-IOSET   = $8080 = 32896          unimon1_dbg.asm:140
-LOOP    = $8118 = 33048          unimon1_dbg.asm:227
-LPBK    = $8123 = 33059          unimon1_dbg.asm:236
-LPBKE   = $813A = 33082          unimon1_dbg.asm:251
+INTCT0  = $8142 = 33090          unimon1_dbg.asm:264
+INTCT1  = $814C = 33100          unimon1_dbg.asm:273
+INTPA   = $8158 = 33112          unimon1_dbg.asm:283
+IOSET   = $8080 = 32896          unimon1_dbg.asm:142
+LF      = $000A =    10          unimon1_dbg.asm:300
+LOOP    = $8119 = 33049          unimon1_dbg.asm:229
+LPBK    = $8128 = 33064          unimon1_dbg.asm:243
+LPBKE   = $813F = 33087          unimon1_dbg.asm:258
+MSGEX   = $817D = 33149          unimon1_dbg.asm:304
+MSGNM   = $818D = 33165          unimon1_dbg.asm:306
+MSGST   = $816C = 33132          unimon1_dbg.asm:302
 NMI     = $8066 = 32870          unimon1_dbg.asm:122 (unused)
 PAEND   = $8008 = 32776          unimon1_dbg.asm:46
 PBEND   = $800B = 32779          unimon1_dbg.asm:53
@@ -349,17 +384,17 @@ PIOB    = $001E =    30          unimon1_dbg.asm:11
 PIOBCD  = $8008 = 32776          unimon1_dbg.asm:47
 SIOA    = $0018 =    24          unimon1_dbg.asm:14 (unused)
 SIOB    = $001A =    26          unimon1_dbg.asm:15 (unused)
-START   = $8100 = 33024          unimon1_dbg.asm:212
-VALUE   = $9000 = 36864          unimon1_dbg.asm:296
+START   = $8100 = 33024          unimon1_dbg.asm:214
+VALUE   = $9000 = 36864          unimon1_dbg.asm:315
 WDC     = $00F1 =   241          unimon1_dbg.asm:25
 WDCL    = $004E =    78          unimon1_dbg.asm:28
 WDDE    = $00B1 =   177          unimon1_dbg.asm:29 (unused)
 WDM     = $00F0 =   240          unimon1_dbg.asm:24
 WDMCD   = $8014 = 32788          unimon1_dbg.asm:98
-WDOG    = $80BB = 32955          unimon1_dbg.asm:179
+WDOG    = $80BB = 32955          unimon1_dbg.asm:181
 _end    = $9001 = 36865          unimon1_dbg.asm:38 (unused)
 _size   = $1001 =  4097          unimon1_dbg.asm:38 (unused)
 
 
-total time: 0.0279 sec.
+total time: 0.0182 sec.
 no errors

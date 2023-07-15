@@ -122,11 +122,13 @@ INT:
 NMI:
 	PUSH	AF
 	PUSH	BC
-	LD	A, '2'
-	LD	C, 02H
-	RST	30H			;[UniMon] CONOUT
+	PUSH	HL
+	LD	HL, MSGNM
+	LD	C, 03H
+	RST	30H			;[UniMon] STROUT
 	LD	A, 0FFH
 	LD	(DBGP), A		;デバッグ用命令に書換え
+	POP	HL
 	POP	BC
 	POP	AF
 	RETN
@@ -221,16 +223,21 @@ START:	DI				;セットアップ中、割り込み不可
 	;ここからプログラムを書く
 	IN	A, (PIOA)		;ポートAを入力
 	LD	(VALUE), A		;VALUEを初期化
-	LD	A, '0'
-	LD	C, 02H
-	RST	30H			;[UniMon] CONOUT
+	LD	HL, MSGST
+	LD	C, 03H
+	RST	30H			;[UniMon] STROUT
 LOOP:
 	CALL	LPBK			;ループバック
 	CALL	WDOG			;ウォッチドッグクリア
+	CALL	DEBUG			;デバッグ用ルーチン
+	JR	LOOP
+
+;デバッグ用ルーチン
+DEBUG:
 	DI
 DBGP:	NOP				;[UniMon] デバッグ用ダミー命令
 	EI
-	JR	LOOP
+	RET
 
 ;ループバック
 LPBK:
@@ -276,16 +283,28 @@ INTCT1:
 INTPA:
 	PUSH	AF
 	PUSH	BC
+	PUSH	HL
 	IN	A, (PIOA)		;ポートAを入力
 	LD	(VALUE), A		;VALUEを更新
-	LD	A, '1'
-	LD	C, 02H
-	RST	30H			;[UniMon] CONOUT
+	LD	HL, MSGEX
+	LD	C, 03H
+	RST	30H			;[UniMon] STROUT
+	POP	HL
 	POP	BC
 	POP	AF
 	EI
 	RETI
 
+;文字列定義
+CR	EQU	0x0D
+LF	EQU	0x0A
+
+MSGST:
+	DEFB	">StartProgram.",CR,LF,00H
+MSGEX:
+	DEFB	">EXInterrupt.",CR,LF,00H
+MSGNM:
+	DEFB	">NMInterrupt.",CR,LF,00H
 
 ;**************************************
 ;	ＲＡＭ配置
