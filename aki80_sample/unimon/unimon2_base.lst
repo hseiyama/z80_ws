@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "unimon2_base.asm"
-                        ; date: 2023-07-16 00:47:08
+                        ; date: 2023-07-16 10:07:40
                         ; --------------------------------------
 
 
@@ -129,8 +129,8 @@
 803F: FF...             
 8066:                   NMI:
 8066: F5       [11]     	PUSH	AF
-8067: 3EFF     [18]     	LD	A, 0FFH
-8069: 321D81   [31]     	LD	(DBGC), A		;デバッグ用命令に書換え
+8067: 3EFF     [18]     	LD	A, 0FFH			;命令(RST 38H)
+8069: 322181   [31]     	LD	(DBGC), A		;デバッグ用命令を書換え
 806C: F1       [41]     	POP	AF
 806D: ED45     [55]     	RETN
                         
@@ -224,31 +224,25 @@
 810D: FB       [59]     	EI
                         
                         	;ここからプログラムを書く
-810E:                   LOOP:
-810E: 11E001   [10]     	LD	DE, 01E0H
-8111: CB23     [18]     	SLA	E
-8113: CB12     [26]     	RL	D			;DEを2倍
-8115: 01C00F   [36]     	LD	BC, 0FC0H
-8118: CB38     [44]     	SRL	B
-811A: CB19     [52]     	RR	C			;BCを1/2倍
-811C: 76       [56]     	HALT
-811D: 00       [ 4]     DBGC:	NOP				;[UniMon] デバッグ用ダミー命令
-811E: 18EE     [16]     	JR	LOOP
-                        
-                        
-                        ;**************************************
-                        ;	ＲＡＭ配置
-                        ;**************************************
-                        
-8120: FFFFFFFF          	ORG	DBUG + 1000H
-8124: FF...             
+810E: DB1C     [70]     	IN	A, (PIOA)
+8110: D31E     [81]     	OUT	(PIOB), A
+8112:                   LOOP:
+8112: 11E001   [10]     	LD	DE, 01E0H
+8115: CB23     [18]     	SLA	E
+8117: CB12     [26]     	RL	D			;DEを2倍
+8119: 01C00F   [36]     	LD	BC, 0FC0H
+811C: CB38     [44]     	SRL	B
+811E: CB19     [52]     	RR	C			;BCを1/2倍
+8120: 76       [56]     	HALT
+8121: 00       [ 4]     DBGC:	NOP				;[UniMon] デバッグ用ダミー命令
+8122: 18EE     [16]     	JR	LOOP
                         
                         	END
 
 
 ; +++ segments +++
 
-#CODE          = $8000 = 32768,  size = $1000 =  4096
+#CODE          = $8000 = 32768,  size = $0124 =   292
 
 ; +++ global symbols +++
 
@@ -262,14 +256,14 @@ CTC1CD  = $800C = 32780          unimon2_base.asm:85
 CTC2    = $0012 =    18          unimon2_base.asm:20
 CTC2CD  = $800E = 32782          unimon2_base.asm:89
 CTC3    = $0013 =    19          unimon2_base.asm:21 (unused)
-DBGC    = $811D = 33053          unimon2_base.asm:225
+DBGC    = $8121 = 33057          unimon2_base.asm:227
 DBUG    = $8000 = 32768          unimon2_base.asm:6
 DGC     = $00F4 =   244          unimon2_base.asm:26
 DGCCD   = $8011 = 32785          unimon2_base.asm:103
 HMCR    = $00DB =   219          unimon2_base.asm:30
 INT     = $8038 = 32824          unimon2_base.asm:112 (unused)
 IOSET   = $8080 = 32896          unimon2_base.asm:135
-LOOP    = $810E = 33038          unimon2_base.asm:217
+LOOP    = $8112 = 33042          unimon2_base.asm:219
 NMI     = $8066 = 32870          unimon2_base.asm:122 (unused)
 PAEND   = $8006 = 32774          unimon2_base.asm:46
 PBEND   = $8009 = 32777          unimon2_base.asm:53
@@ -286,9 +280,9 @@ WDDE    = $00B1 =   177          unimon2_base.asm:29 (unused)
 WDM     = $00F0 =   240          unimon2_base.asm:24
 WDMCD   = $8010 = 32784          unimon2_base.asm:98
 WDOG    = $80BB = 32955          unimon2_base.asm:174 (unused)
-_end    = $9000 = 36864          unimon2_base.asm:38 (unused)
-_size   = $1000 =  4096          unimon2_base.asm:38 (unused)
+_end    = $8124 = 33060          unimon2_base.asm:38 (unused)
+_size   = $0124 =   292          unimon2_base.asm:38 (unused)
 
 
-total time: 0.0219 sec.
+total time: 0.0061 sec.
 no errors

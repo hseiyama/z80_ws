@@ -121,8 +121,8 @@ INT:
 	ORG	DBUG + 0066H
 NMI:
 	PUSH	AF
-	LD	A, 0FFH
-	LD	(DBGC), A		;デバッグ用命令に書換え
+	LD	A, 0FFH			;命令(RST 38H)
+	LD	(DBGC), A		;デバッグ用命令を書換え
 	POP	AF
 	RETN
 
@@ -214,6 +214,8 @@ START:	DI				;セットアップ中、割り込み不可
 	EI
 
 	;ここからプログラムを書く
+	IN	A, (PIOA)
+	OUT	(PIOB), A
 LOOP:
 	LD	DE, 01E0H
 	SLA	E
@@ -224,12 +226,5 @@ LOOP:
 	HALT
 DBGC:	NOP				;[UniMon] デバッグ用ダミー命令
 	JR	LOOP
-
-
-;**************************************
-;	ＲＡＭ配置
-;**************************************
-
-	ORG	DBUG + 1000H
 
 	END
