@@ -1,0 +1,8 @@
+GAME80はHEXコード展開のみで、アセンブラコードは入手できなかった。
+https://github.com/akih-san
+※GAME80コンパイラは最終版の展開なし
+
+<アドレスマップ>
+5400H	GAME80インタプリタ(ROM START)
+5B00H	GAME80コンパイラ(ROM START)
+74FFH	ROM END(GAME80)

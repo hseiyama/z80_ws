@@ -10,9 +10,15 @@
 ;	Modified Akihito Honda
 ;
 
-RAM12K = 1
+AKI80 = 1
+RAM12K = 0
 RAM8K = 0
 RAM4K = 0
+
+	IF	AKI80
+STACKU	equ	0FE90H	; user stack
+RAMTOP	EQU	8000H
+	ENDIF
 
 	IF	RAM12K
 STACKU	equ	0EEC0H	; user stack
@@ -31,7 +37,7 @@ RAMTOP	EQU	08000H
 	ENDIF
 
 ;	MEMORY ASIGN
-ROMTOP	EQU	2000H		; 0000H - 1FFFH for unimon
+ROMTOP	EQU	2F00H		; 0000H - 1FFFH for unimon
 
 ;
 ;	RESET (RST 00H)

@@ -87,10 +87,10 @@ PSIOAD	EQU	SIOA
 PSIOAC	EQU	SIOA+1
 
 ;	カウンタタイマI/Oアドレスセット
-CTC0	EQU	10H		;CTC0のアドレス
+;CTC0	EQU	10H		;CTC0のアドレス
 ;CTC1	EQU	11H		;CTC1のアドレス
 ;CTC2	EQU	12H		;CTC2のアドレス
-;CTC3	EQU	13H		;CTC3のアドレス
+CTC3	EQU	13H		;CTC3のアドレス
 
 ;	Ｚ８４Ｃ０１５専用I/Oアドレスセット
 ;WDM	EQU	0F0H	;WDTER,WDTPR,HALTMR
@@ -225,19 +225,19 @@ SIOBCD:	DB	18H		;SIOB WR0 チャンネルリセット
 ;	DB	68H		;SIOB WR5 送信バッファ制御情報
 SBEND	EQU	$
 
-CTC0CD:	DB	05H		;CTC0 チャンネルコントロールワード	*******1
-	DB	5		;1/5 = 153.6KHz
-;	DB	ENTRY+20	;CTC0 インタラプトベクタ		*****000
-C0END	EQU	$
+;CTC0CD:	DB	05H		;CTC0 チャンネルコントロールワード	*******1
+;	DB	00H		;CTC0 タイムコンスタントレジスタ
+;	DB	ENTRY+20	;CTC0 インタラプトベクタ		*****000 (全チャネル用)
+;C0END	EQU	$
 ;CTC1CD:	DB	05H		;CTC1 チャンネルコントロールワード	*******1
 ;	DB	00H		;CTC1 タイムコンスタントレジスタ
 ;C1END	EQU	$
 ;CTC2CD:	DB	05H		;CTC2 チャンネルコントロールワード	*******1
 ;	DB	00H		;CTC2 タイムコンスタントレジスタ
 ;C2END	EQU	$
-;CTC3CD:	DB	05H		;CTC3 チャンネルコントロールワード	*******1
-;	DB	00H		;CTC3 タイムコンスタントレジスタ
-;C3END	EQU	$
+CTC3CD:	DB	05H		;CTC3 チャンネルコントロールワード	*******1
+	DB	5		;CTC3 タイムコンスタントレジスタ	(1/5 = 153.6KHz)
+C3END	EQU	$
 
 ;WDMCD:	DB	07BH	;ウォッチドッグ disable, HALT: RUN
 ;GCCD:	DB	00H	;デイジーチェーン順位設定		00000***
@@ -374,10 +374,10 @@ IOSET:
 ;	LD	B, PBEND - PIOBCD
 ;	LD	C, PIOB + 1		;PIOBコマンドアドレス(1FH)
 ;	OTIR
-	LD	HL, CTC0CD		;CTC0コマンドセットアップ
-	LD	B, C0END - CTC0CD
-	LD	C, CTC0
-	OTIR
+;	LD	HL, CTC0CD		;CTC0コマンドセットアップ
+;	LD	B, C0END - CTC0CD
+;	LD	C, CTC0
+;	OTIR
 ;	LD	HL, CTC1CD		;CTC1コマンドセットアップ
 ;	LD	B, C1END - CTC1CD
 ;	LD	C, CTC1
@@ -386,10 +386,10 @@ IOSET:
 ;	LD	B, C2END - CTC2CD
 ;	LD	C, CTC2
 ;	OTIR
-;	LD	HL, CTC3CD		;CTC3コマンドセットアップ
-;	LD	B, C3END - CTC3CD
-;	LD	C, CTC3
-;	OTIR
+	LD	HL, CTC3CD		;CTC3コマンドセットアップ
+	LD	B, C3END - CTC3CD
+	LD	C, CTC3
+	OTIR
 	LD	HL, SIOACD		;SIOAコマンドセットアップ
 	LD	B, SAEND - SIOACD
 	LD	C, SIOA + 1		;SIOAコマンドアドレス(19H)
