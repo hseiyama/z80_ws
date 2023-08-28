@@ -44,14 +44,6 @@ RAM_B	equ	8000H	; RAM base address
 RAMSIZ	EQU	8000H
 RAM_E	equ	RAM_B + RAMSIZ - 1 ; RAM END address
 
-Rx_BFSIZ	EQU	40H	; SIO recieve buffer size
-Tx_BFSIZ	equ	40H	; SIO send buffer size
-
-XON		equ	11h	; code DCh
-XOFF		equ	13h	; code DC3
-TXPEND		equ	28h	; SIO clear pending Tx int code
-TXEMPTY		equ	04h
-
 WORK_SIZE	equ	130H		;monitor work area size
 MSTACK_SIZE	equ	64		;Monitor stack size : 32 words 
 
@@ -72,8 +64,6 @@ GM80_WST	equ	5403H	; GAME80 warm start
 
 VTL_CST		equ	7500H	; VTL cold start
 VTL_WST		equ	7503H	; VTL warm start
-
-cmd_hlp		equ	5400H	; command help
 
 ; I/O port ASSIGN
 
@@ -106,7 +96,7 @@ CTC3	EQU	13H		;CTC3のアドレス
 ;
 E_CSTART:
 	JP	START
-	jp	WSTART0
+	jp	WSTART
 
 	db	0008H - $ dup(00H)
 ;	ORG	0008H	; (RST 08H)
@@ -171,14 +161,14 @@ E_CSTART:
 	db	ENTRY - $ dup(00H)
 ;	org	ENTRY
 
-	DW	0000H			; 0: SIOBトランスミッタバッファエンプティ
-	DW	0000H			; 2: SIOB外部／ステータス割り込み
-	DW	0000H			; 4: SIOBレシーバキャラクタアベイラブル
-	DW	0000H			; 6: SIOB特殊受信状態
-	DW	INTTXD			; 8: SIOA
-	DW	IGNORE			;10:
-	DW	INTRXD			;12:
-	DW	IGNORE			;14
+;	DW	0000H			; 0: SIOBトランスミッタバッファエンプティ
+;	DW	0000H			; 2: SIOB外部／ステータス割り込み
+;	DW	0000H			; 4: SIOBレシーバキャラクタアベイラブル
+;	DW	0000H			; 6: SIOB特殊受信状態
+;	DW	INTTXD			; 8: SIOA
+;	DW	IGNORE			;10:
+;	DW	INTRXD			;12:
+;	DW	IGNORE			;14
 
 ;	DW	0000H			;16: PIOA割り込み
 ;	DW	0000H			;18: PIOB割り込み
@@ -204,21 +194,21 @@ PIOBCD:	DB	0CFH		;PIOBモードワード			**001111 (モード3)
 PBEND	EQU	$
 
 SIOACD:	DB	18H		;SIOA WR0 チャンネルリセット
-	DB	14H		;SIOA WR4 & Reset Ext/Status Interrupts
+	DB	04H		;SIOA WR0 WR4
 	DB	44H		;SIOA WR4 1/16CLK 8bit 1stop bit NonParity
-	DB	03H		;SIOA WR0 ポインタ３
+	DB	03H		;SIOA WR0 WR3
 	DB	0C1H		;SIOA WR3 受信バッファ制御情報:8bit, Rx Enable
 	DB	05H		;SIOA WR0 WR5
-	DB	0E8H		;SIOA WR5 DTR, TX 8bit/Character, TX Enable
-	DB	01H		;SIOA WR1
-	db	12H		; enable Tx int
+	DB	68H		;SIOA WR5 TX 8bit/Character, TX Enable
+	DB	01H		;SIOA WR0 WR1
+	DB	00H		;SIOA WR1 disenable Tx int
 
 SAEND	EQU	$
 SIOBCD:	DB	18H		;SIOB WR0 チャンネルリセット
-	DB	01H		;SIOB WR0 ポインタ１
-	DB	04H		;SIOB WR1 割り込み制御ウェイト／レディ
-	DB	02H		;SIOB WR0 ポインタ２
-	DB	ENTRY & 00FFH	;SIOB WR2 インタラプトベクタ
+;	DB	01H		;SIOB WR0 ポインタ１
+;	DB	04H		;SIOB WR1 割り込み制御ウェイト／レディ
+;	DB	02H		;SIOB WR0 ポインタ２
+;	DB	ENTRY & 00FFH	;SIOB WR2 インタラプトベクタ
 
 ;	DB	03H		;SIOB WR0 ポインタ３
 ;	DB	0E1H		;SIOB WR3 受信バッファ制御情報
@@ -248,118 +238,6 @@ C3END	EQU	$
 	db	NMIVEC - $ dup(00H)	; nop
 ;	org	NMIVEC
 	RETN			;ＮＭＩ禁止
-
-;-------------------------------------
-; SIO INTERRUPT SERVICE ROUTINE
-;-------------------------------------
-
-INTTXD:	
-	PUSH	AF
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-
-	ld	a, (rx_xreq)
-	or	a
-	jr	z, inttx_nxt
-
-	;send XON/XOFF request
-	OUT	(PSIOAD), a
-	ld	(rx_xflg), a
-	jr	clr_pend
-
-inttx_nxt:
-	call	get_TxDat
-	JR	c, clr_TxIntPending
-
-;	SEND DATA
-	OUT	(PSIOAD), a
-
-clr_pend:
-	xor	a
-	ld	(rx_xreq), a
-set_pend:
-	ld	(tx_pend), a
-	jr	INTEXT
-
-; clear Tx interrupt pending
-clr_TxIntPending:
-	ld	a, TXPEND	; reset Tx int pending
-	out	(PSIOAC), a
-	jr	set_pend
-
-; RX
-;	SIOA -> BUFFER
-;
-INTRXD:	PUSH	AF
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-;	RECEIVE DATA
-	IN	A,(PSIOAD)
-
-	;check XOFF code
-	cp	XOFF
-	jr	z, ctl_txflg
-
-	;check XON code
-	cp	XON
-	jr	nz, ctl_rcv
-
-ctl_txflg:
-	ld	(tx_xflg), a	; save TX XON/OFF condition
-	jr	INTEXT
-
-; control receive data buffer
-ctl_rcv:
-	LD	D,A
-
-	LD	A,(Rx_BCNT)
-	CP	Rx_BFSIZ	; CHECK BUFFER FULL
-	jr	z, INTEXT	; ring buffer full
-
-	INC	A
-	LD	(Rx_BCNT),A
-	CP	Rx_BFSIZ - 10
-	jr	nz, ctl_rcv1
-
-	; XOFF control
-	ld	a, XOFF
-	ld	(rx_xreq), a
-	ld	a, (tx_pend)
-	or	a
-	jr	z, ctl_rcv1
-
-	ld	a, XOFF
-	ld	(rx_xflg), a
-	call	Tx_direct
-	xor	a
-	ld	(rx_xreq), a
-
-;
-;	WRITE DATA TO BUFFER
-ctl_rcv1:
-	LD	A,(Rx_BWP)
-	LD	C,A
-	LD	B,00H
-	LD	HL,Rx_BUF
-	ADD	HL,BC
-	LD	(HL),D
-	INC	A
-	AND	Rx_BFSIZ-1
-	LD	(Rx_BWP),A
-;
-;	RESTORE REGISTERS
-INTEXT:	POP	HL
-	POP	DE
-	POP	BC
-	POP	AF
-;
-;	RETURN FROM INTERRUPT
-IGNORE:
-	EI
-	RETI
 
 ;*******************************
 ;	Ｉ／Ｏセットアップ
@@ -511,12 +389,6 @@ init_ram:
 ;	JR	NZ, WAIT
 
 	CALL	IOSET
-
-	ld	a, XON
-	ld	(rx_xflg), a
-	ld	(tx_xflg), a
-	call	Tx_direct
-
 	EI
 
 	LD	HL,RAM_B
@@ -608,34 +480,6 @@ ir00:
 
 	LD	HL,OPNMSG
 	CALL	STROUT
-	jr	WSTART
-
-WSTART0:
-;	RECEIVE BUFFER INITIALIZE
-;	init XON/XOFF control
-
-	XOR	A
-	DI
-	LD	(Rx_BCNT),A
-	LD	(Rx_BRP),A
-	LD	(Rx_BWP),A
-	LD	(Tx_BCNT),A
-	LD	(Tx_BRP),A
-	LD	(Tx_BWP),A
-	ld	(rx_xreq), a
-
-	; Reinit SIO
-
-	ld	a, 30h		; Error Reset
-	out	(PSIOAC), a
-	ld	a, TXPEND	; Reset TxINT Pending
-	out	(PSIOAC), a
-	ld	(tx_pend), a
-
-	ld	a, XON
-	ld	(rx_xflg), a
-	ld	(tx_xflg), a
-	call	Tx_direct
 ;	EI
 
 WSTART:
@@ -808,16 +652,12 @@ lanch4:
 	DB	"4. Palo Alto Tiny BASIC Restart",CR,LF,00H
 
 lanch5:
-;	dw	GM80_CST
-;	DB	"5. GAME80 Start",CR,LF,00H
-	dw	WSTART
-	DB	"5. GAME80 Start (Not Used)",CR,LF,00H
+	dw	GM80_CST
+	DB	"5. GAME80 Start",CR,LF,00H
 
 lanch6:
-;	dw	GM80_WST
-;	DB	"6. GAME80 Restart",CR,LF,00H
-	dw	WSTART
-	DB	"6. GAME80 Restart (Not Used)",CR,LF,00H
+	dw	GM80_WST
+	DB	"6. GAME80 Restart",CR,LF,00H
 
 lanch7:
 	dw	VTL_CST
@@ -8375,23 +8215,23 @@ ST_MUL8:
 ;;; Messages
 ;;;
 
-;cmd_hlp:	db	"? :Command Help", CR, LF
-;		db	"#L|<num> :Launch program", CR, LF
-;		db	"A[<address>] : Mini Assemble mode", CR, LF
-;		db	"B[1|2[,<adr>]] :Set or List Break Point", CR, LF
-;		db	"BC[1|2] :Clear Break Point", CR, LF
-;		db	"D[<adr>] :Dump Memory", CR, LF
-;		db	"DI[<adr>][,s<steps>|<adr>] :Disassemble", CR, LF
-;		db	"G[<adr>][,<stop adr>] :Go and Stop", CR, LF
-;		db	"I<port> : Input from port", CR, LF
-;		db	"L[G|<offset>] :Load HexFile (and GO)", CR, LF
-;		db	"O<port>,<data> : Output data to port", CR, LF
-;		db	"P[I|S] :Save HexFile(I:Intel,S:Motorola)", CR, LF
-;		db	"R[<reg>] :Set or Dump register", CR, LF
-;		db	"S[<adr>] :Set Memory", CR, LF
-;		db	"T[<adr>][,<steps>|-1] : Trace command", CR, LF
-;		db	"TM[I|S] :Trace Option for CALL", CR, LF
-;		db	"TP[ON|OFF] :Trace Print Mode", CR, LF, 00h
+cmd_hlp:	db	"? :Command Help", CR, LF
+		db	"#L|<num> :Launch program", CR, LF
+		db	"A[<address>] : Mini Assemble mode", CR, LF
+		db	"B[1|2[,<adr>]] :Set or List Break Point", CR, LF
+		db	"BC[1|2] :Clear Break Point", CR, LF
+		db	"D[<adr>] :Dump Memory", CR, LF
+		db	"DI[<adr>][,s<steps>|<adr>] :Disassemble", CR, LF
+		db	"G[<adr>][,<stop adr>] :Go and Stop", CR, LF
+		db	"I<port> : Input from port", CR, LF
+		db	"L[G|<offset>] :Load HexFile (and GO)", CR, LF
+		db	"O<port>,<data> : Output data to port", CR, LF
+		db	"P[I|S] :Save HexFile(I:Intel,S:Motorola)", CR, LF
+		db	"R[<reg>] :Set or Dump register", CR, LF
+		db	"S[<adr>] :Set Memory", CR, LF
+		db	"T[<adr>][,<steps>|-1] : Trace command", CR, LF
+		db	"TM[I|S] :Trace Option for CALL", CR, LF
+		db	"TP[ON|OFF] :Trace Print Mode", CR, LF, 00h
 
 OPNMSG:
 	DB	CR,LF
@@ -8675,167 +8515,26 @@ RNR:	DB	"R",00H
 ;;; Console drivers
 ;;;
 
-;	BUFER -> A
-;
-;	SAVE REGISTERS
-CONIN: ; RXA
-	PUSH	BC
-	PUSH	DE
-	PUSH	HL
-;
-;	WAIT FOR NOT EMPTY
-RXWAIT:	LD	A,(Rx_BCNT)
-	or	a
-	JR	Z,RXWAIT
-;
-;	READ DATA
-	DI
-	LD	A,(Rx_BCNT)
-	DEC	A
-	LD	(Rx_BCNT),A
-
-	cp	a, 10
-	jr	nz, cont_rcv
-	ld	a, (rx_xflg)
-	cp	XOFF
-	jr	nz, cont_rcv
-
-	ld	a, XON
-	ld	(rx_xreq), a	; set XON request
-	ld	a, (tx_pend)
-	or	a
-	jr	nz, cont_rcv
-
-	ld	a, XON
-	ld	(rx_xflg), a	; save XON condition
-	call	Tx_direct
-	xor	a
-	ld	(rx_xreq), a	; clear XON request
-
-cont_rcv:
-	LD	A,(Rx_BRP)
-	LD	C,A
-	LD	B,00H
-	LD	HL,Rx_BUF
-	ADD	HL,BC
-	LD	D,(HL)
-	INC	A
-	AND	Rx_BFSIZ-1
-	LD	(Rx_BRP),A
-	LD	A,D
-	EI
-;
-;	RESTORE REGISTERS
-	POP	HL
-	POP	DE
-	POP	BC
+CONIN:
+	IN	A,(PSIOAC)
+	BIT	0,A
+	JR	Z,CONIN
+	IN	A,(PSIOAD)
 	RET
 
-;
-;	CHECK RECEIVE STATUS
-CONST: ; KBHIT
-	LD	A,(Rx_BCNT)
-	or	a
+CONST:
+	IN	A,(PSIOAC)
+	BIT	0,A
 	RET
 
-;
-; A -> Tx buffer;
-;
-CONOUT:	; TXA
-
-	push	af
-	push	hl
-	push	bc
-	push	de
-
-	ld	d, a
-CONOUT1:
-	ld	a, (tx_xflg)
-	cp	XOFF
-	jr	z, CONOUT1
-
-	ld	a, (Tx_BCNT)
-	cp	Tx_BFSIZ	; check buffer full
-	jr	z, CONOUT1
-
-; save tx data to tx buffer
-	di
-	ld	a, (Tx_BCNT)
-	inc	a
-	ld	(Tx_BCNT), a
-
-	ld	hl, Tx_BUF
-	ld	a, (Tx_BWP)
-	ld	c, a
-	ld	b, 0
-	add	hl, bc
-	ld	(hl), d		; save tx data
-	inc	a
-	and	Tx_BFSIZ-1
-	ld	(Tx_BWP), a	; save write buffer pointer
-
-; check tx buffer empty
-
-	ld	a, (tx_pend)
-	or	a
-	JR	z, end_tx
-	call	get_TxDat
-	call	Tx_direct
-
-end_tx:
-	ei
-	pop	de
-	pop	bc
-	pop	hl
-	pop	af
+CONOUT:
+	PUSH	AF
+PCST1:	IN	A,(PSIOAC)
+	BIT	2,A
+	JR	Z,PCST1
+	POP	AF
+	OUT	(PSIOAD),A
 	RET
-;
-; control Tx buffer
-;
-get_TxDat:
-	LD	A,(Tx_BCNT)
-	or	a
-	jr	z, tx_nodat
-
-	DEC	A
-	LD	(Tx_BCNT),A
-
-	ld	hl, Tx_BUF
-	ld	a, (Tx_BRP)
-	ld	c, a
-	ld	b, 0
-	add	hl, bc
-	inc	a
-	and	Tx_BFSIZ -1	; CF=0
-	ld	(Tx_BRP), a
-	ld	a, (hl)		; get Tx data
-	ret
-
-tx_nodat:
-	scf
-	ret
-
-;---------------------
-; Tx send data direct
-;---------------------
-Tx_direct:
-	push	af
-	push	de
-
-	ld	d, a
-TX_WT:	IN	A,(PSIOAC)
-	and	TXEMPTY
-	JR	Z,TX_WT
-
-	ld	a, d
-	OUT	(PSIOAD), a
-
-	xor	a
-	ld	(tx_pend), a
-
-	pop	de
-	pop	af
-	ret
 
 	db	BASIC_TOP - $ dup(0ffH)
 ;	ORG	BASIC_TOP
@@ -8960,24 +8659,6 @@ reg_xy:		ds	2	; RNIX or RNIY
 xy_srtp		ds	2	; strings pointer
 
 mc_Size:	ds	1
-;
-;	RECEIVE BUFFER
-Rx_BCNT:	ds	1
-Rx_BRP:		ds	1
-Rx_BWP:		ds	1
-Rx_BUF:		ds	Rx_BFSIZ
-
-;	SEND BUFFER
-Tx_BCNT:	ds	1
-Tx_BRP:		ds	1
-Tx_BWP:		ds	1
-Tx_BUF:		ds	Tx_BFSIZ
-tx_pend:	ds	1
-
-;	XON/XOFF flag
-rx_xflg:	ds	1
-tx_xflg:	ds	1
-rx_xreq:	ds	1
 
 ;;;;;;;;;;;;;;;;;;;
 ; union area
