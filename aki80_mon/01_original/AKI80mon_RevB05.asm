@@ -32,7 +32,7 @@ NO_LF		equ	00000010b
 NO_CR		equ	00000001b
 
 BACKDOOR = 0
-	
+
 ;	MEMORY ASSIGN
 
 ROM_B	EQU	0000H
@@ -63,16 +63,15 @@ BASIC_TOP	equ	2F00H
 BASIC_CST	equ	2F00H	; basic cold start
 BASIC_WST	equ	2F03H	; basic warm start
 
-POTB_TOP	equ	4C00H
-POTB_CST	equ	4C00H	; basic cold start
-POTB_WST	equ	4C03H	; basic warm start
+PATB_TOP	equ	4C00H
+PATB_CST	equ	4C00H	; PATB cold start
+PATB_WST	equ	4C03H	; PATB warm start
 
-GAME80_TOP	equ	5400H
-GAME80_CST	equ	5400H	; basic cold start
-GAME80_WST	equ	5403H	; basic warm start
+GM80_CST	equ	5400H	; GAME80 cold start
+GM80_WST	equ	5403H	; GAME80 warm start
 
-VTL_CST		equ	7500H	; basic cold start
-VTL_WST		equ	7503H	; basic warm start
+VTL_CST		equ	7500H	; VTL cold start
+VTL_WST		equ	7503H	; VTL warm start
 
 ; I/O port ASSIGN
 
@@ -142,7 +141,7 @@ E_CSTART:
 	db	0028H - $ dup(00H)	; nop
 ;	ORG	0028H	; (RST 28H)
 	IF	BACKDOOR
-	RET
+	JP	RST28H
 	ELSE
 	RET
 	ENDIF
@@ -158,7 +157,7 @@ E_CSTART:
 	db	0038H - $ dup(00H)	; nop
 ;	ORG	0038H
 	IF	BACKDOOR
-	JP	RST38H;
+	JP	RST38H
 	ELSE
 	JP	RST38H_IN
 	ENDIF
@@ -266,7 +265,6 @@ INTTXD:
 	OUT	(PSIOAD), a
 	ld	(rx_xflg), a
 	jr	clr_pend
-	
 
 inttx_nxt:
 	call	get_TxDat
@@ -323,7 +321,7 @@ ctl_rcv:
 	LD	(Rx_BCNT),A
 	CP	Rx_BFSIZ - 10
 	jr	nz, ctl_rcv1
-	
+
 	; XOFF control
 	ld	a, XOFF
 	ld	(rx_xreq), a
@@ -527,7 +525,7 @@ init_ram:
 	ld	(tasm_adr),HL
 	LD	A,'I'
 	LD	(HEXMOD),A
-	
+
 	IF	BACKDOOR
 	; init back door RST XXH entory point
 	ld	hl, CONOUT		; RST 08H : CONOUT
@@ -672,7 +670,7 @@ WSTART:
 
 	cp	'B'
 	jp	z, brk_cmd	; break point command
-	
+
 	cp	'T'
 	jp	z, trace_cmd	; trace point command
 
@@ -703,7 +701,7 @@ Launcher:
 	JR	Z,ERR
 
 	; check L or number
-	
+
 	cp	'L'
 	JR	Z,LST_PRG	; list append program
 
@@ -732,7 +730,7 @@ Launcher:
 	LD	D, (HL)	; DE : JUMP POINT
 
 	; Jump to append program
-	
+
 	EX	DE, HL
 	LD	E, (HL)
 	INC	HL
@@ -742,7 +740,7 @@ Launcher:
 ;	JR	Z,ERR	; jump address NULL
 	EX	DE, HL
 	JP	(HL)	; lanch append program
-	
+
 	; List out append program
 LST_PRG:
 	; get address to DE
@@ -757,14 +755,14 @@ LST_PRG1:
 
 	INC	DE
 	INC	DE	; get string address
-	
+
 	EX	DE, HL
 	CALL	STROUT
 	EX	DE, HL
 	dec	b
 	JR	nz, LST_PRG1
 	JP	WSTART
-	
+
 ; Append program launch table
 ;
 ApendTBL:
@@ -785,38 +783,39 @@ ApendTBL:
 ;	dw	lanch15
 ;	dw	lanch16
 ;	dw	0
-	
+
 lanch1:
 	dw	BASIC_CST
 	DB	"1. GBASIC Start",CR,LF,00H
+
 lanch2:
 	dw	BASIC_WST
 	DB	"2. GBASIC Restart",CR,LF,00H
 
 lanch3:
-	dw	POTB_CST
+	dw	PATB_CST
 	DB	"3. PaloAltoTinyBASIC Start",CR,LF,00H
-		
+
 lanch4:
-	dw	POTB_WST
+	dw	PATB_WST
 	DB	"4. PaloAltoTinyBASIC Restart",CR,LF,00H
 
 lanch5:
-	dw	GAME80_CST
+	dw	GM80_CST
 	DB	"5. GAME80 Start",CR,LF,00H
-		
+
 lanch6:
-	dw	GAME80_CST
+	dw	GM80_WST
 	DB	"6. GAME80 Restart",CR,LF,00H
-		
+
 lanch7:
 	dw	VTL_CST
 	DB	"7. VTL Start",CR,LF,00H
 		
 lanch8:
-	dw	VTL_CST
+	dw	VTL_WST
 	DB	"8. VTL Restart",CR,LF,00H
-		
+
 ;lanch9:
 ;lanch10:
 ;lanch11:
@@ -846,7 +845,7 @@ GET_NUM:
 	XOR	A		; Initialize C
 	LD	B, A
 	LD	C, A		; clear BC
-	
+
 GET_NUM0:
 	CALL	SKIPSP		; A <- next char
 	OR	A
@@ -885,7 +884,7 @@ GET_BI:
 	JR	Z, UP_BI
 	CP	'0'
 	RET	C
-	
+
 	CP	'9'+1	; ASCII':'
 	JR	NC, UP_BI
 	SUB	'0'	; Make binary to A
@@ -1106,9 +1105,9 @@ trace_cmd:
 	jr	z, tp_cmd
 	cp	'M'
 	jp	nz, ERR
-	
+
 	; tm_cmd
-	
+
 	inc	hl
 	CALL	SKIPSP		; A <- next char
 dip_TM:
@@ -1141,8 +1140,7 @@ tm_msg_i:
 	db	"IN>", CR, LF, 00h
 tm_msg_s:
 	db	"SKIP>", CR, LF, 00h
-	
-	
+
 	; tp_cmd
 tp_cmd:	
 	inc	hl
@@ -1151,7 +1149,7 @@ tp_cmd:
 	jr	nz, tp_n1
 	ld	a, (TP_mode)
 	jr	tp_n2
-	
+
 tp_n1:
 	cp	'O'
 	jp	nz, ERR
@@ -1176,7 +1174,7 @@ tp_md_on:
 	pop	hl
 	call	STROUT
 	jp	WSTART
-	
+
 tp_msg_0:
 	db	"TP mode: ", 00h
 tp_msg_on:
@@ -1229,7 +1227,7 @@ chk_fevre:
 t_op_chk:
 	ld	hl, (tmpT)	; get PC address
 	ld	a, (hl)		; get opcode
-	
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; branch opecode check
@@ -1256,7 +1254,7 @@ INSTC2:
 	ld	c, 1		; first TC point
 	call	insBRK_sp
 	jp	c, err_trace_seq
-	
+
 	; 2
 	ld	c, 2		; second TC point
 	call	insBRK_1op
@@ -1333,7 +1331,7 @@ next_bc222:
 	; 1. ea = *REGPC; *((char *)(ea+1)) = TC;
 	call	insBRK_brp
 	jp	c, err_trace_seq
-	
+
 next_bc221:
 	; 2. ea = *REGPC; *(ea+3) = TC;
 	ld	c, 2		; second TC point
@@ -1375,7 +1373,7 @@ next_bc3:
 	ld	c, 1		; first TC point
 	call	insBRK_1op
 	jp	c, err_trace_seq
-	
+
 	jp	END_INS_TC
 
 ;RST_DMSG:
@@ -1547,7 +1545,7 @@ insBRK_1op:
 ;	ld	hl, (REGPC)
 	ld	hl, (tmpT)
 	jr	ib1
-	
+
 ;--------------------------------------
 ; 2 byte op code, insert TC
 ; ea = *REGPC; *(ea+2) = TC
@@ -1556,7 +1554,7 @@ insBRK_2op:
 ;	ld	hl, (REGPC)
 	ld	hl, (tmpT)
 	jr	ib2
-	
+
 ;--------------------------------------
 ; 3 byte op code, insert TC
 ; ea = *REGPC; *(ea+3) = TC;
@@ -1636,7 +1634,6 @@ icka_end:
 NO_RAM_AREA:
 	SCF
 	ret
-	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 2 insertion TC TABLE
@@ -1724,17 +1721,17 @@ INS2:
 	jp	z, meet_op3
 
 	; check 0CBH
-	
+
 	; readjust hl
 	ld	hl, (tmpT)
 
 	cp	0CBH		; opecode 0CBH?
 	jr	z, meet_op2
-	
+
 	; check 0DDH
 	cp	0ddh		; opecode 0DDH?
 	jr	z, meet_dd
-	
+
 	; check 0EDH
 	cp	0edh		; opecode 0EDH?
 	jr	z, meet_ed
@@ -2113,7 +2110,7 @@ dis_go1:
 	ld	a, (dasm_stpf)
 	or	a
 	jr	nz, calc_dis_step
-	
+
 	; *dasm_adr > *dasm_ed ?, yes, finish
 	ld	hl, (dasm_ed)
 	ld	bc, (dasm_adr)
@@ -2256,7 +2253,7 @@ chk_ld:
 	ld	de, RNSP
 	call	mk_rcs		; "SP, "
 	jp	hl_crlf
-	
+
 ; LD A, (BC)
 ld_a_kbck:
 	ld	de, RNBC
@@ -3185,7 +3182,7 @@ dd_ld:
 	ld	a, c
 	cp	7
 	jp	nc, dd_ld1
-	
+
 ; LD (IX+nn), r
 	ld	de, (reg_xy)
 	call	kixypnk_cs	; make "(IX+nn), "
@@ -3196,7 +3193,7 @@ dd_ld:
 	pop	hl
 	jp	cpstr_crlf	; "A", "L", "H", "E", D", "C", "B"
 				; CR, LF, 00h
-	
+
 ; LD r, (IX+nn)
 dd_ld1:
 	sub	7
@@ -3436,12 +3433,12 @@ ed_ld_ar:
 	call	a_colon_sp	; "A, "
 	ld	de, RNR
 	jp	cpstr_crlf	; "R",cr,lf
-	
+
 ed_ld_ai:
 	call	a_colon_sp	; "A, "
 	ld	de, RNI
 	jp	cpstr_crlf	; "I",cr,lf
-	
+
 ; c: 32, 33 : LD R,A ; LD I,A
 ed_ld_ra:
 	ld	de, RNR
@@ -3452,7 +3449,7 @@ ed_ld_ra1:
 ed_ld_ia:
 	ld	de, RNI
 	jr	ed_ld_ra1
-	
+
 ; c: 27, 28, 29 : IM 2, IM 1, IM 0
 ed_im:
 	ld	de, IMstr
@@ -3549,7 +3546,7 @@ mk_kixypnk:
 sv_nnkr:
 	call	hex2str_asm	; nnh
 	jp	ins_kakkoR	; ")"
-	
+
 numPlus:
 	call	ins_plsR	; +
 	jr	sv_nnkr
@@ -3659,7 +3656,7 @@ mkRel_str:
 	pop	hl
 	call	hex4str_asm
 	jr	insPostStr
-	
+
 ;------------------------------------------------
 ;input de: value, hl: save baffer.
 ;output 4hex chars(asm format)
@@ -3789,7 +3786,7 @@ hl_crlf:
 	ld	de, RNHL
 cpstr_crlf:
 	call	st_copy		; "REG"
-	
+
 ;-----------------------------------
 ; insert CR, LF, 00H(end delimiter)
 ; input hl : insert buffer
@@ -3867,7 +3864,7 @@ st_copy:
 ins_kakkoL:
 	ld	a, '('
 	jr	ikk_1
-	
+
 ;--------------
 ; insert ")"
 ;--------------
@@ -4238,7 +4235,7 @@ ed_noopr:	dw	OTDRstr, INDRstr, CPDRstr, LDDRstr
 
 dd_rt_str:	dw	SRLstr, SRAstr, SLAstr, RRstr
 		dw	RLstr, RRCstr, RLCstr
-	
+
 ;;;
 ;;; GO address
 ;;; 
@@ -4286,7 +4283,7 @@ G0:
 	ld	a, (tpt1_f)
 	or	a
 	jr	z, donot_trace
-	
+
 	ld	hl,(tmpT)
 	ld	(REGPC), hl	; set trace address
 
@@ -4357,7 +4354,7 @@ set_bp:
 	ld	a, 0FFH
 	ld	(bc), a	; insert RST 38H code
 	ret
-	
+
 ;;;
 ;;; SET memory
 ;;; 
@@ -4444,7 +4441,7 @@ LOADH:
 	xor	a
 	ld	(bpt1_f), a
 	ld	(bpt2_f), a
-	
+
 	INC	HL
 	CALL	SKIPSP
 	CALL	RDHEX
@@ -4534,7 +4531,7 @@ LHIE:
 	LD	HL,IHEMSG
 	CALL	STROUT
 	JP	WSTART
-	
+
 LHS0:
 	CALL	CONIN
 	LD	(RECTYP),A
@@ -4547,7 +4544,7 @@ LHS0:
 	LD	H,A
 	ADD	A,C
 	LD	C,A
-	
+
 	CALL	HEXIN
 	LD	L,A
 	ADD	A,C
@@ -4596,7 +4593,7 @@ LHSE:
 	CALL	STROUT
 LHSR:
 	JP	WSTART
-	
+
 ;;;
 ;;; SAVE HEX file
 ;;;
@@ -4692,13 +4689,13 @@ SHL0:
 	LD	A,D
 	ADD	A,C
 	LD	C,A
-	
+
 	LD	A,E
 	CALL	HEXOUT2
 	LD	A,E
 	ADD	A,C
 	LD	C,A
-	
+
 	XOR	A
 	CALL	HEXOUT2
 SHLI0:
@@ -4734,7 +4731,7 @@ SHLS:
 	LD	A,D
 	ADD	A,C
 	LD	C,A
-	
+
 	LD	A,E
 	CALL	HEXOUT2
 	LD	A,E
@@ -5128,12 +5125,12 @@ line_asm:
 	call	skp_sp
 	or	a
 	jp	nz, ERR
-	
+
 	; init work area
 skpa_adr:
 	ld	hl, (asm_adr)
 	ld	(tasm_adr), hl
-	
+
 	; print address
 
 next_asm:
@@ -5292,7 +5289,7 @@ mk_e3:	ld	a, (opc_cd)
 	ld	hl, el3_stb
 	cpir
 	jp	nz, asm_err
-	
+
 	ld	hl, el3_jtb
 
 jp_each:
@@ -5531,14 +5528,14 @@ el3_550:
 	ld	a, b
 	cp	1
 	jr	z, el3_551	; passing search
-	
+
 	ld	hl, in_selt
 	ld	bc, in_selm
 	call	mkmc_sh
 	jp	c, asm_err
 	ld	a, d
 	jr	el3_552
-	
+
 el3_551:
 	ld	a, d
 	add	a, 38h		; get 2nd MC
@@ -5554,7 +5551,7 @@ in_a_nn:
 	push	af		; adjust I/F
 	ld	a, e		; 1st MC
 	jr	el3_431		; save 2byte MC (el2_441)
-	
+
 ;
 ; JR section
 ;
@@ -5575,7 +5572,7 @@ el3_43: ; JR   ( normal )
 
 	call	calc_reladr
 	jp	c, asm_err
-	
+
 	push	af		; adjust I/F
 	ld	a, d		; adjust I/F
 el3_431:
@@ -5591,7 +5588,7 @@ el3_431:
 mkmc_sh:
 	cpi
 	jr	z, mkmc_shed
-	
+
 	ld	e, a	; save a
 	ld	a, d
 	add	a, 8
@@ -5686,7 +5683,7 @@ adc_a_:
 	sub	c		; make MC 1
 adc_a_x:
 	jp	st_mc11
-	
+
 adc_a_n:
 	ld	hl, (opr_num25)
 	ex	af, af'		; get 1st MC
@@ -5932,7 +5929,7 @@ el3_1:
 	ld	bc, ld_en1
 	cpir
 	jp	nz, el3_11
-	
+
 	ld	hl, ld1_base
 	add	hl, bc
 	ld	d, (hl)		; met MC base code
@@ -5942,7 +5939,7 @@ el3_1:
 	ld	bc, ld_rrn
 	cpir
 	jr	nz, el3_125
-	
+
 	ld	a, c
 	cp	7		; A param?
 	jr	z, el3_12
@@ -5987,7 +5984,7 @@ ld_r17: ; LD A,R
 	ld	a, 5fh
 ld_r171:
 	jp	el2_5411
-	
+
 ld_r13: ; LD A,I
 	ld	a, 57h
 	jr	ld_r171
@@ -5995,7 +5992,7 @@ ld_r13: ; LD A,I
 ld_r27: ; LD A,(DE)
 	ld	a, 1ah
 	jp	st_mc11
-	
+
 ld_r26: ; LD A,(BC)
 	ld	a, 0ah
 	jp	st_mc11
@@ -6097,7 +6094,7 @@ ld_bc_n42:
 	inc	hl
 	ld	(hl), d
 	jp	mc_end3
-	
+
 ; LD DE, nnnn; LD DE, (nnnn)
 ld_de_n4:
 	ld	d, 0EDH		; 1st MC
@@ -6153,7 +6150,7 @@ el3_1_2:
 	ld	bc, ld_en3
 	cpir
 	jr	nz, el3_13
-	
+
 	ld	hl, opr_num37
 	add	hl, bc
 	ld	d, (hl)		; get 3rd MC
@@ -6341,7 +6338,6 @@ el3_s16: ; ld SP, hl | ix | iy | nnnn | (nnnn)
 	ld	c, l		; 3rd MC
 	ld	e, h		; 4th MC
 	jp	mc_end41
-	
 
 el3_s161: ; LD SP, HL
 	ld	a, 0f9h
@@ -6350,7 +6346,7 @@ el3_s161: ; LD SP, HL
 el3_s162: ; LD SP, IX
 	ld	d, 0DDh
 	jr	el3_s1631
-	
+
 el3_s163: ; LD SP, IY
 	ld	d, 0FDh
 el3_s1631:
@@ -6369,12 +6365,12 @@ el3_s164: ; LD SP, nnnn
 el3_s27: ; LD (DE), A
 	ld	a, 12h		; set MC
 	jr	el3_s261
-	
+
 el3_s26: ; LD (BC), A
 	ld	a, 2h		; set MC
 el3_s261:
 	jp	st_mc11
-	
+
 el3_s17: ; LD R, A
 	ld	a, 4fh		; set 2nd MC
 	jp	el2_5411
@@ -6421,7 +6417,7 @@ mk_e1:	; 1byte MC
 	ld	hl, elem1_cd
 	cpir
 	jp	nz, mk_e11
-	
+
 	ld	hl, elem1_opcd
 
 st_mc1:
@@ -6442,7 +6438,7 @@ mk_e11: ; 2byte MC (0EDh, XX)
 	ld	hl, elem1_cd1
 	cpir
 	jp	nz, asm_err
-	
+
 	ld	hl, (tasm_adr)
 	ld	a, 0EDH
 	ld	(hl), a		; set MC No.1
@@ -6539,7 +6535,7 @@ mk_e2:
 	ld	hl, elem2_cd
 	cpir
 	jp	nz, asm_err
-	
+
 	ld	hl, ent_el2
 	jp	jp_each
 
@@ -6561,7 +6557,7 @@ el2_69: ; DB
 	jr	z, el2_691
 	cp	38
 	jp	nz, asm_err
-	
+
 	ld	hl, (opr_num25)
 
 	xor	a
@@ -6791,7 +6787,7 @@ and_cp:
 	jp	c, el2_410
 	ld	a, d		; restore
 	jp	st_mc11
-	
+
 ; IX+,IY+,IX-,IY-,nnnn
 el2_410:
 	cp	4 		; cp nn ?
@@ -6808,7 +6804,7 @@ el2_411:
 	push	af		; adjust save I/F
 	ld	a, d		; restore cp opecode
 	jp	el2_441
-	
+
 ; CP (IX+nn), CP (IY+nn), CP (IX-nn), CP (IY-nn)
 
 cp_ixiy:
@@ -6885,9 +6881,9 @@ el2_di:
 	ld	a, c
 	cp	di_ixnnum
 	jr	c, di_3mc
-	
+
 	; 2 MC. : INC IX, IY, DEC IX, IY
-	
+
 	jr	z, di_iy
 	ld	d, 0DDH		; set IX extended OP
 di_iy:
@@ -6903,7 +6899,7 @@ di_3mc1:
 	ld	a, d		; adjust I/F
 	ld	d, e		; adjust I/F
 	jp	cp_iy		; make 3 MC
-	
+
 ;
 ; PUSH, POP section
 ;
@@ -7150,7 +7146,7 @@ analize_opr:
 	inc	hl		; HL : top of operand strings point
 	call	sch_operand1
 	ret	nc		; match, then retrun
-	
+
 	; search (IX+, (IY+, (IX-, (IY-
 
 	call	sch_operand1_1
@@ -7161,11 +7157,11 @@ analize_opr:
 	push	af		; save operand code
 	call	get_number	; DE : binary
 	jp	c, an_err
-	
+
 	ld	a, d
 	or	a
 	jr	nz, an_err	; over 255
-	
+
 	ld	a, (hl)
 	cp	')'
 	jr	nz, an_err
@@ -7193,7 +7189,7 @@ nxt_a22:
 	ld	(bc),a		; save binary
 	pop	af
 	ret
-	
+
 nxt_a3:
 	cp 	36		; IX-?
 	jr	nz, nxt_a4
@@ -7205,7 +7201,7 @@ nxt_a31:
 	jr	nc, an_err
 	neg
 	jr	nxt_a22
-	
+
 nxt_a4:	; IY-
 	ld	bc, opr_num37
 	jr	nxt_a31
@@ -7215,9 +7211,9 @@ nxt_a1:
 	ld	a, (hl)
 	cp	'('
 	jr	nz, chk_strings
-	
+
 	; get number
-	
+
 	inc	hl
 	call	get_number
 	ret	c		; error number
@@ -7279,7 +7275,7 @@ sh_1:
 	ld	a, (de)
 	cp	(hl)
 	jr	nz, sch_next
-	
+
 	; match
 	inc	hl
 	inc	de
@@ -7288,7 +7284,7 @@ sh_1:
 sch_next:
 	and	dm_bit		; delimiter?
 	jr	nz, ok_match
-	
+
 skip_next:
 	inc	de
 	ld	a, (de)
@@ -7298,7 +7294,7 @@ skip_next:
 	; detect delimiter string
 
 	inc	de		; next search strings
-	
+
 	ld	a, (de)
 	or	a		; tabel end?
 	jr	z, n_end	; yes, no match return
@@ -7314,7 +7310,7 @@ ok_match:
 	and	a, 7Fh		; mask dm_bit, get code of opecode
 	pop	de		; discard top string address
 	ret
-	
+
 ; no opecode strings maching
 n_end:
 	pop	hl
@@ -7330,7 +7326,7 @@ get_number:
 
 	ld	de, num_string
 	ld	c, 0
-	
+
 ; check first character
 
 	call	dec_chr		; check decimal chrarcter
@@ -7410,7 +7406,7 @@ dec_chr:
 	jr	nc, no_num
 	cp	'0'
 	ret	nc
-	
+
 no_num:	scf
 	ret
 
@@ -7542,7 +7538,7 @@ nxchr:
 	cp	' '
 	jr	z, next_char
 	jr	recorr1
-	
+
 ;;;
 ;;; Other support routines
 ;;;
@@ -7610,7 +7606,7 @@ HI1:
 HIR:
 	POP	BC
 	RET
-	
+
 CRLF:
 	LD	A,CR
 	CALL	CONOUT
@@ -7623,7 +7619,7 @@ CLR_CRT:
 	CALL	STROUT
 	POP	HL
 	RET
-	
+
 ESC_CRT_CLR:
 	db	01BH
 	db	"[2"
@@ -7778,7 +7774,7 @@ RHE:
 	jr	nc, rhe1
 	or	a	; clear carry
 	ret
-	
+
 rhe1:
 	scf	; set carry
 	RET
@@ -7941,7 +7937,6 @@ RST38H_IN:
 	ld	d, a
 	ld	e, a		;clear msg pointer
 
-
 ; check go, end operation
 	ld	a, (tmpb_f)
 	or	a
@@ -7992,13 +7987,13 @@ bp_chk_end:
 	jr	nz, no_rst38_msg
 
 	; set RST 38H message
-	LD	de,RST38MSG
+	LD	de, RST38MSG
 
 no_rst38_msg:
 	ld	a, (de)		; get first char of message
 	cp	'T'		; trace ?
 	jr	z, chk_ntrace
-	
+
 	ex	de, hl
 	CALL	STROUT
 
@@ -8040,7 +8035,7 @@ backTomon:
 	ld	l, a
 	ld	(TC_cnt), hl
 	JP	WSTART
-	
+
 	; check trace forever
 t_no_ky:
 	ld	a, (fever_t)
@@ -8434,7 +8429,7 @@ RNTABA:
 	DW	REGAFX+1,RNAX
 
 	DB	00H,0
-	
+
 RNTABB:
 	DB	00H,1		; "B"
 	DW	REGBC+1,RNB
@@ -8454,7 +8449,7 @@ RNTABBC:
 	DW	REGBCX,RNBCX
 
 	DB	00H,0
-	
+
 RNTABC:
 	DB	00H,1		; "C"
 	DW	REGBC,RNC
@@ -8463,7 +8458,7 @@ RNTABC:
 	DW	REGBCX,RNCX
 
 	DB	00H,0
-	
+
 RNTABD:
 	DB	00H,1		; "D"
 	DW	REGDE+1,RND
@@ -8483,7 +8478,7 @@ RNTABDE:
 	DW	REGDEX,RNDEX
 
 	DB	00H,0
-	
+
 RNTABE:
 	DB	00H,1		; "E"
 	DW	REGDE,RNE
@@ -8492,7 +8487,7 @@ RNTABE:
 	DW	REGDEX,RNEX
 
 	DB	00H,0
-	
+
 RNTABF:
 	DB	00H,1		; "F"
 	DW	REGAF,RNF
@@ -8501,7 +8496,7 @@ RNTABF:
 	DW	REGAFX,RNFX
 
 	DB	00H,0
-	
+
 RNTABH:
 	DB	00H,1		; "H"
 	DW	REGHL+1,RNH
@@ -8521,7 +8516,7 @@ RNTABHL:
 	DW	REGHLX,RNHLX
 
 	DB	00H,0
-	
+
 RNTABL:
 	DB	00H,1		; "L"
 	DW	REGHL,RNL
@@ -8530,7 +8525,7 @@ RNTABL:
 	DW	REGHLX,RNLX
 
 	DB	00H,0
-	
+
 RNTABI:
 	DB	00H,1		; "I"
 	DW	REGI,RNI
@@ -8538,7 +8533,7 @@ RNTABI:
 	DW	REGIX,RNIX
 	DB	'Y',2		; "IY"
 	DW	REGIY,RNIY
-	
+
 	DB	00H,0
 
 RNTABP:
@@ -8610,7 +8605,7 @@ RXWAIT:	LD	A,(Rx_BCNT)
 	ld	a, (rx_xflg)
 	cp	XOFF
 	jr	nz, cont_rcv
-	
+
 	ld	a, XON
 	ld	(rx_xreq), a	; set XON request
 	ld	a, (tx_pend)
@@ -8758,7 +8753,7 @@ TX_WT:	IN	A,(PSIOAC)
 	;;
 	;; Work Area
 	;;
-	
+
 	ORG	WORK_B
 
 	IF	BACKDOOR
@@ -8771,7 +8766,7 @@ stealRST30:	ds	2	; hacking RST 30H, set jump address
 stealRST38:	ds	2	; hacking RST 38H, set jump address
 save_hl:	ds	2
 	ENDIF
-	
+
 DSADDR:	DS	2	; Dump start address
 DEADDR:	DS	2	; Dump end address
 DSTATE:	DS	1	; Dump state
@@ -8779,7 +8774,6 @@ GADDR:	DS	2	; Go address
 SADDR:	DS	2	; Set address
 HEXMOD:	DS	1	; HEX file mode
 RECTYP:	DS	1	; Record type
-SIZE:	DS	1	; I/O Size 00H,'W','S'
 
 REG_B:	
 REGAF:	DS	2
