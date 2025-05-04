@@ -1,0 +1,118 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "aki80_simple02_api.asm"
+                        ; date: 2025-04-25 09:23:51
+                        ; --------------------------------------
+
+
+                        ;***************************************************************
+                        ;	AKI-80ゴールドボード単体
+                        ;***************************************************************
+                        
+                        ;*******************************
+                        ;	定数定義
+                        ;*******************************
+8000:                   RAM_B	EQU	8000H
+000D:                   CR	EQU	0DH
+000A:                   LF	EQU	0AH
+001B:                   ESC	EQU	1BH
+007F:                   DEL	EQU	7FH
+                        
+                        ;***************************************************************
+                        ;	メインルーチン
+                        ;***************************************************************
+8000:                   	ORG	RAM_B
+                        
+8000:                   START:
+8000: 0E03     [ 7]     	LD	C, 03H		; param1: STROUT
+8002: 214080   [17]     	LD	HL, MSG1	; param2: String address
+8005: F7       [28]     	RST	30H		; [UniMon] STROUT
+8006: AF       [32]     	XOR	A
+8007: 328080   [45]     	LD	(DATA1), A
+800A:                   LOOP:
+800A: 3A8080   [13]     	LD	A, (DATA1)
+800D: 3C       [17]     	INC	A
+800E: 328080   [30]     	LD	(DATA1), A
+8011: 0E05     [37]     	LD	C, 05H		; param1: CONST
+8013: F7       [48]     	RST	30H		; [UniMon] CONST
+8014: 28F4     [55|60]  	JR	Z, LOOP
+8016: 0E04     [62]     	LD	C, 04H		; param1: CONIN
+8018: F7       [73]     	RST	30H		; [UniMon] CONIN
+8019: FE1B     [80]     	CP	ESC
+801B: 280D     [87|92]  	JR	Z, DEBUG
+801D: FE7F     [94]     	CP	DEL
+801F: 280C     [101|106]	JR	Z, WSTAR
+8021: FE20     [108]    	CP	" "
+8023: 280B     [115|120]	JR	Z, MSGOT
+8025: 0E02     [122]    	LD	C, 02H		; param1: CONOUT
+8027: F7       [133]    	RST	30H		; [UniMon] CONOUT
+8028: 18E0     [145]    	JR	LOOP
+802A:                   DEBUG:
+802A: 00       [ 4]     	NOP			; For DEBUG
+802B: 18DD     [16]     	JR	LOOP
+802D:                   WSTAR:
+802D: 0E01     [ 7]     	LD	C, 01H		; param1: WSTART
+802F: F7       [18]     	RST	30H		; [UniMon] WSTART
+8030:                   MSGOT:
+8030: 0E03     [ 7]     	LD	C, 03H		; param1: STROUT
+8032: 215B80   [17]     	LD	HL, MSG2	; param2: String address
+8035: F7       [28]     	RST	30H		; [UniMon] STROUT
+8036: 18D2     [40]     	JR	LOOP
+                        
+                        ;*******************************
+                        ;	ROM領域
+                        ;*******************************
+8038: FFFFFFFF          	ORG	RAM_B + 40H
+803C: FFFFFFFF          
+                        
+8040: 48656C6C          MSG1:	DEFB	"Hello Assembler World !!", CR, LF, 00H
+8044: 6F204173          
+8048: 73656D62          
+804C: 6C657220          
+8050: 576F726C          
+8054: 64202121          
+8058: 0D0A00            
+805B: 4D657373          MSG2:	DEFM	"MessageString", CR, LF, 00H
+805F: 61676553          
+8063: 7472696E          
+8067: 670D0A00          
+806B: 6B80              ADDR1:	DEFW	$
+806D: 6B80              ADDR2:	DEFW	. - 2
+                        
+                        ;*******************************
+                        ;	RAM領域
+                        ;*******************************
+806F: FFFFFFFF          	ORG	RAM_B + 80H
+8073: FF...             
+                        
+8080: FF                DATA1:	DEFS	1
+                        
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $8000 = 32768,  size = $0081 =   129
+
+; +++ global symbols +++
+
+ADDR1   = $806B = 32875          aki80_simple02_api.asm:62 (unused)
+ADDR2   = $806D = 32877          aki80_simple02_api.asm:63 (unused)
+CR      = $000D =    13          aki80_simple02_api.asm:9
+DATA1   = $8080 = 32896          aki80_simple02_api.asm:70
+DEBUG   = $802A = 32810          aki80_simple02_api.asm:43
+DEL     = $007F =   127          aki80_simple02_api.asm:12
+ESC     = $001B =    27          aki80_simple02_api.asm:11
+LF      = $000A =    10          aki80_simple02_api.asm:10
+LOOP    = $800A = 32778          aki80_simple02_api.asm:25
+MSG1    = $8040 = 32832          aki80_simple02_api.asm:60
+MSG2    = $805B = 32859          aki80_simple02_api.asm:61
+MSGOT   = $8030 = 32816          aki80_simple02_api.asm:49
+RAM_B   = $8000 = 32768          aki80_simple02_api.asm:8
+START   = $8000 = 32768          aki80_simple02_api.asm:19 (unused)
+WSTAR   = $802D = 32813          aki80_simple02_api.asm:46
+_end    = $8081 = 32897          aki80_simple02_api.asm:17 (unused)
+_size   = $0081 =   129          aki80_simple02_api.asm:17 (unused)
+
+
+total time: 0.0053 sec.
+no errors

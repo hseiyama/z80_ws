@@ -1,0 +1,92 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "aki80_simple01_pio.asm"
+                        ; date: 2025-04-25 09:25:16
+                        ; --------------------------------------
+
+
+                        ;***************************************************************
+                        ;	AKI-80ゴールドボード
+                        ;	+ブレッドボード(SW+LED)
+                        ;***************************************************************
+                        
+                        ;*******************************
+                        ;	定数定義
+                        ;*******************************
+8000:                   RAM_B	EQU	8000H
+000D:                   CR	EQU	0DH
+000A:                   LF	EQU	0AH
+                        
+                        ;***************************************************************
+                        ;	メインルーチン
+                        ;***************************************************************
+8000:                   	ORG	RAM_B
+                        
+8000:                   START:
+8000: AF       [ 4]     	XOR	A		; A = 0
+8001: 328080   [17]     	LD	(CNT_DT), A
+8004:                   LOOP:
+8004: DB1C     [11]     	IN	A, (1CH)	; A <- IO only
+8006: FEAA     [18]     	CP	0AAH		; A only
+8008: 2005     [25|30]  	JR	NZ, IO_OUT
+800A: 76       [29]     	HALT
+800B: 00       [33]     	NOP			; for Debug
+800C: CD1A80   [50]     	CALL	MSG_OT
+800F:                   IO_OUT:
+800F: D31E     [11]     	OUT	(1EH), A	; IO <- A only
+8011: 3A8080   [24]     	LD	A, (CNT_DT)	; A <- MEM only
+8014: 3C       [28]     	INC	A
+8015: 328080   [41]     	LD	(CNT_DT), A	; MEM <- A only
+8018: 18EA     [53]     	JR	LOOP
+                        
+801A:                   MSG_OT:
+801A: F5       [11]     	PUSH	AF
+801B: 214080   [21]     	LD	HL, MSG_ST
+801E: 0E03     [28]     	LD	C, 03H
+8020: F7       [39]     	RST	30H		; [UniMon] STROUT
+8021: F1       [49]     	POP	AF
+8022: C9       [59]     	RET
+                        
+                        ;*******************************
+                        ;	ROM領域
+                        ;*******************************
+8023: FFFFFFFF          	ORG	RAM_B + 40H
+8027: FF...             
+                        
+8040: 48616C74          MSG_ST:	DEFB	"Halt executed!!", CR, LF, 00H
+8044: 20657865          
+8048: 63757465          
+804C: 6421210D          
+8050: 0A00              
+                        
+                        ;*******************************
+                        ;	RAM領域
+                        ;*******************************
+8052: FFFFFFFF          	ORG	RAM_B + 80H
+8056: FF...             
+                        
+8080: FF                CNT_DT:	DEFS	1
+                        
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $8000 = 32768,  size = $0081 =   129
+
+; +++ global symbols +++
+
+CNT_DT  = $8080 = 32896          aki80_simple01_pio.asm:55
+CR      = $000D =    13          aki80_simple01_pio.asm:10
+IO_OUT  = $800F = 32783          aki80_simple01_pio.asm:28
+LF      = $000A =    10          aki80_simple01_pio.asm:11
+LOOP    = $8004 = 32772          aki80_simple01_pio.asm:21
+MSG_OT  = $801A = 32794          aki80_simple01_pio.asm:35
+MSG_ST  = $8040 = 32832          aki80_simple01_pio.asm:48
+RAM_B   = $8000 = 32768          aki80_simple01_pio.asm:9
+START   = $8000 = 32768          aki80_simple01_pio.asm:18 (unused)
+_end    = $8081 = 32897          aki80_simple01_pio.asm:16 (unused)
+_size   = $0081 =   129          aki80_simple01_pio.asm:16 (unused)
+
+
+total time: 0.0050 sec.
+no errors
