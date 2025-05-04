@@ -5,7 +5,12 @@
 #include <string.h> // memcpy
 #include "perfectz80.h"
 
-uint8_t cpu_rom[] = {
+typedef struct {
+	uint16_t addr;
+	char *inst;
+} asm_t;
+
+static uint8_t cpu_rom[] = {
 	0x31, 0x30, 0x00,		//         ld sp,stack
 	0xCD, 0x08, 0x00,		// loop:   call func
 	0x18, 0xFB,				//         jr loop
@@ -14,6 +19,15 @@ uint8_t cpu_rom[] = {
 	0xC9,					//         ret
 	0x40					// data:   db 40h
 							// stack:  org 30h
+};
+
+static asm_t cpu_asm[] = {
+	{0x0000, "LD SP,0030h "},
+	{0x0003, "CALL 0008h  "},
+	{0x0006, "JR 0003h    "},
+	{0x0008, "LD HL,000Dh "},
+	{0x000B, "INC (HL)    "},
+	{0x000C, "RET         "}
 };
 
 void main(void) {
@@ -33,15 +47,17 @@ void main(void) {
 	uint8_t val_IR;
 	uint16_t val_AF;
 	uint16_t val_HL;
+	char *val_Asm;
 
 	// Initialize
 	InstCnt = 0;
 	memcpy(cpu_memory, cpu_rom, sizeof(cpu_rom));
+	val_Asm = "";
 
 	// print title
-	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+\n");
-	printf("|   T  | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | HL   |\n");
-	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+\n");
+	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+----+--------------+\n");
+	printf("|   T  | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | HL   |mem | Asm          |\n");
+	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+----+--------------+\n");
 
 	// cpu_initAndResetChip
 	cpu_state = cpu_initAndResetChip();
@@ -66,6 +82,14 @@ void main(void) {
 		val_IR = cpu_readIR(cpu_state);
 		val_AF = (cpu_readA(cpu_state) << 8) | cpu_readF(cpu_state);
 		val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
+		// set val_Asm
+		if (pin_M1 & !pin_MREQ) {
+			for (int i = 0; i < (sizeof(cpu_asm) / sizeof(asm_t)); i++) {
+				if (cpu_asm[i].addr == AddressBus) {
+					val_Asm = cpu_asm[i].inst;
+				}
+			}
+		}
 
 		// print item
 		printf("|%3d/%-2d|", InstCnt, pin_CLK);
@@ -82,6 +106,8 @@ void main(void) {
 		printf(" %02X |", val_IR);
 		printf(" %04X |", val_AF);
 		printf(" %04X |", val_HL);
+		printf(" %02X |", cpu_memory[0x000D]);
+		printf(" %s |", val_Asm);
 		printf("\n");
 	}
 
