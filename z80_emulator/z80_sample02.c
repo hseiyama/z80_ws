@@ -70,10 +70,10 @@ int main() {
 		// handle io read or write access
 		else if (pins & Z80_IORQ) {
 			if (pins & Z80_RD) {
-				Z80_SET_DATA(pins, io[Z80_GET_ADDR(pins)]);
+				Z80_SET_DATA(pins, io[Z80_GET_ADDR(pins) & 0xFF]);
 			}
 			else if (pins & Z80_WR) {
-				io[Z80_GET_ADDR(pins)] = Z80_GET_DATA(pins);
+				io[Z80_GET_ADDR(pins) & 0xFF] = Z80_GET_DATA(pins);
 			}
 		}
 	}
