@@ -32,7 +32,7 @@ static asm_t cpu_asm[] = {
 
 void main(void) {
 	void* cpu_state;
-	uint32_t InstCnt;
+	uint32_t TickCnt;
 	uint8_t pin_CLK;
 	uint8_t pin_M1;
 	uint8_t pin_MREQ;
@@ -50,7 +50,7 @@ void main(void) {
 	char *val_Asm;
 
 	// Initialize
-	InstCnt = 0;
+	TickCnt = 0;
 	memcpy(cpu_memory, cpu_rom, sizeof(cpu_rom));
 	val_Asm = "";
 
@@ -68,7 +68,7 @@ void main(void) {
 
 		// read
 		pin_CLK = cpu_readCLK(cpu_state);
-		InstCnt += pin_CLK;
+		TickCnt += pin_CLK;
 		pin_M1 = !cpu_readM1(cpu_state);
 		pin_MREQ = !cpu_readMREQ(cpu_state);
 		pin_IORQ = !cpu_readIORQ(cpu_state);
@@ -92,7 +92,7 @@ void main(void) {
 		}
 
 		// print item
-		printf("|%3d/%-2d|", InstCnt, pin_CLK);
+		printf("|%3d/%-2d|", TickCnt, pin_CLK);
 		pin_M1 ? printf(" M1 |") : printf("    |");
 		pin_MREQ ? printf(" MREQ |") : printf("      |");
 		pin_IORQ ? printf(" IORQ |") : printf("      |");
