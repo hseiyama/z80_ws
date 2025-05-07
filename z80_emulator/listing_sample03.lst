@@ -1,0 +1,98 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "listing_sample03.asm"
+                        ; date: 2025-05-08 01:18:08
+                        ; --------------------------------------
+
+
+                        ;***************************************************************
+                        ;	z80_sample03用 Z80アセンブラコード
+                        ;***************************************************************
+                        
+                        ;*******************************
+                        ;	定数定義
+                        ;*******************************
+0000:                   ROM_B	EQU	0000H
+                        
+                        ;	パラレルポートI/Oアドレスセット
+001C:                   PIOA	EQU	1CH		;Ａポートデータ
+001E:                   PIOB	EQU	1EH		;Ｂポートデータ
+                        
+                        ;***************************************************************
+                        ;	メインルーチン
+                        ;***************************************************************
+0000:                   	ORG	ROM_B
+                        
+0000:                   START:
+0000: F3       [ 4]     	DI
+0001: 310000   [14]     	LD	SP, 0000H
+0004: CD1000   [31]     	CALL	IOSET
+0007:                   LOOP:
+0007: DB1C     [11]     	IN	A, (PIOA)
+0009: D31E     [22]     	OUT	(PIOB), A
+000B: 324000   [35]     	LD	(PIO_WS), A
+000E: 18F7     [47]     	JR	LOOP
+                        
+0010:                   IOSET:
+0010: 213000   [10]     	LD	HL, PIOACD		;PIOAコマンドセットアップ
+0013: 0603     [17]     	LD	B, PAEND - PIOACD
+0015: 0E1D     [24]     	LD	C, PIOA + 1		;PIOAコマンドアドレス(1DH)
+0017: EDB3     [40|21]  	OTIR
+0019: 213300   [50]     	LD	HL, PIOBCD		;PIOBコマンドセットアップ
+001C: 0603     [57]     	LD	B, PBEND - PIOBCD
+001E: 0E1F     [64]     	LD	C, PIOB + 1		;PIOBコマンドアドレス(1FH)
+0020: EDB3     [80|21]  	OTIR
+0022: C9       [90]     	RET
+                        
+                        ;*******************************
+                        ;	ROM領域
+                        ;*******************************
+0023: FFFFFFFF          	ORG	ROM_B + 30H
+0027: FF...             
+                        
+0030: CF                PIOACD:	DB	0CFH		;PIOAモードワード			**001111 (モード3)
+0031: FF                	DB	0FFH		;PIOAデータディレクションワード		(全ビット入力)
+0032: 07                	DB	07H		;PIOAインタラプトコントロールワード	****0111 (割込み無効)
+                        ;	DB	00H		;PIOAインタラプトマスクワード
+                        ;	DB	ENTRY+16	;PIOAインタラプトベクタ
+0033:                   PAEND	EQU	$
+0033: CF                PIOBCD:	DB	0CFH		;PIOBモードワード			**001111 (モード3)
+0034: 00                	DB	00H		;PIOBデータディレクションワード		(全ビット出力)
+0035: 07                	DB	07H		;PIOBインタラプトコントロールワード	****0111 (割込み無効)
+                        ;	DB	00H		;PIOBインタラプトマスクワード
+                        ;	DB	ENTRY+18	;PIOBインタラプトベクタ
+0036:                   PBEND	EQU	$
+                        
+                        ;*******************************
+                        ;	RAM領域
+                        ;*******************************
+0036: FFFFFFFF          	ORG	ROM_B + 40H
+003A: FF...             
+                        
+0040: FF                PIO_WS:	DEFS	1
+                        
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $0000 =     0,  size = $0041 =    65
+
+; +++ global symbols +++
+
+IOSET   = $0010 =    16          listing_sample03.asm:29
+LOOP    = $0007 =     7          listing_sample03.asm:23
+PAEND   = $0033 =    51          listing_sample03.asm:50
+PBEND   = $0036 =    54          listing_sample03.asm:56
+PIOA    = $001C =    28          listing_sample03.asm:11
+PIOACD  = $0030 =    48          listing_sample03.asm:45
+PIOB    = $001E =    30          listing_sample03.asm:12
+PIOBCD  = $0033 =    51          listing_sample03.asm:51
+PIO_WS  = $0040 =    64          listing_sample03.asm:63
+ROM_B   = $0000 =     0          listing_sample03.asm:8
+START   = $0000 =     0          listing_sample03.asm:19 (unused)
+_end    = $0041 =    65          listing_sample03.asm:17 (unused)
+_size   = $0041 =    65          listing_sample03.asm:17 (unused)
+
+
+total time: 0.0027 sec.
+no errors

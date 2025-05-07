@@ -1,0 +1,257 @@
++-----+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+
+|  T  | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   |mem | PIO   | Asm          |
++-----+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+
+| 1/1 | M1 | MREQ |      |      | RD |    | 0000 | 00 | 0001 | FFFF | 00 | FFFF | FFFF | FFFF | FF | AA,FF | DI           |
+| 1/2 |    |      |      |      |    |    | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | FF | AA,FF | DI           |
+| 1/3 |    | MREQ |      | RFSH |    |    | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | FF | AA,FF | DI           |
+| 1/4 |    |      |      |      |    |    | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | FF | AA,FF | DI           |
+| 2/1 | M1 | MREQ |      |      | RD |    | 0001 | F3 | 0002 | FFFF | F3 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/2 |    |      |      |      |    |    | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/3 |    | MREQ |      | RFSH |    |    | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/4 |    |      |      |      |    |    | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/5 |    |      |      |      |    |    | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/6 |    | MREQ |      |      | RD |    | 0002 | 31 | 0003 | FFFF | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/7 |    |      |      |      |    |    | 0002 | 00 | 0003 | FF00 | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/8 |    |      |      |      |    |    | 0002 | 00 | 0003 | FF00 | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/9 |    | MREQ |      |      | RD |    | 0003 | 00 | 0004 | FF00 | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 2/10|    |      |      |      |    |    | 0003 | 00 | 0004 | 0000 | 31 | FFFF | FFFF | FFFF | FF | AA,FF | LD SP,0000h  |
+| 3/1 | M1 | MREQ |      |      | RD |    | 0004 | 00 | 0005 | 0000 | 31 | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/2 |    |      |      |      |    |    | 0004 | CD | 0005 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/3 |    | MREQ |      | RFSH |    |    | 0002 | CD | 0005 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/4 |    |      |      |      |    |    | 0002 | CD | 0005 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/5 |    |      |      |      |    |    | 0002 | CD | 0005 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/6 |    | MREQ |      |      | RD |    | 0005 | CD | 0006 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/7 |    |      |      |      |    |    | 0005 | 10 | 0006 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/8 |    |      |      |      |    |    | 0005 | 10 | 0006 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/9 |    | MREQ |      |      | RD |    | 0006 | 10 | 0007 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/10|    |      |      |      |    |    | 0006 | 00 | 0007 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/11|    |      |      |      |    |    | 0006 | 00 | 0007 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/12|    |      |      |      |    |    | 0006 | 00 | 0007 | 0000 | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/13|    | MREQ |      |      |    | WR | FFFF | 00 | 0007 | FFFF | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/14|    |      |      |      |    |    | FFFF | 00 | 0007 | FFFF | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/15|    |      |      |      |    |    | FFFF | 00 | 0007 | FFFF | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/16|    | MREQ |      |      |    | WR | FFFE | 07 | 0010 | FFFE | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 3/17|    |      |      |      |    |    | FFFE | 07 | 0010 | FFFE | CD | FFFF | FFFF | FFFF | FF | AA,FF | CALL 0010h   |
+| 4/1 | M1 | MREQ |      |      | RD |    | 0010 | 07 | 0011 | FFFE | CD | FFFF | FFFF | FFFF | FF | AA,FF | LD HL,0030h  |
+| 4/2 |    |      |      |      |    |    | 0010 | 21 | 0011 | FFFE | 21 | FFFF | FFFF | FFFF | FF | AA,FF | LD HL,0030h  |
+| 4/3 |    | MREQ |      | RFSH |    |    | 0003 | 21 | 0011 | FFFE | 21 | FFFF | FFFF | FFFF | FF | AA,FF | LD HL,0030h  |
+| 4/4 |    |      |      |      |    |    | 0003 | 21 | 0011 | FFFE | 21 | FFFF | FFFF | FFFF | FF | AA,FF | LD HL,0030h  |
+| 4/5 |    |      |      |      |    |    | 0003 | 21 | 0011 | FFFE | 21 | FFFF | FFFF | FFFF | FF | AA,FF | LD HL,0030h  |
+| 4/6 |    | MREQ |      |      | RD |    | 0011 | 21 | 0012 | FFFE | 21 | FFFF | FFFF | FFFF | FF | AA,FF | LD HL,0030h  |
+| 4/7 |    |      |      |      |    |    | 0011 | 30 | 0012 | FFFE | 21 | FFFF | FFFF | FF30 | FF | AA,FF | LD HL,0030h  |
+| 4/8 |    |      |      |      |    |    | 0011 | 30 | 0012 | FFFE | 21 | FFFF | FFFF | FF30 | FF | AA,FF | LD HL,0030h  |
+| 4/9 |    | MREQ |      |      | RD |    | 0012 | 30 | 0013 | FFFE | 21 | FFFF | FFFF | FF30 | FF | AA,FF | LD HL,0030h  |
+| 4/10|    |      |      |      |    |    | 0012 | 00 | 0013 | FFFE | 21 | FFFF | FFFF | 0030 | FF | AA,FF | LD HL,0030h  |
+| 5/1 | M1 | MREQ |      |      | RD |    | 0013 | 00 | 0014 | FFFE | 21 | FFFF | FFFF | 0030 | FF | AA,FF | LD B,03h     |
+| 5/2 |    |      |      |      |    |    | 0013 | 06 | 0014 | FFFE | 06 | FFFF | FFFF | 0030 | FF | AA,FF | LD B,03h     |
+| 5/3 |    | MREQ |      | RFSH |    |    | 0004 | 06 | 0014 | FFFE | 06 | FFFF | FFFF | 0030 | FF | AA,FF | LD B,03h     |
+| 5/4 |    |      |      |      |    |    | 0004 | 06 | 0014 | FFFE | 06 | FFFF | FFFF | 0030 | FF | AA,FF | LD B,03h     |
+| 5/5 |    |      |      |      |    |    | 0004 | 06 | 0014 | FFFE | 06 | FFFF | FFFF | 0030 | FF | AA,FF | LD B,03h     |
+| 5/6 |    | MREQ |      |      | RD |    | 0014 | 06 | 0015 | FFFE | 06 | FFFF | FFFF | 0030 | FF | AA,FF | LD B,03h     |
+| 5/7 |    |      |      |      |    |    | 0014 | 03 | 0015 | FFFE | 06 | FFFF | 03FF | 0030 | FF | AA,FF | LD B,03h     |
+| 6/1 | M1 | MREQ |      |      | RD |    | 0015 | 03 | 0016 | FFFE | 06 | FFFF | 03FF | 0030 | FF | AA,FF | LD C,1Dh     |
+| 6/2 |    |      |      |      |    |    | 0015 | 0E | 0016 | FFFE | 0E | FFFF | 03FF | 0030 | FF | AA,FF | LD C,1Dh     |
+| 6/3 |    | MREQ |      | RFSH |    |    | 0005 | 0E | 0016 | FFFE | 0E | FFFF | 03FF | 0030 | FF | AA,FF | LD C,1Dh     |
+| 6/4 |    |      |      |      |    |    | 0005 | 0E | 0016 | FFFE | 0E | FFFF | 03FF | 0030 | FF | AA,FF | LD C,1Dh     |
+| 6/5 |    |      |      |      |    |    | 0005 | 0E | 0016 | FFFE | 0E | FFFF | 03FF | 0030 | FF | AA,FF | LD C,1Dh     |
+| 6/6 |    | MREQ |      |      | RD |    | 0016 | 0E | 0017 | FFFE | 0E | FFFF | 03FF | 0030 | FF | AA,FF | LD C,1Dh     |
+| 6/7 |    |      |      |      |    |    | 0016 | 1D | 0017 | FFFE | 0E | FFFF | 031D | 0030 | FF | AA,FF | LD C,1Dh     |
+| 7/1 | M1 | MREQ |      |      | RD |    | 0017 | 1D | 0018 | FFFE | 0E | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 7/2 |    |      |      |      |    |    | 0017 | ED | 0018 | FFFE | ED | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 7/3 |    | MREQ |      | RFSH |    |    | 0006 | ED | 0018 | FFFE | ED | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 7/4 |    |      |      |      |    |    | 0006 | ED | 0018 | FFFE | ED | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/1 | M1 | MREQ |      |      | RD |    | 0018 | ED | 0019 | FFFE | ED | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/2 |    |      |      |      |    |    | 0018 | B3 | 0019 | FFFE | B3 | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/3 |    | MREQ |      | RFSH |    |    | 0007 | B3 | 0019 | FFFE | B3 | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/4 |    |      |      |      |    |    | 0007 | B3 | 0019 | FFFE | B3 | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/5 |    |      |      |      |    |    | 0007 | B3 | 0019 | FFFE | B3 | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/6 |    |      |      |      |    |    | 0007 | B3 | 0019 | FFFE | B3 | FFFF | 031D | 0030 | FF | AA,FF | OTIR         |
+| 8/7 |    | MREQ |      |      | RD |    | 0030 | B3 | 0019 | FFFE | B3 | FFFF | 031D | 0031 | FF | AA,FF | OTIR         |
+| 8/8 |    |      |      |      |    |    | 0030 | CF | 0019 | FFFE | B3 | FFFF | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/9 |    |      |      |      |    |    | 0030 | CF | 0019 | FFFE | B3 | FFFF | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/10|    |      | IORQ |      |    | WR | 021D | CF | 0019 | FFFE | B3 | FFFF | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/11|    |      |      |      |    |    | 021D | CF | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/12|    |      |      |      |    |    | 021D | CF | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/13|    |      |      |      |    |    | 021D | CF | 0017 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/14|    |      |      |      |    |    | 021D | CF | 0017 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/15|    |      |      |      |    |    | 021D | CF | 0017 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/16|    |      |      |      |    |    | 021D | CF | 0017 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 8/17|    |      |      |      |    |    | 021D | CF | 0017 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 9/1 | M1 | MREQ |      |      | RD |    | 0017 | CF | 0018 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 9/2 |    |      |      |      |    |    | 0017 | ED | 0018 | FFFE | ED | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 9/3 |    | MREQ |      | RFSH |    |    | 0008 | ED | 0018 | FFFE | ED | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+| 9/4 |    |      |      |      |    |    | 0008 | ED | 0018 | FFFE | ED | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/1 | M1 | MREQ |      |      | RD |    | 0018 | ED | 0019 | FFFE | ED | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/2 |    |      |      |      |    |    | 0018 | B3 | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/3 |    | MREQ |      | RFSH |    |    | 0009 | B3 | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/4 |    |      |      |      |    |    | 0009 | B3 | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/5 |    |      |      |      |    |    | 0009 | B3 | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/6 |    |      |      |      |    |    | 0009 | B3 | 0019 | FFFE | B3 | FF13 | 021D | 0031 | FF | AA,FF | OTIR         |
+|10/7 |    | MREQ |      |      | RD |    | 0031 | B3 | 0019 | FFFE | B3 | FF13 | 021D | 0032 | FF | AA,FF | OTIR         |
+|10/8 |    |      |      |      |    |    | 0031 | FF | 0019 | FFFE | B3 | FF13 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/9 |    |      |      |      |    |    | 0031 | FF | 0019 | FFFE | B3 | FF13 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/10|    |      | IORQ |      |    | WR | 011D | FF | 0019 | FFFE | B3 | FF13 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/11|    |      |      |      |    |    | 011D | FF | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/12|    |      |      |      |    |    | 011D | FF | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/13|    |      |      |      |    |    | 011D | FF | 0017 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/14|    |      |      |      |    |    | 011D | FF | 0017 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/15|    |      |      |      |    |    | 011D | FF | 0017 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/16|    |      |      |      |    |    | 011D | FF | 0017 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|10/17|    |      |      |      |    |    | 011D | FF | 0017 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|11/1 | M1 | MREQ |      |      | RD |    | 0017 | FF | 0018 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|11/2 |    |      |      |      |    |    | 0017 | ED | 0018 | FFFE | ED | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|11/3 |    | MREQ |      | RFSH |    |    | 000A | ED | 0018 | FFFE | ED | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|11/4 |    |      |      |      |    |    | 000A | ED | 0018 | FFFE | ED | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/1 | M1 | MREQ |      |      | RD |    | 0018 | ED | 0019 | FFFE | ED | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/2 |    |      |      |      |    |    | 0018 | B3 | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/3 |    | MREQ |      | RFSH |    |    | 000B | B3 | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/4 |    |      |      |      |    |    | 000B | B3 | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/5 |    |      |      |      |    |    | 000B | B3 | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/6 |    |      |      |      |    |    | 000B | B3 | 0019 | FFFE | B3 | FF17 | 011D | 0032 | FF | AA,FF | OTIR         |
+|12/7 |    | MREQ |      |      | RD |    | 0032 | B3 | 0019 | FFFE | B3 | FF17 | 011D | 0033 | FF | AA,FF | OTIR         |
+|12/8 |    |      |      |      |    |    | 0032 | 07 | 0019 | FFFE | B3 | FF17 | 001D | 0033 | FF | AA,FF | OTIR         |
+|12/9 |    |      |      |      |    |    | 0032 | 07 | 0019 | FFFE | B3 | FF17 | 001D | 0033 | FF | AA,FF | OTIR         |
+|12/10|    |      | IORQ |      |    | WR | 001D | 07 | 0019 | FFFE | B3 | FF17 | 001D | 0033 | FF | AA,FF | OTIR         |
+|12/11|    |      |      |      |    |    | 001D | 07 | 0019 | FFFE | B3 | FF40 | 001D | 0033 | FF | AA,FF | OTIR         |
+|12/12|    |      |      |      |    |    | 001D | 07 | 0019 | FFFE | B3 | FF40 | 001D | 0033 | FF | AA,FF | OTIR         |
+|13/1 | M1 | MREQ |      |      | RD |    | 0019 | 07 | 001A | FFFE | B3 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/2 |    |      |      |      |    |    | 0019 | 21 | 001A | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/3 |    | MREQ |      | RFSH |    |    | 000C | 21 | 001A | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/4 |    |      |      |      |    |    | 000C | 21 | 001A | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/5 |    |      |      |      |    |    | 000C | 21 | 001A | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/6 |    | MREQ |      |      | RD |    | 001A | 21 | 001B | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/7 |    |      |      |      |    |    | 001A | 33 | 001B | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/8 |    |      |      |      |    |    | 001A | 33 | 001B | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/9 |    | MREQ |      |      | RD |    | 001B | 33 | 001C | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|13/10|    |      |      |      |    |    | 001B | 00 | 001C | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD HL,0033h  |
+|14/1 | M1 | MREQ |      |      | RD |    | 001C | 00 | 001D | FFFE | 21 | FF40 | 001D | 0033 | FF | AA,FF | LD B,03h     |
+|14/2 |    |      |      |      |    |    | 001C | 06 | 001D | FFFE | 06 | FF40 | 001D | 0033 | FF | AA,FF | LD B,03h     |
+|14/3 |    | MREQ |      | RFSH |    |    | 000D | 06 | 001D | FFFE | 06 | FF40 | 001D | 0033 | FF | AA,FF | LD B,03h     |
+|14/4 |    |      |      |      |    |    | 000D | 06 | 001D | FFFE | 06 | FF40 | 001D | 0033 | FF | AA,FF | LD B,03h     |
+|14/5 |    |      |      |      |    |    | 000D | 06 | 001D | FFFE | 06 | FF40 | 001D | 0033 | FF | AA,FF | LD B,03h     |
+|14/6 |    | MREQ |      |      | RD |    | 001D | 06 | 001E | FFFE | 06 | FF40 | 001D | 0033 | FF | AA,FF | LD B,03h     |
+|14/7 |    |      |      |      |    |    | 001D | 03 | 001E | FFFE | 06 | FF40 | 031D | 0033 | FF | AA,FF | LD B,03h     |
+|15/1 | M1 | MREQ |      |      | RD |    | 001E | 03 | 001F | FFFE | 06 | FF40 | 031D | 0033 | FF | AA,FF | LD C,1Fh     |
+|15/2 |    |      |      |      |    |    | 001E | 0E | 001F | FFFE | 0E | FF40 | 031D | 0033 | FF | AA,FF | LD C,1Fh     |
+|15/3 |    | MREQ |      | RFSH |    |    | 000E | 0E | 001F | FFFE | 0E | FF40 | 031D | 0033 | FF | AA,FF | LD C,1Fh     |
+|15/4 |    |      |      |      |    |    | 000E | 0E | 001F | FFFE | 0E | FF40 | 031D | 0033 | FF | AA,FF | LD C,1Fh     |
+|15/5 |    |      |      |      |    |    | 000E | 0E | 001F | FFFE | 0E | FF40 | 031D | 0033 | FF | AA,FF | LD C,1Fh     |
+|15/6 |    | MREQ |      |      | RD |    | 001F | 0E | 0020 | FFFE | 0E | FF40 | 031D | 0033 | FF | AA,FF | LD C,1Fh     |
+|15/7 |    |      |      |      |    |    | 001F | 1F | 0020 | FFFE | 0E | FF40 | 031F | 0033 | FF | AA,FF | LD C,1Fh     |
+|16/1 | M1 | MREQ |      |      | RD |    | 0020 | 1F | 0021 | FFFE | 0E | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|16/2 |    |      |      |      |    |    | 0020 | ED | 0021 | FFFE | ED | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|16/3 |    | MREQ |      | RFSH |    |    | 000F | ED | 0021 | FFFE | ED | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|16/4 |    |      |      |      |    |    | 000F | ED | 0021 | FFFE | ED | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/1 | M1 | MREQ |      |      | RD |    | 0021 | ED | 0022 | FFFE | ED | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/2 |    |      |      |      |    |    | 0021 | B3 | 0022 | FFFE | B3 | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/3 |    | MREQ |      | RFSH |    |    | 0010 | B3 | 0022 | FFFE | B3 | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/4 |    |      |      |      |    |    | 0010 | B3 | 0022 | FFFE | B3 | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/5 |    |      |      |      |    |    | 0010 | B3 | 0022 | FFFE | B3 | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/6 |    |      |      |      |    |    | 0010 | B3 | 0022 | FFFE | B3 | FF40 | 031F | 0033 | FF | AA,FF | OTIR         |
+|17/7 |    | MREQ |      |      | RD |    | 0033 | B3 | 0022 | FFFE | B3 | FF40 | 031F | 0034 | FF | AA,FF | OTIR         |
+|17/8 |    |      |      |      |    |    | 0033 | CF | 0022 | FFFE | B3 | FF40 | 021F | 0034 | FF | AA,FF | OTIR         |
+|17/9 |    |      |      |      |    |    | 0033 | CF | 0022 | FFFE | B3 | FF40 | 021F | 0034 | FF | AA,FF | OTIR         |
+|17/10|    |      | IORQ |      |    | WR | 021F | CF | 0022 | FFFE | B3 | FF40 | 021F | 0034 | FF | AA,FF | OTIR         |
+|17/11|    |      |      |      |    |    | 021F | CF | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|17/12|    |      |      |      |    |    | 021F | CF | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|17/13|    |      |      |      |    |    | 021F | CF | 0020 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|17/14|    |      |      |      |    |    | 021F | CF | 0020 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|17/15|    |      |      |      |    |    | 021F | CF | 0020 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|17/16|    |      |      |      |    |    | 021F | CF | 0020 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|17/17|    |      |      |      |    |    | 021F | CF | 0020 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|18/1 | M1 | MREQ |      |      | RD |    | 0020 | CF | 0021 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|18/2 |    |      |      |      |    |    | 0020 | ED | 0021 | FFFE | ED | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|18/3 |    | MREQ |      | RFSH |    |    | 0011 | ED | 0021 | FFFE | ED | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|18/4 |    |      |      |      |    |    | 0011 | ED | 0021 | FFFE | ED | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/1 | M1 | MREQ |      |      | RD |    | 0021 | ED | 0022 | FFFE | ED | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/2 |    |      |      |      |    |    | 0021 | B3 | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/3 |    | MREQ |      | RFSH |    |    | 0012 | B3 | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/4 |    |      |      |      |    |    | 0012 | B3 | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/5 |    |      |      |      |    |    | 0012 | B3 | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/6 |    |      |      |      |    |    | 0012 | B3 | 0022 | FFFE | B3 | FF13 | 021F | 0034 | FF | AA,00 | OTIR         |
+|19/7 |    | MREQ |      |      | RD |    | 0034 | B3 | 0022 | FFFE | B3 | FF13 | 021F | 0035 | FF | AA,00 | OTIR         |
+|19/8 |    |      |      |      |    |    | 0034 | 00 | 0022 | FFFE | B3 | FF13 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/9 |    |      |      |      |    |    | 0034 | 00 | 0022 | FFFE | B3 | FF13 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/10|    |      | IORQ |      |    | WR | 011F | 00 | 0022 | FFFE | B3 | FF13 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/11|    |      |      |      |    |    | 011F | 00 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/12|    |      |      |      |    |    | 011F | 00 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/13|    |      |      |      |    |    | 011F | 00 | 0020 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/14|    |      |      |      |    |    | 011F | 00 | 0020 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/15|    |      |      |      |    |    | 011F | 00 | 0020 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/16|    |      |      |      |    |    | 011F | 00 | 0020 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|19/17|    |      |      |      |    |    | 011F | 00 | 0020 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|20/1 | M1 | MREQ |      |      | RD |    | 0020 | 00 | 0021 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|20/2 |    |      |      |      |    |    | 0020 | ED | 0021 | FFFE | ED | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|20/3 |    | MREQ |      | RFSH |    |    | 0013 | ED | 0021 | FFFE | ED | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|20/4 |    |      |      |      |    |    | 0013 | ED | 0021 | FFFE | ED | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/1 | M1 | MREQ |      |      | RD |    | 0021 | ED | 0022 | FFFE | ED | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/2 |    |      |      |      |    |    | 0021 | B3 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/3 |    | MREQ |      | RFSH |    |    | 0014 | B3 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/4 |    |      |      |      |    |    | 0014 | B3 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/5 |    |      |      |      |    |    | 0014 | B3 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/6 |    |      |      |      |    |    | 0014 | B3 | 0022 | FFFE | B3 | FF00 | 011F | 0035 | FF | AA,00 | OTIR         |
+|21/7 |    | MREQ |      |      | RD |    | 0035 | B3 | 0022 | FFFE | B3 | FF00 | 011F | 0036 | FF | AA,00 | OTIR         |
+|21/8 |    |      |      |      |    |    | 0035 | 07 | 0022 | FFFE | B3 | FF00 | 001F | 0036 | FF | AA,00 | OTIR         |
+|21/9 |    |      |      |      |    |    | 0035 | 07 | 0022 | FFFE | B3 | FF00 | 001F | 0036 | FF | AA,00 | OTIR         |
+|21/10|    |      | IORQ |      |    | WR | 001F | 07 | 0022 | FFFE | B3 | FF00 | 001F | 0036 | FF | AA,00 | OTIR         |
+|21/11|    |      |      |      |    |    | 001F | 07 | 0022 | FFFE | B3 | FF44 | 001F | 0036 | FF | AA,00 | OTIR         |
+|21/12|    |      |      |      |    |    | 001F | 07 | 0022 | FFFE | B3 | FF44 | 001F | 0036 | FF | AA,00 | OTIR         |
+|22/1 | M1 | MREQ |      |      | RD |    | 0022 | 07 | 0023 | FFFE | B3 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/2 |    |      |      |      |    |    | 0022 | C9 | 0023 | FFFE | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/3 |    | MREQ |      | RFSH |    |    | 0015 | C9 | 0023 | FFFE | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/4 |    |      |      |      |    |    | 0015 | C9 | 0023 | FFFE | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/5 |    |      |      |      |    |    | 0015 | C9 | 0023 | FFFE | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/6 |    | MREQ |      |      | RD |    | FFFE | C9 | 0023 | FFFF | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/7 |    |      |      |      |    |    | FFFE | 07 | 0023 | FFFF | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/8 |    |      |      |      |    |    | FFFE | 07 | 0023 | FFFF | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/9 |    | MREQ |      |      | RD |    | FFFF | 07 | 0023 | 0000 | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|22/10|    |      |      |      |    |    | FFFF | 00 | 0007 | 0000 | C9 | FF44 | 001F | 0036 | FF | AA,00 | RET          |
+|23/1 | M1 | MREQ |      |      | RD |    | 0007 | 00 | 0008 | 0000 | C9 | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/2 |    |      |      |      |    |    | 0007 | DB | 0008 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/3 |    | MREQ |      | RFSH |    |    | 0016 | DB | 0008 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/4 |    |      |      |      |    |    | 0016 | DB | 0008 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/5 |    |      |      |      |    |    | 0016 | DB | 0008 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/6 |    | MREQ |      |      | RD |    | 0008 | DB | 0009 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/7 |    |      |      |      |    |    | 0008 | 1C | 0009 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/8 |    |      |      |      |    |    | 0008 | 1C | 0009 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/9 |    |      |      |      |    |    | 0008 | 1C | 0009 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/10|    |      | IORQ |      | RD |    | FF1C | 1C | 0009 | 0000 | DB | FF44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|23/11|    |      |      |      |    |    | FF1C | AA | 0009 | 0000 | DB | AA44 | 001F | 0036 | FF | AA,00 | IN A,(1Ch)   |
+|24/1 | M1 | MREQ |      |      | RD |    | 0009 | AA | 000A | 0000 | DB | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/2 |    |      |      |      |    |    | 0009 | D3 | 000A | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/3 |    | MREQ |      | RFSH |    |    | 0017 | D3 | 000A | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/4 |    |      |      |      |    |    | 0017 | D3 | 000A | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/5 |    |      |      |      |    |    | 0017 | D3 | 000A | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/6 |    | MREQ |      |      | RD |    | 000A | D3 | 000B | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/7 |    |      |      |      |    |    | 000A | 1E | 000B | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/8 |    |      |      |      |    |    | 000A | 1E | 000B | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/9 |    |      | IORQ |      |    | WR | AA1E | AA | 000B | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,00 | OUT (1Eh),A  |
+|24/10|    |      |      |      |    |    | AA1E | AA | 000B | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,AA | OUT (1Eh),A  |
+|24/11|    |      |      |      |    |    | AA1E | AA | 000B | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,AA | OUT (1Eh),A  |
+|25/1 | M1 | MREQ |      |      | RD |    | 000B | AA | 000C | 0000 | D3 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/2 |    |      |      |      |    |    | 000B | 32 | 000C | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/3 |    | MREQ |      | RFSH |    |    | 0018 | 32 | 000C | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/4 |    |      |      |      |    |    | 0018 | 32 | 000C | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/5 |    |      |      |      |    |    | 0018 | 32 | 000C | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/6 |    | MREQ |      |      | RD |    | 000C | 32 | 000D | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/7 |    |      |      |      |    |    | 000C | 40 | 000D | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/8 |    |      |      |      |    |    | 000C | 40 | 000D | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/9 |    | MREQ |      |      | RD |    | 000D | 40 | 000E | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/10|    |      |      |      |    |    | 000D | 00 | 000E | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/11|    |      |      |      |    |    | 000D | 00 | 000E | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/12|    | MREQ |      |      |    | WR | 0040 | AA | 000E | 0000 | 32 | AA44 | 001F | 0036 | FF | AA,AA | LD (0040h),A |
+|25/13|    |      |      |      |    |    | 0040 | AA | 000E | 0000 | 32 | AA44 | 001F | 0036 | AA | AA,AA | LD (0040h),A |
+|26/1 | M1 | MREQ |      |      | RD |    | 000E | AA | 000F | 0000 | 32 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/2 |    |      |      |      |    |    | 000E | 18 | 000F | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/3 |    | MREQ |      | RFSH |    |    | 0019 | 18 | 000F | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/4 |    |      |      |      |    |    | 0019 | 18 | 000F | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/5 |    |      |      |      |    |    | 0019 | 18 | 000F | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/6 |    | MREQ |      |      | RD |    | 000F | 18 | 0010 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/7 |    |      |      |      |    |    | 000F | F7 | 0010 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/8 |    |      |      |      |    |    | 000F | F7 | 0007 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/9 |    |      |      |      |    |    | 000F | F7 | 0007 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/10|    |      |      |      |    |    | 000F | F7 | 0007 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/11|    |      |      |      |    |    | 000F | F7 | 0007 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|26/12|    |      |      |      |    |    | 000F | F7 | 0007 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | JR 0007h     |
+|27/1 | M1 | MREQ |      |      | RD |    | 0007 | F7 | 0008 | 0000 | 18 | AA44 | 001F | 0036 | AA | AA,AA | IN A,(1Ch)   |
+|27/2 |    |      |      |      |    |    | 0007 | DB | 0008 | 0000 | DB | AA44 | 001F | 0036 | AA | AA,AA | IN A,(1Ch)   |
