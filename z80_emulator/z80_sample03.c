@@ -17,7 +17,8 @@ typedef struct {
 	uint8_t bin_buf[DASM_MAX_BINLEN];
 } dasm_t;
 
-#define Z80_ACT_PIN(p) ((pins & Z80_##p) == Z80_##p)
+#define Z80_GET_PIN(p) ((pins & Z80_##p) == Z80_##p)
+#define Z80_SET_PIN(p,v) {pins = (pins & ~Z80_##p) | (((v) & 1ULL) << Z80_PIN_##p);}
 
 // 64 KB memory with test program at address 0x0000
 static uint8_t mem[(1<<16)] = {
@@ -56,13 +57,13 @@ static uint8_t mem[(1<<16)] = {
 	// 0034: 00                        DB      00H             ;PIOBデータディレクションワード         (全ビット出力)
 	// 0035: 07                        DB      07H             ;PIOBインタラプトコントロールワード     ****0111 (割込み無効)
 	// 0036:                   PBEND   EQU     $
-	// 0036: FFFFFFFF                  ORG     ROM_B + 40H
+	// 0036: FFFFFFFF                  ORG     RAM_B
 	// 003A: FF...             
 	// 0040: FF                PIO_WS: DEFS    1
 };
 
 // opcode address
-static const uint16_t op_addr[] = {
+static const uint16_t op_addr_tbl[] = {
 	0x0000,
 	0x0001,
 	0x0004,
@@ -86,7 +87,7 @@ static dasm_t dasm_info;
 static void dasm_init(void);
 static uint8_t _dasm_in_cb(void* user_data);
 static void _dasm_out_cb(char c, void* user_data);
-static void dasm_disasm(uint16_t cur_addr);
+static void dasm_disasm(uint16_t op_addr);
 
 void main(void) {
 	z80_t cpu;
@@ -95,11 +96,11 @@ void main(void) {
 	uint8_t pio_b;
 	uint8_t inst;
 	uint8_t tick;
-	char *val_Asm;
+	char *str_asm;
 
 	// initialize dasm_info
 	dasm_init();
-	// initialize Z80 emu
+	// initialize Z80 family emulator
 	z80_init(&cpu);
 	z80pio_init(&pio);
 	// execution starts at 0x0000
@@ -109,27 +110,25 @@ void main(void) {
 	pio_b = 0xFF;					// PB for output
 	inst = 0;
 	tick = 0;
-	val_Asm = dasm_info.str_buf;	// assembler string
+	str_asm = dasm_info.str_buf;	// assembler string
 
 	// print title
-	printf("+-----+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+\n");
-	printf("|  T  | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   |mem | PIO   | Asm          |\n");
-	printf("+-----+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+\n");
+	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+\n");
+	printf("| OP/T | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   |mem | PIO   | asm          |\n");
+	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+\n");
 
 	// execute some clock cycles
 	for (int i = 0; i < 254; i++) {
 
-		// tick the CPU
+		// tick CPU
 		pins = z80_tick(&cpu, pins);
 		tick++;
-		if (Z80_ACT_PIN(M1)) {
-			inst++;
-			tick = 1;
-		}
-		// set val_Asm
-		if (Z80_ACT_PIN(M1)) {
-			for (int i = 0; i < (sizeof(op_addr) / sizeof(uint16_t)); i++) {
-				if (op_addr[i] == Z80_GET_ADDR(pins)) {
+		// opcode fetch machine cycle
+		if (Z80_GET_PIN(M1)) {
+			for (int i = 0; i < (sizeof(op_addr_tbl) / sizeof(uint16_t)); i++) {
+				if (op_addr_tbl[i] == Z80_GET_ADDR(pins)) {
+					inst++;
+					tick = 1;
 					// disassemble instruction
 					dasm_disasm(Z80_GET_ADDR(pins));
 				}
@@ -137,13 +136,13 @@ void main(void) {
 		}
 
 		// print item
-		printf("|%2d/%-2d|", inst, tick);
-		Z80_ACT_PIN(M1) ? printf(" M1 |") : printf("    |");
-		Z80_ACT_PIN(MREQ) ? printf(" MREQ |") : printf("      |");
-		Z80_ACT_PIN(IORQ) ? printf(" IORQ |") : printf("      |");
-		Z80_ACT_PIN(RFSH) ? printf(" RFSH |") : printf("      |");
-		Z80_ACT_PIN(RD) ? printf(" RD |") : printf("    |");
-		Z80_ACT_PIN(WR) ? printf(" WR |") : printf("    |");
+		printf("|%3d/%-2d|", inst, tick);
+		Z80_GET_PIN(M1) ? printf(" M1 |") : printf("    |");
+		Z80_GET_PIN(MREQ) ? printf(" MREQ |") : printf("      |");
+		Z80_GET_PIN(IORQ) ? printf(" IORQ |") : printf("      |");
+		Z80_GET_PIN(RFSH) ? printf(" RFSH |") : printf("      |");
+		Z80_GET_PIN(RD) ? printf(" RD |") : printf("    |");
+		Z80_GET_PIN(WR) ? printf(" WR |") : printf("    |");
 		printf(" %04X |", Z80_GET_ADDR(pins));
 		printf(" %02X |", Z80_GET_DATA(pins));
 		printf(" %04X |", cpu.pc);
@@ -154,7 +153,7 @@ void main(void) {
 		printf(" %04X |", cpu.hl);
 		printf(" %02X |", mem[0x0040]);
 		printf(" %02X,%02X |", pio_a, pio_b);
-		printf(" %s |", val_Asm);
+		printf(" %s |", str_asm);
 		printf("\n");
 
 		// handle memory read or write access
@@ -205,14 +204,14 @@ static void _dasm_out_cb(char c, void* user_data) {
 }
 
 /* disassemble the next instruction */
-static void dasm_disasm(uint16_t cur_addr) {
+static void dasm_disasm(uint16_t op_addr) {
 	dasm_info.str_pos = 0;
 	dasm_info.bin_pos = 0;
-	dasm_info.cur_addr = cur_addr;
-	z80dasm_op(dasm_info.cur_addr, _dasm_in_cb, _dasm_out_cb, &dasm_info);
+	dasm_info.cur_addr = op_addr;
+	z80dasm_op(op_addr, _dasm_in_cb, _dasm_out_cb, &dasm_info);
 	// adjust length of assembler string
-	for (int i = dasm_info.str_pos; i < DASM_ASM_STRLEN; i++) {
-		dasm_info.str_buf[i] = ' ';
+	if (dasm_info.str_pos < DASM_ASM_STRLEN) {
+		memset(&dasm_info.str_buf[dasm_info.str_pos], ' ', DASM_ASM_STRLEN - dasm_info.str_pos);
+		dasm_info.str_buf[DASM_ASM_STRLEN] = 0;
 	}
-	dasm_info.str_buf[DASM_ASM_STRLEN] = 0;
 }

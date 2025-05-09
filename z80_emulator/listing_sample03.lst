@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "listing_sample03.asm"
-                        ; date: 2025-05-08 01:18:08
+                        ; date: 2025-05-09 23:29:25
                         ; --------------------------------------
 
 
@@ -12,6 +12,7 @@
                         ;	定数定義
                         ;*******************************
 0000:                   ROM_B	EQU	0000H
+0040:                   RAM_B	EQU	ROM_B + 40H
                         
                         ;	パラレルポートI/Oアドレスセット
 001C:                   PIOA	EQU	1CH		;Ａポートデータ
@@ -65,7 +66,7 @@
                         ;*******************************
                         ;	RAM領域
                         ;*******************************
-0036: FFFFFFFF          	ORG	ROM_B + 40H
+0036: FFFFFFFF          	ORG	RAM_B
 003A: FF...             
                         
 0040: FF                PIO_WS:	DEFS	1
@@ -79,20 +80,21 @@
 
 ; +++ global symbols +++
 
-IOSET   = $0010 =    16          listing_sample03.asm:29
-LOOP    = $0007 =     7          listing_sample03.asm:23
-PAEND   = $0033 =    51          listing_sample03.asm:50
-PBEND   = $0036 =    54          listing_sample03.asm:56
-PIOA    = $001C =    28          listing_sample03.asm:11
-PIOACD  = $0030 =    48          listing_sample03.asm:45
-PIOB    = $001E =    30          listing_sample03.asm:12
-PIOBCD  = $0033 =    51          listing_sample03.asm:51
-PIO_WS  = $0040 =    64          listing_sample03.asm:63
+IOSET   = $0010 =    16          listing_sample03.asm:30
+LOOP    = $0007 =     7          listing_sample03.asm:24
+PAEND   = $0033 =    51          listing_sample03.asm:51
+PBEND   = $0036 =    54          listing_sample03.asm:57
+PIOA    = $001C =    28          listing_sample03.asm:12
+PIOACD  = $0030 =    48          listing_sample03.asm:46
+PIOB    = $001E =    30          listing_sample03.asm:13
+PIOBCD  = $0033 =    51          listing_sample03.asm:52
+PIO_WS  = $0040 =    64          listing_sample03.asm:64
+RAM_B   = $0040 =    64          listing_sample03.asm:9
 ROM_B   = $0000 =     0          listing_sample03.asm:8
-START   = $0000 =     0          listing_sample03.asm:19 (unused)
-_end    = $0041 =    65          listing_sample03.asm:17 (unused)
-_size   = $0041 =    65          listing_sample03.asm:17 (unused)
+START   = $0000 =     0          listing_sample03.asm:20 (unused)
+_end    = $0041 =    65          listing_sample03.asm:18 (unused)
+_size   = $0041 =    65          listing_sample03.asm:18 (unused)
 
 
-total time: 0.0027 sec.
+total time: 0.0044 sec.
 no errors
