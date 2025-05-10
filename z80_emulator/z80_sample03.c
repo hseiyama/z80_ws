@@ -5,9 +5,24 @@
 #include "z80pio.h"
 #include "z80dasm.h"
 
-#define DASM_MAX_STRLEN (32)
-#define DASM_MAX_BINLEN (16)
-#define DASM_ASM_STRLEN (12)
+#define TICK_CYCLE_END		(348)
+#define DASM_MAX_STRLEN		(32)
+#define DASM_MAX_BINLEN		(16)
+#define DASM_ASM_STRLEN		(12)
+#define LOG_STRLEN			(122)
+
+// pin kind
+enum {
+	PIN_Z80_INT = 0,		// Interrupt Request
+	PIN_Z80_NMI,			// Non-Maskable Interrupt
+	PIN_Z80_WAIT,			// Wait Requested
+	PIN_Z80PIO_ARDY,		// Port A Ready
+	PIN_Z80PIO_BRDY,		// Port B Ready
+	PIN_Z80PIO_ASTB,		// Port A Strobe
+	PIN_Z80PIO_BSTB,		// Port B Strobe
+	PIN_Z80PIO_PA,			// Port A
+	PIN_Z80PIO_PB			// Port B
+};
 
 typedef struct {
 	uint16_t cur_addr;
@@ -17,8 +32,17 @@ typedef struct {
 	uint8_t bin_buf[DASM_MAX_BINLEN];
 } dasm_t;
 
+typedef struct {
+	uint16_t inst;
+	uint8_t tick;
+	uint8_t pin_knd;
+	uint8_t pin_val;
+} scene_t;
+
 #define Z80_GET_PIN(p) ((pins & Z80_##p) == Z80_##p)
 #define Z80_SET_PIN(p,v) {pins = (pins & ~Z80_##p) | (((v) & 1ULL) << Z80_PIN_##p);}
+#define GET_OP_ODR(i,t) (((i) << 8) | (t))
+#define GET_SC_ODR(idx) ((scene_tbl[idx].inst << 8) | scene_tbl[idx].tick)
 
 // 64 KB memory with test program at address 0x0000
 static uint8_t mem[(1<<16)] = {
@@ -62,7 +86,7 @@ static uint8_t mem[(1<<16)] = {
 	// 0040: FF                PIO_WS: DEFS    1
 };
 
-// opcode address
+// opcode address table
 static const uint16_t op_addr_tbl[] = {
 	0x0000,
 	0x0001,
@@ -82,44 +106,57 @@ static const uint16_t op_addr_tbl[] = {
 	0x0022
 };
 
+// scene table
+static const scene_t scene_tbl[] = {
+	{17,	1,		PIN_Z80PIO_PA,		0xAA},
+	{21,	1,		PIN_Z80PIO_PA,		0xBB},
+	{25,	1,		PIN_Z80PIO_PA,		0xCC}
+};
+
+// dasm informaion
 static dasm_t dasm_info;
+// scene informaion
+static uint16_t scene_idx;
+static uint8_t z80pio_pa;
+static uint8_t z80pio_pb;
 
 static void dasm_init(void);
 static uint8_t _dasm_in_cb(void* user_data);
 static void _dasm_out_cb(char c, void* user_data);
 static void dasm_disasm(uint16_t op_addr);
+static void scene_init(void);
+static uint64_t scene_update(uint16_t inst, uint8_t tick, uint64_t pins);
 
 void main(void) {
 	z80_t cpu;
 	z80pio_t pio;
-	uint8_t pio_a;
-	uint8_t pio_b;
-	uint8_t inst;
+	uint16_t inst;
 	uint8_t tick;
 	char *str_asm;
 
-	// initialize dasm_info
+	// initialize dasm
 	dasm_init();
+	// initialize scene
+	scene_init();
 	// initialize Z80 family emulator
 	z80_init(&cpu);
 	z80pio_init(&pio);
 	// execution starts at 0x0000
 	uint64_t pins = z80_prefetch(&cpu, 0x0000);
 
-	pio_a = 0xAA;					// PA for input
-	pio_b = 0xFF;					// PB for output
 	inst = 0;
 	tick = 0;
 	str_asm = dasm_info.str_buf;	// assembler string
 
 	// print title
 	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+\n");
-	printf("| OP/T | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   |mem | PIO   | asm          |\n");
+	printf("|ins/t | M1 | MREQ | IORQ | RFSH | RD | WR | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   |mem | pio   | asm          |\n");
 	printf("+------+----+------+------+------+----+----+------+----+------+------+----+------+------+------+----+-------+--------------+\n");
 
 	// execute some clock cycles
-	for (int i = 0; i < 254; i++) {
-
+	for (int i = 0; i < TICK_CYCLE_END; i++) {
+		// update scene
+		pins = scene_update(inst, tick, pins);
 		// tick CPU
 		pins = z80_tick(&cpu, pins);
 		tick++;
@@ -129,7 +166,7 @@ void main(void) {
 				if (op_addr_tbl[i] == Z80_GET_ADDR(pins)) {
 					inst++;
 					tick = 1;
-					// disassemble instruction
+					// disassemble the instruction
 					dasm_disasm(Z80_GET_ADDR(pins));
 				}
 			}
@@ -152,7 +189,7 @@ void main(void) {
 		printf(" %04X |", cpu.bc);
 		printf(" %04X |", cpu.hl);
 		printf(" %02X |", mem[0x0040]);
-		printf(" %02X,%02X |", pio_a, pio_b);
+		printf(" %02X,%02X |", z80pio_pa, z80pio_pb);
 		printf(" %s |", str_asm);
 		printf("\n");
 
@@ -172,19 +209,20 @@ void main(void) {
 			if (0x1C == (Z80_GET_ADDR(pins) & 0xFC)) { pins |= Z80PIO_CE; }
 			if (pins & Z80_A1) { pins |= Z80PIO_BASEL; }
 			if (pins & Z80_A0) { pins |= Z80PIO_CDSEL; }
-			Z80PIO_SET_PAB(pins, pio_a, 0xFF);
+			Z80PIO_SET_PAB(pins, z80pio_pa, 0xFF);
 			pins = z80pio_tick(&pio, pins);
-			pio_b = Z80PIO_GET_PB(pins);
+			z80pio_pb = Z80PIO_GET_PB(pins);
 			pins &= Z80_PIN_MASK;
 		}
 	}
 }
 
+// initialize dasm
 static void dasm_init(void) {
 	memset(&dasm_info, 0, sizeof(dasm_t));
 }
 
-/* disassembler callback to fetch the next instruction byte */
+// disassembler callback to fetch the next instruction byte
 static uint8_t _dasm_in_cb(void* user_data) {
 	dasm_t* info = (dasm_t*) user_data;
 	uint8_t val = mem[info->cur_addr++];
@@ -194,7 +232,7 @@ static uint8_t _dasm_in_cb(void* user_data) {
 	return val;
 }
 
-/* disassembler callback to output a character */
+// disassembler callback to output a character
 static void _dasm_out_cb(char c, void* user_data) {
 	dasm_t* info = (dasm_t*) user_data;
 	if ((info->str_pos + 1) < DASM_MAX_STRLEN) {
@@ -203,7 +241,7 @@ static void _dasm_out_cb(char c, void* user_data) {
 	}
 }
 
-/* disassemble the next instruction */
+// disassemble the instruction
 static void dasm_disasm(uint16_t op_addr) {
 	dasm_info.str_pos = 0;
 	dasm_info.bin_pos = 0;
@@ -214,4 +252,26 @@ static void dasm_disasm(uint16_t op_addr) {
 		memset(&dasm_info.str_buf[dasm_info.str_pos], ' ', DASM_ASM_STRLEN - dasm_info.str_pos);
 		dasm_info.str_buf[DASM_ASM_STRLEN] = 0;
 	}
+}
+
+// initialize scene
+static void scene_init(void) {
+	scene_idx = 0;
+	z80pio_pa = 0xFF;		// PA for input
+	z80pio_pb = 0xFF;		// PB for output
+}
+
+// update scene
+static uint64_t scene_update(uint16_t inst, uint8_t tick, uint64_t pins) {
+	while ((scene_idx < (sizeof(scene_tbl) / sizeof(scene_t)))
+	&&     (GET_SC_ODR(scene_idx) <= GET_OP_ODR(inst, tick))  ) {
+		switch (scene_tbl[scene_idx].pin_knd) {
+		case PIN_Z80PIO_PA:
+			z80pio_pa = scene_tbl[scene_idx].pin_val;
+			printf("|%*s| <- set z80pio_pa\r", LOG_STRLEN, "");
+			break;
+		}
+		scene_idx++;
+	}
+	return pins;
 }
