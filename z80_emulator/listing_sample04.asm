@@ -137,6 +137,6 @@ INTCT0:
 ;*******************************
 	ORG	RAM_B
 
-CT0CNT:	DEFS	1
+CT0CNT:	DS	1
 
 	END

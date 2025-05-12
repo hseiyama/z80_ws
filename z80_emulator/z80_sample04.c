@@ -125,7 +125,7 @@ static uint8_t mem[(1<<16)] = {
 	// 0073: ED4D     [69]             RETI
 	// 0075: FFFFFFFF                  ORG     RAM_B
 	// 0079: FF...             
-	// 0080: FF                CT0CNT: DEFS    1
+	// 0080: FF                CT0CNT: DS      1
 };
 
 // opcode address table
@@ -286,7 +286,7 @@ void main(void) {
 			pins &= Z80_PIN_MASK;
 		}
 
-		// tick PIO  (next in daisychain priority)
+		// tick PIO (next in daisychain priority)
 		{
 			if (0x1C == (Z80_GET_ADDR(pins) & 0xFC)) { pins |= Z80PIO_CE; }
 			if (pins & Z80_A1) { pins |= Z80PIO_BASEL; }
