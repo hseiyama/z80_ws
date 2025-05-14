@@ -128,44 +128,6 @@ static uint8_t mem[(1<<16)] = {
 	// 0080: FF                CT0CNT: DS      1
 };
 
-// opcode address table
-static const uint16_t op_addr_tbl[] = {
-	0x0000,
-	0x0001,
-	0x0004,
-	0x0006,
-	0x0007,
-	0x0009,
-	0x000C,
-	0x000D,
-	0x0010,
-	0x0011,
-	0x0013,
-	0x0015,
-	0x0017,
-	0x001A,
-	0x001C,
-	0x001E,
-	0x0020,
-	0x0023,
-	0x0025,
-	0x0027,
-	0x0029,
-	0x002C,
-	0x002E,
-	0x0030,
-	0x0032,
-	0x0066,
-	0x0067,
-	0x0069,
-	0x006A,
-	0x006D,
-	0x006E,
-	0x0071,
-	0x0072,
-	0x0073
-};
-
 // scene table
 static const scene_t scene_tbl[] = {
 	{29,	1,		PIN_Z80PIO_PA,		0xAA},
@@ -230,15 +192,11 @@ void main(void) {
 		pins = z80_tick(&cpu, pins);
 		tick++;
 		// opcode fetch machine cycle
-		if (Z80_GET_PIN(M1)) {
-			for (int i = 0; i < (sizeof(op_addr_tbl) / sizeof(uint16_t)); i++) {
-				if (op_addr_tbl[i] == Z80_GET_ADDR(pins)) {
-					inst++;
-					tick = 1;
-					// disassemble the instruction
-					dasm_disasm(Z80_GET_ADDR(pins));
-				}
-			}
+		if (z80_opdone(&cpu)) {
+			inst++;
+			tick = 1;
+			// disassemble the instruction
+			dasm_disasm(Z80_GET_ADDR(pins));
 		}
 
 		// print item
