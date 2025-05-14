@@ -9,7 +9,15 @@
 typedef struct {
 	uint8_t dpsw_in;
 	uint8_t led_out;
+	uint8_t pin_reset : 1;
+	uint8_t pin_wait : 1;
+	uint8_t pin_nmi : 1;
+	uint8_t pin_halt : 1;
+	uint8_t reserved : 4;
 } io_t;
+
+#define Z80_GET_PIN(p) ((pins & Z80_##p) == Z80_##p)
+#define Z80_SET_PIN(p,v) {pins = (pins & ~Z80_##p) | (((v) & 1ULL) << Z80_PIN_##p);}
 
 // 64 KB memory with test program at address 0x0000
 static uint8_t mem[(1<<16)] = {
@@ -2078,6 +2086,10 @@ void main(void) {
 
 	// execute clock cycles
 	while (true) {
+		// set pin value
+		Z80_SET_PIN(WAIT, io_info->pin_wait);
+		Z80_SET_PIN(NMI, io_info->pin_nmi);
+
 		// tick CPU
 		pins = z80_tick(&cpu, pins);
 
@@ -2135,6 +2147,17 @@ void main(void) {
 			io_info->led_out = Z80PIO_GET_PB(pins);
 			pins &= Z80_PIN_MASK;
 		}
+
+		// reset pin active
+		if (io_info->pin_reset != 0) {
+			uint64_t pins = z80_reset(&cpu);
+			z80pio_init(&pio);
+			z80ctc_init(&ctc);
+			io_info->pin_reset = 0;
+		}
+
+		// get pin value
+		io_info->pin_halt = Z80_GET_PIN(HALT);
 	}
 
 	// share memory close

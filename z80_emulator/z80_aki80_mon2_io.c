@@ -10,6 +10,11 @@
 typedef struct {
 	uint8_t dpsw_in;
 	uint8_t led_out;
+	uint8_t pin_reset : 1;
+	uint8_t pin_wait : 1;
+	uint8_t pin_nmi : 1;
+	uint8_t pin_halt : 1;
+	uint8_t reserved : 4;
 } io_t;
 
 static HANDLE hMap;
@@ -18,6 +23,7 @@ static io_t *io_info;
 static int shmem_open(void);
 static void shmem_close(void);
 static int conv_hex(char c);
+static void cmd_help(void);
 
 void main(void) {
 	io_t io_info_prev;
@@ -34,6 +40,9 @@ void main(void) {
 		return;
 	}
 
+	// command help message
+	cmd_help();
+
 	// set print evet
 	io_info_prev.dpsw_in = ~(io_info->dpsw_in);
 
@@ -41,14 +50,38 @@ void main(void) {
 	while (true) {
 		// check key input
 		if (kbhit()) {
-			getch();
-			printf("]SW=");
-			fgets(str_buf, STR_BUF_MAX, stdin);
-			if ((value = conv_hex(str_buf[0])) >= 0) {
-				io_info->dpsw_in = value;
-				if ((value = conv_hex(str_buf[1])) >= 0) {
-					io_info->dpsw_in = (io_info->dpsw_in << 4) + value;
+			char key = tolower(getch());
+			switch (key) {
+			case '?':
+				// command help message
+				cmd_help();
+				break;
+			case 's':
+				printf("]SW=");
+				fgets(str_buf, STR_BUF_MAX, stdin);
+				if ((value = conv_hex(str_buf[0])) >= 0) {
+					io_info->dpsw_in = value;
+					if ((value = conv_hex(str_buf[1])) >= 0) {
+						io_info->dpsw_in = (io_info->dpsw_in << 4) + value;
+					}
 				}
+				break;
+			case 'r':
+				printf("]Reset?(y/n)=");
+				if (tolower(getche()) == 'y') {
+					io_info->pin_reset = 1;
+				}
+				printf("\n");
+				break;
+			case 'w':
+				io_info->pin_wait = ~io_info->pin_wait;
+				break;
+			case 'n':
+				io_info->pin_nmi = ~io_info->pin_nmi;
+				break;
+			default:
+				printf("Error\n");
+				break;
 			}
 			// set print evet
 			io_info_prev.dpsw_in = ~(io_info->dpsw_in);
@@ -64,14 +97,24 @@ void main(void) {
 			for (int i = 7; i >= 0; i--) {
 				((io_info->led_out >> i) & 0x01) ? printf("O") : printf(".");
 			}
-			printf("]\n");
+			printf("]");
+			if (io_info->pin_wait != 0) {
+				printf(" WAIT");
+			}
+			if (io_info->pin_nmi != 0) {
+				printf(" NMI");
+			}
+			if (io_info->pin_halt != 0) {
+				printf(" HALT");
+			}
+			printf("\n");
 		}
 
 		// save previous value
 		io_info_prev = *io_info;
 
-		// wait 0.5s
-		sleep(0.5);
+		// wait 0.1s
+		sleep(0.1);
 	}
 
 	// share memory close
@@ -117,4 +160,13 @@ static int conv_hex(char c) {
 	}
 
 	return value;
+}
+
+// command help message
+static void cmd_help(void) {
+	printf("? :command Help\n");
+	printf("S :set SW\n");
+	printf("R :go Reset\n");
+	printf("W :toggle Wait\n");
+	printf("N :toggle Nmi\n");
 }
