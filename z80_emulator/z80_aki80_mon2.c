@@ -18,6 +18,8 @@ typedef struct {
 
 #define Z80_GET_PIN(p) ((pins & Z80_##p) == Z80_##p)
 #define Z80_SET_PIN(p,v) {pins = (pins & ~Z80_##p) | (((v) & 1ULL) << Z80_PIN_##p);}
+#define Z80CTC_GET_PIN(p) ((pins & Z80CTC_##p) == Z80CTC_##p)
+#define Z80CTC_SET_PIN(p,v) {pins = (pins & ~Z80CTC_##p) | (((v) & 1ULL) << Z80CTC_BIT_##p);}
 
 // 64 KB memory with test program at address 0x0000
 static uint8_t mem[(1<<16)] = {
@@ -2070,12 +2072,16 @@ void main(void) {
 	z80_t cpu;
 	z80pio_t pio;
 	z80ctc_t ctc;
+	uint8_t ctc_zcto0;
 
 	// share memory open
 	if (shmem_open() != 0) {
 		// failure occurred
 		return;
 	}
+
+	// initialize variable
+	ctc_zcto0 = 0;
 
 	// initialize Z80 family emulator
 	z80_init(&cpu);
@@ -2133,7 +2139,9 @@ void main(void) {
 			if (0x10 == (Z80_GET_ADDR(pins) & 0xFC)) { pins |= Z80CTC_CE; };
 			if (pins & Z80_A0) { pins |= Z80CTC_CS0; }
 			if (pins & Z80_A1) { pins |= Z80CTC_CS1; }
+			Z80CTC_SET_PIN(CLKTRG1, ctc_zcto0);
 			pins = z80ctc_tick(&ctc, pins);
+			ctc_zcto0 = Z80CTC_GET_PIN(ZCTO0);
 			pins &= Z80_PIN_MASK;
 		}
 

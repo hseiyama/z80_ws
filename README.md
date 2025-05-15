@@ -7,7 +7,9 @@ HEXファイルを一発で生成できる。
 ※個人的には、Z80のアセンブル目的であればコレで十分  
 [情報元のリンク](https://k1.spdns.de/Develop/Projects/zasm/Distributions/)
 ### (1) アセンブルのコマンド
-zasm -uwxy listing_sample01.asm  
+$ zasm -uwxy listing_sample01.asm  
+<RAM出力用>  
+$ zasm -uwxy --target=ram listing_sample01.asm  
 ### (2) HEXをテキストに変換するまでの手順
 $ zasm -uyz aki80_simple01.asm  
 $ xxd -i -c 16 aki80_simple01.rom > aki80_simple01.txt  
