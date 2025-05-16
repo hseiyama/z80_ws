@@ -1,6 +1,6 @@
-以下のファイルを収集した。
+以下のパスからファイルを収集した。
 
-<z80_ws\aki80_mon\03_non_intr>
+<z80_ws\aki80_mon\04_optimize>
  AKI80mon_RevB05.p
 
 <z80_ws\aki80_mon\01_original>
