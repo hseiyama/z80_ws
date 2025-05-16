@@ -11,13 +11,13 @@ $ zasm -uwxy listing_sample01.asm
 <RAM出力用>  
 $ zasm -uwxy --target=ram listing_sample01.asm  
 ### (2) HEXをテキストに変換するまでの手順
-$ zasm -uyz aki80_simple01.asm  
+$ zasm -buwy aki80_simple01.asm  
 $ xxd -i -c 16 aki80_simple01.rom > aki80_simple01.txt  
 
 ## The Macroassembler AS
 ### 特徴
-様々なマイコン向けを対象にアセンブルすることができる。  
-（Z80, MC68000 等）  
+様々なマイコンを対象にアセンブルすることができる。  
+（Z80, MC68000, MC68030 等）  
 Github等で公開されているプロジェクトで利用されているケースが多い。  
 [情報元のリンク](http://john.ccac.rwth-aachen.de:8000/as/)
 ### (1) アセンブルのコマンド

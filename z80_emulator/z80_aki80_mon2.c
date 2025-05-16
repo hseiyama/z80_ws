@@ -9,11 +9,14 @@
 typedef struct {
 	uint8_t dpsw_in;
 	uint8_t led_out;
+	// bit field for input
 	uint8_t pin_reset : 1;
 	uint8_t pin_wait : 1;
 	uint8_t pin_nmi : 1;
+	uint8_t reserved1 : 5;
+	// bit field for output
 	uint8_t pin_halt : 1;
-	uint8_t reserved : 4;
+	uint8_t reserved2 : 7;
 } io_t;
 
 #define Z80_GET_PIN(p) ((pins & Z80_##p) == Z80_##p)
@@ -2074,14 +2077,14 @@ void main(void) {
 	z80ctc_t ctc;
 	uint8_t ctc_zcto0;
 
+	// initialize variable
+	ctc_zcto0 = 0;
+
 	// share memory open
 	if (shmem_open() != 0) {
 		// failure occurred
 		return;
 	}
-
-	// initialize variable
-	ctc_zcto0 = 0;
 
 	// initialize Z80 family emulator
 	z80_init(&cpu);

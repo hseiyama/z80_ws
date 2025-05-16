@@ -10,11 +10,14 @@
 typedef struct {
 	uint8_t dpsw_in;
 	uint8_t led_out;
+	// bit field for input
 	uint8_t pin_reset : 1;
 	uint8_t pin_wait : 1;
 	uint8_t pin_nmi : 1;
+	uint8_t reserved1 : 5;
+	// bit field for output
 	uint8_t pin_halt : 1;
-	uint8_t reserved : 4;
+	uint8_t reserved2 : 7;
 } io_t;
 
 static HANDLE hMap;
@@ -31,7 +34,7 @@ void main(void) {
 	char str_buf[STR_BUF_MAX];
 	int value;
 
-	// initialize
+	// initialize variable
 	memset(&io_info_prev, 0, sizeof(io_t));
 
 	// share memory open
@@ -44,7 +47,7 @@ void main(void) {
 	cmd_help();
 
 	// set print evet
-	io_info_prev.dpsw_in = ~(io_info->dpsw_in);
+	io_info_prev.dpsw_in = ~io_info->dpsw_in;
 
 	// execute clock cycles
 	while (true) {
@@ -84,7 +87,7 @@ void main(void) {
 				break;
 			}
 			// set print evet
-			io_info_prev.dpsw_in = ~(io_info->dpsw_in);
+			io_info_prev.dpsw_in = ~io_info->dpsw_in;
 		}
 
 		// print io value
