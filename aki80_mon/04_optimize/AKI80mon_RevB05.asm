@@ -1,7 +1,7 @@
 	page 0
 	cpu z80
 
-;;; 
+;;;
 ;;; Universal Monitor for Zilog Z80
 ;;;   Copyright (C) 2019,2020,2021 Haruo Asano
 ;;;
@@ -31,8 +31,6 @@ NO_UPPER	equ	00000100b
 NO_LF		equ	00000010b
 NO_CR		equ	00000001b
 
-BACKDOOR = 0
-
 ;	MEMORY ASSIGN
 
 ROM_B	EQU	0000H
@@ -45,7 +43,7 @@ RAMSIZ	EQU	8000H
 RAM_E	equ	RAM_B + RAMSIZ - 1 ; RAM END address
 
 WORK_SIZE	equ	130H		;monitor work area size
-MSTACK_SIZE	equ	64		;Monitor stack size : 32 words 
+MSTACK_SIZE	equ	64		;Monitor stack size : 32 words
 
 WORK_B	equ	RAM_E -	WORK_SIZE + 1	; work area BF00-BFFF
 STACKM	equ	WORK_B			; monitor stack
@@ -100,59 +98,31 @@ E_CSTART:
 
 	db	0008H - $ dup(00H)
 ;	ORG	0008H	; (RST 08H)
-	IF	BACKDOOR
-	JP	RST08H
-	ELSE
-	JP	CONOUT
-	ENDIF
+	RET
 
 	db	0010H - $ dup(00H)
 ;	ORG	0010H	; (RST 10H)
-	IF	BACKDOOR
-	JP	RST10H
-	ELSE
-	JP	CONIN
-	ENDIF
+	RET
 
 	db	0018H - $ dup(00H)	; nop
 ;	ORG	0018H	; (RST 18H)
-	IF	BACKDOOR
-	JP	RST18H
-	ELSE
-	JP	CONST
-	ENDIF
+	RET
 
 	db	0020H - $ dup(00H)	; nop
 ;	ORG	0020H	; (RST 20H)
-	IF	BACKDOOR
-	JP	RST20H
-	ELSE
 	RET
-	ENDIF
 
 	db	0028H - $ dup(00H)	; nop
 ;	ORG	0028H	; (RST 28H)
-	IF	BACKDOOR
-	JP	RST28H
-	ELSE
 	RET
-	ENDIF
 
 	db	0030H - $ dup(00H)	; nop
 ;	ORG	0030H
-	IF	BACKDOOR
-	JP	RST30H
-	ELSE
 	JP	RST30H_IN
-	ENDIF
 
 	db	0038H - $ dup(00H)	; nop
 ;	ORG	0038H
-	IF	BACKDOOR
-	JP	RST38H
-	ELSE
 	JP	RST38H_IN
-	ENDIF
 
 ;**************************************
 ;	INTERRUPT TABLE
@@ -285,76 +255,6 @@ IOSET:
 ;	OUT	(WDC), A
 	RET
 
-	IF	BACKDOOR
-;;;
-;;; RST 08H Handler
-;;;
-RST08H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST08)
-	jr	jmp_rst
-
-;;;
-;;; RST 10H Handler
-;;;
-RST10H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST10)
-	jr	jmp_rst
-
-;;;
-;;; RST 18H Handler
-;;;
-RST18H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST18)
-	jr	jmp_rst
-
-;;;
-;;; RST 20H Handler
-;;;
-RST20H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST20)
-	jr	jmp_rst
-
-;;;
-;;; RST 28H Handler
-;;;
-RST28H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST28)
-	jr	jmp_rst
-
-;;;
-;;; RST 30H Handler
-;;;
-RST30H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST30)
-	jr	jmp_rst
-
-;;;
-;;; RST 38H Handler
-;;;
-RST38H:
-
-	ld	(save_hl), hl	; save hl
-	ld	hl, (stealRST38)
-jmp_rst:
-	push	hl		; set jump address
-	ld	hl, (save_hl)	; restore hl
-RST20H_IN:
-RST28H_IN:
-	ret			; jump (stealRST38)
-	ENDIF
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -400,24 +300,6 @@ init_ram:
 	LD	A,'I'
 	LD	(HEXMOD),A
 
-	IF	BACKDOOR
-	; init back door RST XXH entory point
-	ld	hl, CONOUT		; RST 08H : CONOUT
-	ld	(stealRST08), hl
-	ld	hl, CONIN
-	ld	(stealRST10), hl	; RST 10H : CONIN
-	ld	hl, CONST
-	ld	(stealRST18), hl	; RST 18H : CONST
-	ld	hl, RST20H_IN
-	ld	(stealRST20), hl
-	ld	hl, RST28H_IN
-	ld	(stealRST28), hl
-	ld	hl, RST30H_IN
-	ld	(stealRST30), hl
-	ld	hl, RST38H_IN
-	ld	(stealRST38), hl
-	ENDIF
-
 	;; Initialize register value
 	XOR	A
 	LD	HL,REG_B
@@ -428,7 +310,7 @@ IR0:
 	DJNZ	IR0
 
 ;	LD	B, dbg_wend - dbg_wtop
-;	ld	hl,dbg_wtop	
+;	ld	hl,dbg_wtop
 ;	XOR	A
 ;
 ;dbg_wini:
@@ -662,7 +544,7 @@ lanch6:
 lanch7:
 	dw	VTL_CST
 	DB	"7. VTL Start",CR,LF,00H
-		
+
 lanch8:
 	dw	VTL_WST
 	DB	"8. VTL Restart",CR,LF,00H
@@ -788,9 +670,9 @@ b_list1:
 	JP	WSTART
 
 
-;;; 
+;;;
 ;;; break point command
-;;; 
+;;;
 brk_cmd:
 	INC	HL
 	CALL	SKIPSP		; A <- next char
@@ -835,7 +717,7 @@ set_bp1:
 ; de : break point address
 
 ; check ram area, and set berak point
-; 
+;
 setbpadr:
 	ld	a, d
 	cp	RAM_B >> 8		; a - 080H
@@ -918,12 +800,12 @@ b_msg_out:
 	call	STROUT
 	pop	hl
 	call	HEXOUT4
-	call	CRLF	
+	call	CRLF
 	ret
 
-;;; 
+;;;
 ;;; trace command
-;;; 
+;;;
 trace_cmd:
 
 ; T[address][,step”]
@@ -993,7 +875,7 @@ tm_msg_s:
 	db	"SKIP>", CR, LF, 00h
 
 	; tp_cmd
-tp_cmd:	
+tp_cmd:
 	inc	hl
 	CALL	SKIPSP		; A <- next char
 	or	a
@@ -1086,7 +968,7 @@ t_op_chk:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 2 insertion Trace code(TC) 
+; 2 insertion Trace code(TC)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INSTC2:
 	; check 1 byte machine code: branch (RET CC)
@@ -1193,7 +1075,7 @@ next_bc22:
 	jp	END_INS_TC
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 1 insertion Trace code(TC) 
+; 1 insertion Trace code(TC)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 INSTC1:
 	; check 1 byte machine code: branch (return)
@@ -1333,7 +1215,7 @@ next_bc10:
 	; check call literal
 next_bc11:
 	cp	0CDH		; CALL literal ?
-	jp	nz, INS2	; no, check not branch opcode 
+	jp	nz, INS2	; no, check not branch opcode
 
 	; CALL literal
 	; trace operation:
@@ -1367,7 +1249,7 @@ err_trace_seq:
 	call	STROUT
 	JP	WSTART
 	rst	38h
-;	
+;
 terr_msg:	db	"Adr ERR", CR, LF, 00H
 
 ;--------------------------------------
@@ -1382,7 +1264,7 @@ Rel_adr_c:
 	inc	hl		; hl = PC + 2
 	ld	d, 0ffh
 	bit	7, e		; test msb bit
-	jr	nz, exp_msb	; 
+	jr	nz, exp_msb	;
 	ld	d, 0
 exp_msb:
 	add	hl, de
@@ -1597,7 +1479,7 @@ INS2:
 	; opecode 0DDh
 meet_dd:
 	inc	hl
-	ld	a, (hl)	
+	ld	a, (hl)
 	cp	0cbh		; 2nd 0CBH?
 	jr	z, meet_op4
 	cp	21h		; 2nd 21H?
@@ -1618,7 +1500,7 @@ meet_dd:
 
 meet_ed:
 	inc	hl
-	ld	a, (hl)	
+	ld	a, (hl)
 	cp	43h		; 2nd 43H?
 	jr	z, meet_op4
 	cp	4bh		; 2nd 4BH?
@@ -1717,9 +1599,9 @@ DD_2NDTBL2:
 	DB	0F9h	; LD	SP,IX
 DD_2NDTBL_E:
 
-;;; 
+;;;
 ;;; Dump memory
-;;; 
+;;;
 
 DUMP:
 	INC	HL
@@ -1881,7 +1763,7 @@ DPB2:
 
 ;;;
 ;;; Disassemble
-;;; 
+;;;
 
 
 ; DI[<address>][,s<steps>|<end address>]
@@ -2026,7 +1908,7 @@ mas_1:
 	dec	c
 	jr	nz, mas_1
 
-mas_2:	
+mas_2:
 	call	ins_spcR
 	call	ins_spcR
 	call	ins_spcR
@@ -3370,7 +3252,7 @@ kixypnk_cs:
 	jp	ins_kmR
 
 ;-----------------------------------
-; make "(REG+nn)",cr,lf 
+; make "(REG+nn)",cr,lf
 ;	REG : IX or IY
 ; input de: RNIX, or RNIY
 ;       hl: string buffer
@@ -3440,7 +3322,7 @@ get_rstg_off:
 ; input
 ;	bc: found operand point
 ;	hl: massage table
-; output: 
+; output:
 ;	DE : string point
 ;-------------------------------------------------
 get_strBufpoint:
@@ -4089,7 +3971,7 @@ dd_rt_str:	dw	SRLstr, SRAstr, SLAstr, RRstr
 
 ;;;
 ;;; GO address
-;;; 
+;;;
 
 GO:
 	ld	de, (REGPC)
@@ -4208,7 +4090,7 @@ set_bp:
 
 ;;;
 ;;; SET memory
-;;; 
+;;;
 
 SETM:
 	INC	HL
@@ -4633,7 +4515,7 @@ SHLS0:
 
 ;;;
 ;;; Port in
-;;; 
+;;;
 
 PIN:
 	INC	HL
@@ -5174,7 +5056,7 @@ dmp_dw:
 	inc	hl
 	inc	hl
 	ld	(deaddr), hl
-prtdmp:	
+prtdmp:
 	call	dpm
 	jr	cout_sp2
 
@@ -5240,7 +5122,7 @@ el3_stb:	db	1			; normal, DD, FD, ED
 		db	55, 60			; normal, ED
 		db	42, 45			; normal
 		db	34, 36, 35 		; CB, DD, FD
-el3_stbe:	
+el3_stbe:
 
 el3_jtb:	dw	el3_35
 		dw	el3_36
@@ -5512,7 +5394,7 @@ el3_431:
 ;
 ; hl : search table
 ; bc : loop counter
-; d  : base MC 
+; d  : base MC
 ;
 ; output:
 ;	  CF=1 : error
@@ -5879,7 +5761,7 @@ el3_1:
 	sub	c		; make B, C, D, E, H, L, (HL) param
 el3_12:
 	or	d		; make MC
-	jp	st_mc11	
+	jp	st_mc11
 
 
 el3_125:
@@ -6123,7 +6005,7 @@ mc2_77:
 	ld	e, a		; adjust I/F
 	jp	ld_bc_n42
 
-ld_xynln: ; 4byte MC 
+ld_xynln: ; 4byte MC
 	  ; LD ([IX|IY] [+|-]), nn
 	  ; 2nd MC = 36h
 
@@ -6313,7 +6195,7 @@ el3_s13: ; LD I, A
 
 ;1111111111111111111111111111111111
 ;
-; element count = 1 
+; element count = 1
 ;
 ;1111111111111111111111111111111111
 
@@ -6389,7 +6271,7 @@ mc_end2:
 
 ;2222222222222222222222222222222222222222222222
 ;
-; element count = 2 
+; element count = 2
 ;
 ;2222222222222222222222222222222222222222222222
 
@@ -6748,7 +6630,7 @@ cp_iy:
 	ld	hl, opr_num37
 	add	hl, bc
 	ld	c, (hl)
-cp_xy1:	
+cp_xy1:
 	ld	hl, (tasm_adr)
 	ld	(hl), a		; save op_code
 	ld	a, d		; restore 2nd operand
@@ -6841,7 +6723,7 @@ pp_ixiy		equ	pp_tble - pp_ixy
 
 pp_tbl:		db	2, 5, 8, 11
 pp_ixy:		db	14, 15
-pp_tble:	
+pp_tble:
 
 pp_base:	db	0E0h, 0E0h ; IY, IX
 		db	0E0h, 0D0h, 0C0h, 0f0h
@@ -6979,7 +6861,7 @@ mc_end41:
 	ld	hl, (tasm_adr)
 	ld	(hl), d		; save 1st MC
 	inc	hl
-	ld	(hl), a		; save 2nd MC 
+	ld	(hl), a		; save 2nd MC
 	inc	hl
 	ld	(hl), c		; save 3rd MC (8bit litelal)
 	inc	hl
@@ -7191,7 +7073,7 @@ sch_operand1_1:
 
 ;----------------------------------------------------------
 ; Search code number of opecode from input strings
-; 
+;
 ; output:
 ; if mach opecode ; HL : next point of input strings
 ;		    A  : a code number of opecode
@@ -7458,7 +7340,7 @@ next_char:
 	xor	a, 1
 	ld	b, a		; toggle '"' flag
 	ex	af, af'		;'
-;"	
+;"
 nxchr:
 	inc	hl
 	ld	a, (hl)
@@ -8025,9 +7907,9 @@ dis_call:
 
 RST38MSG:
 	DB	"RST 38H",CR,LF,00H
-stpBrk_msg:	
+stpBrk_msg:
 	db	"Break!",CR,LF,00H
-trace_msg:	
+trace_msg:
 	db	"Trace!",CR,LF,00H
 
 ;
@@ -8217,19 +8099,19 @@ ST_MUL8:
 
 cmd_hlp:	db	"? :Command Help", CR, LF
 		db	"#L|<num> :Launch program", CR, LF
-		db	"A[<address>] : Mini Assemble mode", CR, LF
+		db	"A[<adr>] :Mini Assemble mode", CR, LF
 		db	"B[1|2[,<adr>]] :Set or List Break Point", CR, LF
 		db	"BC[1|2] :Clear Break Point", CR, LF
 		db	"D[<adr>] :Dump Memory", CR, LF
 		db	"DI[<adr>][,s<steps>|<adr>] :Disassemble", CR, LF
 		db	"G[<adr>][,<stop adr>] :Go and Stop", CR, LF
-		db	"I<port> : Input from port", CR, LF
+		db	"I<port> :Input from port", CR, LF
 		db	"L[G|<offset>] :Load HexFile (and GO)", CR, LF
-		db	"O<port>,<data> : Output data to port", CR, LF
-		db	"P[I|S] :Save HexFile(I:Intel,S:Motorola)", CR, LF
+		db	"O<port>,<data> :Output data to port", CR, LF
+		db	"PI|S<adr>,<adr> :Save HexFile(I:Intel,S:Motorola)", CR, LF
 		db	"R[<reg>] :Set or Dump register", CR, LF
 		db	"S[<adr>] :Set Memory", CR, LF
-		db	"T[<adr>][,<steps>|-1] : Trace command", CR, LF
+		db	"T[<adr>][,<steps>|-1] :Trace command", CR, LF
 		db	"TM[I|S] :Trace Option for CALL", CR, LF
 		db	"TP[ON|OFF] :Trace Print Mode", CR, LF, 00h
 
@@ -8549,17 +8431,6 @@ PCST1:	IN	A,(PSIOAC)
 
 	ORG	WORK_B
 
-	IF	BACKDOOR
-stealRST08:	ds	2	; hacking RST 08H, set jump address
-stealRST10:	ds	2	; hacking RST 10H, set jump address
-stealRST18:	ds	2	; hacking RST 18H, set jump address
-stealRST20:	ds	2	; hacking RST 20H, set jump address
-stealRST28:	ds	2	; hacking RST 28H, set jump address
-stealRST30:	ds	2	; hacking RST 30H, set jump address
-stealRST38:	ds	2	; hacking RST 38H, set jump address
-save_hl:	ds	2
-	ENDIF
-
 DSADDR:	DS	2	; Dump start address
 DEADDR:	DS	2	; Dump end address
 DSTATE:	DS	1	; Dump state
@@ -8568,7 +8439,7 @@ SADDR:	DS	2	; Set address
 HEXMOD:	DS	1	; HEX file mode
 RECTYP:	DS	1	; Record type
 
-REG_B:	
+REG_B:
 REGAF:	DS	2
 REGBC:	DS	2
 REGDE:	DS	2
