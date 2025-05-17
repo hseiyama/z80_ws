@@ -328,7 +328,7 @@ extern uint8_t cpu_readT(state_t* state) {
  ************************************************************/
 
 uint8_t cpu_memory[0x10000];
-uint8_t cpu_io[0x10000];
+uint8_t cpu_io[0x100];
 uint8_t int_vector = 0xE0;
 
 void cpu_setIntVec(uint8_t val) {
@@ -350,11 +350,11 @@ static void memWrite(uint16_t a, uint8_t d)
 }
 
 static uint8_t ioRead(uint16_t a) {
-    return cpu_io[a];
+    return cpu_io[a & 0xFF];
 }
 
 static void ioWrite(uint16_t a, uint8_t d) {
-    cpu_io[a] = d;
+    cpu_io[a & 0xFF] = d;
 }
 
 static inline void handleBus(void *state) {

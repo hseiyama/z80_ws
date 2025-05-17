@@ -1,0 +1,191 @@
+                        ; --------------------------------------
+                        ; zasm: assemble "listing_sample02.asm"
+                        ; date: 2025-05-18 18:03:42
+                        ; --------------------------------------
+
+
+                        ;***************************************************************
+                        ;	perfectz80_sample02用 Z80アセンブラコード
+                        ;***************************************************************
+                        
+                        ;*******************************
+                        ;	定数定義
+                        ;*******************************
+0000:                   ROM_B	EQU	0000H
+0040:                   ENTRY	EQU	0040h
+0080:                   RAM_B	EQU	ROM_B + 80H
+                        
+                        ;	パラレルポートI/Oアドレスセット
+001C:                   PIOA	EQU	1CH		;Ａポートデータ
+001E:                   PIOB	EQU	1EH		;Ｂポートデータ
+                        ;	カウンタタイマI/Oアドレスセット
+0010:                   CTC0	EQU	10H		;CTC0のアドレス
+                        ;CTC1	EQU	11H		;CTC1のアドレス
+                        ;CTC2	EQU	12H		;CTC2のアドレス
+                        ;CTC3	EQU	13H		;CTC3のアドレス
+                        
+                        ;***************************************************************
+                        ;	メインルーチン
+                        ;***************************************************************
+0000:                   	ORG	ROM_B
+                        
+0000:                   START:
+0000: F3       [ 4]     	DI
+0001: 310000   [14]     	LD	SP, 0000H
+0004: ED5E     [22]     	IM	2
+0006: AF       [26]     	XOR	A
+0007: ED47     [35]     	LD	I, A
+0009: CD1E00   [52]     	CALL	IOSET
+000C: AF       [56]     	XOR	A
+000D: 328000   [69]     	LD	(CT0CNT), A
+0010: 328100   [82]     	LD	(NMICNT), A
+0013: FB       [86]     	EI
+0014:                   LOOP:
+0014: 0E1C     [ 7]     	LD	C, PIOA
+0016: ED40     [19]     	IN	B, (C)
+0018: 0E1E     [26]     	LD	C, PIOB
+001A: ED41     [38]     	OUT	(C), B
+001C: 18F6     [50]     	JR	LOOP
+                        
+001E:                   IOSET:
+001E: 215000   [10]     	LD	HL, PIOACD		;PIOAコマンドセットアップ
+0021: 0603     [17]     	LD	B, PAEND - PIOACD
+0023: 0E1D     [24]     	LD	C, PIOA + 1		;PIOAコマンドアドレス(1DH)
+0025: EDB3     [40|21]  	OTIR
+0027: 215300   [50]     	LD	HL, PIOBCD		;PIOBコマンドセットアップ
+002A: 0603     [57]     	LD	B, PBEND - PIOBCD
+002C: 0E1F     [64]     	LD	C, PIOB + 1		;PIOBコマンドアドレス(1FH)
+002E: EDB3     [80|21]  	OTIR
+0030: 215600   [90]     	LD	HL, CTC0CD		;CTC0コマンドセットアップ
+0033: 0603     [97]     	LD	B, C0END - CTC0CD
+0035: 0E10     [104]    	LD	C, CTC0
+0037: EDB3     [120|21] 	OTIR
+                        ;	LD	HL, CTC1CD		;CTC1コマンドセットアップ
+                        ;	LD	B, C1END - CTC1CD
+                        ;	LD	C, CTC1
+                        ;	OTIR
+                        ;	LD	HL, CTC2CD		;CTC2コマンドセットアップ
+                        ;	LD	B, C2END - CTC2CD
+                        ;	LD	C, CTC2
+                        ;	OTIR
+                        ;	LD	HL, CTC3CD		;CTC3コマンドセットアップ
+                        ;	LD	B, C3END - CTC3CD
+                        ;	LD	C, CTC3
+                        ;	OTIR
+0039: C9       [130]    	RET
+                        
+                        ;*******************************
+                        ;	割り込みアドレス
+                        ;*******************************
+003A: FFFFFFFF          	ORG	ENTRY + 04H
+003E: FF...             
+                        
+0044: 0000              	DW	0000H		; 4: PIOA割り込み
+0046: 0000              	DW	0000H		; 6: PIOB割り込み
+0048: 6E00              	DW	INTCT0		; 8: CTC0割り込み
+004A: 0000              	DW	0000H		;10: CTC1割り込み
+004C: 0000              	DW	0000H		;12: CTC2割り込み
+004E: 0000              	DW	0000H		;14: CTC3割り込み
+                        
+                        ;*******************************
+                        ;	ROM領域
+                        ;*******************************
+0050: CF                PIOACD:	DB	0CFH		;PIOAモードワード			**001111 (モード3)
+0051: FF                	DB	0FFH		;PIOAデータディレクションワード		(全ビット入力)
+0052: 07                	DB	07H		;PIOAインタラプトコントロールワード	****0111 (割込み無効)
+                        ;	DB	00H		;PIOAインタラプトマスクワード
+                        ;	DB	ENTRY + 4	;PIOAインタラプトベクタ
+0053:                   PAEND	EQU	$
+0053: CF                PIOBCD:	DB	0CFH		;PIOBモードワード			**001111 (モード3)
+0054: 00                	DB	00H		;PIOBデータディレクションワード		(全ビット出力)
+0055: 07                	DB	07H		;PIOBインタラプトコントロールワード	****0111 (割込み無効)
+                        ;	DB	00H		;PIOBインタラプトマスクワード
+                        ;	DB	ENTRY + 6	;PIOBインタラプトベクタ
+0056:                   PBEND	EQU	$
+                        
+0056:                   CTC0CD:
+0056: 48                	DB	ENTRY + 8	;CTC0インタラプトベクタ			*****000 (全チャネル用)
+0057: 87                	DB	87H		;CTC0チャンネルコントロールワード	*******1 (タイマモード)
+0058: 08                	DB	08H		;CTC0タイムコンスタントレジスタ		(8)
+0059:                   C0END	EQU	$
+                        ;CTC1CD:
+                        ;	DB	05H		;CTC1チャンネルコントロールワード	*******1
+                        ;	DB	00H		;CTC1タイムコンスタントレジスタ
+                        ;C1END	EQU	$
+                        ;CTC2CD:
+                        ;	DB	05H		;CTC2チャンネルコントロールワード	*******1
+                        ;	DB	00H		;CTC2タイムコンスタントレジスタ
+                        ;C2END	EQU	$
+                        ;CTC3CD:
+                        ;	DB	05H		;CTC3チャンネルコントロールワード	*******1
+                        ;	DB	5		;CTC3タイムコンスタントレジスタ
+                        ;C3END	EQU	$
+                        
+                        ;*******************************
+                        ;	NMI処理
+                        ;*******************************
+0059: FFFFFFFF          	ORG	0066H
+005D: FF...             
+                        
+0066:                   NMI:
+0066: D9       [ 4]     	EXX
+0067: 218100   [14]     	LD	HL, NMICNT
+006A: 34       [25]     	INC	(HL)
+006B: D9       [29]     	EXX
+006C: ED45     [43]     	RETN
+                        
+                        ;*******************************
+                        ;	割り込み処理
+                        ;*******************************
+006E:                   INTCT0:
+006E: F5       [11]     	PUSH	AF
+006F: 3A8000   [24]     	LD	A, (CT0CNT)
+0072: 3C       [28]     	INC	A
+0073: 328000   [41]     	LD	(CT0CNT), A
+0076: F1       [51]     	POP	AF
+0077: FB       [55]     	EI
+0078: ED4D     [69]     	RETI
+                        
+                        ;*******************************
+                        ;	RAM領域
+                        ;*******************************
+007A: FFFFFFFF          	ORG	RAM_B
+007E: FFFF              
+                        
+0080: FF                CT0CNT:	DS	1
+0081: FF                NMICNT:	DS	1
+                        
+                        	END
+
+
+; +++ segments +++
+
+#CODE          = $0000 =     0,  size = $0082 =   130
+
+; +++ global symbols +++
+
+C0END   = $0059 =    89          listing_sample02.asm:103
+CT0CNT  = $0080 =   128          listing_sample02.asm:146
+CTC0    = $0010 =    16          listing_sample02.asm:16
+CTC0CD  = $0056 =    86          listing_sample02.asm:99
+ENTRY   = $0040 =    64          listing_sample02.asm:9
+INTCT0  = $006E =   110          listing_sample02.asm:132
+IOSET   = $001E =    30          listing_sample02.asm:44
+LOOP    = $0014 =    20          listing_sample02.asm:37
+NMI     = $0066 =   102          listing_sample02.asm:122 (unused)
+NMICNT  = $0081 =   129          listing_sample02.asm:147
+PAEND   = $0053 =    83          listing_sample02.asm:91
+PBEND   = $0056 =    86          listing_sample02.asm:97
+PIOA    = $001C =    28          listing_sample02.asm:13
+PIOACD  = $0050 =    80          listing_sample02.asm:86
+PIOB    = $001E =    30          listing_sample02.asm:14
+PIOBCD  = $0053 =    83          listing_sample02.asm:92
+RAM_B   = $0080 =   128          listing_sample02.asm:10
+ROM_B   = $0000 =     0          listing_sample02.asm:8
+START   = $0000 =     0          listing_sample02.asm:26 (unused)
+_end    = $0082 =   130          listing_sample02.asm:24 (unused)
+_size   = $0082 =   130          listing_sample02.asm:24 (unused)
+
+
+total time: 0.0021 sec.
+no errors
