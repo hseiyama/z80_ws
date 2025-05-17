@@ -98,15 +98,15 @@ E_CSTART:
 
 	db	0008H - $ dup(00H)
 ;	ORG	0008H	; (RST 08H)
-	RET
+	JP	CONOUT
 
 	db	0010H - $ dup(00H)
 ;	ORG	0010H	; (RST 10H)
-	RET
+	JP	CONIN
 
 	db	0018H - $ dup(00H)	; nop
 ;	ORG	0018H	; (RST 18H)
-	RET
+	JP	CONST
 
 	db	0020H - $ dup(00H)	; nop
 ;	ORG	0020H	; (RST 20H)
