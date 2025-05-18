@@ -7,7 +7,7 @@
 #include "perfectz80.h"
 #include "z80dasm.h"
 
-#define TICK_CYCLE_END		(830)
+#define TICK_CYCLE_END		(938)
 #define DASM_MAX_STRLEN		(32)
 #define DASM_MAX_BINLEN		(16)
 #define DASM_ASM_STRLEN		(12)
@@ -136,7 +136,13 @@ static const scene_t scene_tbl[] = {
 	{	580,	PIN_Z80_NMI,	0x0000,		true	},
 	{	582,	PIN_Z80_NMI,	0x0000,		false	},
 	{	689,	SET_IO_VAL,		0x001C,		0x78	},
-	{	713,	PIN_Z80_INT,	0x0000,		0x00	}	// no use value
+	{	713,	PIN_Z80_INT,	0x0000,		0x00	},	// no use value
+	{	828,	PIN_Z80_WAIT,	0x0000,		true	},
+	{	834,	PIN_Z80_WAIT,	0x0000,		false	},
+	{	842,	PIN_Z80_BUSRQ,	0x0000,		true	},
+	{	848,	PIN_Z80_BUSRQ,	0x0000,		false	},
+	{	891,	PIN_Z80_RESET,	0x0000,		true	},
+	{	897,	PIN_Z80_RESET,	0x0000,		false	}
 };
 
 // dasm informaion
