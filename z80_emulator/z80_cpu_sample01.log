@@ -1,0 +1,933 @@
++-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+
+| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |
++-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+
+|     1 | M1 | MREQ |      |      | RD |    |     |     |      | 0000 | 00 | 0001 | FFFF | 00 | FFFF | FFFF | FFFF | FF FF | FF FF | DI           |
+|     2 |    |      |      |      |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | FF FF | FF FF | DI           |
+|     3 |    | MREQ |      | RFSH |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | FF FF | FF FF | DI           |
+|     4 |    |      |      |      |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | FF FF | FF FF | DI           |
+|     5 | M1 | MREQ |      |      | RD |    |     |     |      | 0001 | F3 | 0002 | FFFF | F3 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|     6 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|     7 |    | MREQ |      | RFSH |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|     8 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|     9 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|    10 |    | MREQ |      |      | RD |    |     |     |      | 0002 | 31 | 0003 | FFFF | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|    11 |    |      |      |      |    |    |     |     |      | 0002 | 00 | 0003 | FF00 | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|    12 |    |      |      |      |    |    |     |     |      | 0002 | 00 | 0003 | FF00 | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|    13 |    | MREQ |      |      | RD |    |     |     |      | 0003 | 00 | 0004 | FF00 | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|    14 |    |      |      |      |    |    |     |     |      | 0003 | 00 | 0004 | 0000 | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | LD SP,0000h  |
+|    15 | M1 | MREQ |      |      | RD |    |     |     |      | 0004 | 00 | 0005 | 0000 | 31 | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    16 |    |      |      |      |    |    |     |     |      | 0004 | ED | 0005 | 0000 | ED | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    17 |    | MREQ |      | RFSH |    |    |     |     |      | 0002 | ED | 0005 | 0000 | ED | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    18 |    |      |      |      |    |    |     |     |      | 0002 | ED | 0005 | 0000 | ED | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    19 | M1 | MREQ |      |      | RD |    |     |     |      | 0005 | ED | 0006 | 0000 | ED | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    20 |    |      |      |      |    |    |     |     |      | 0005 | 5E | 0006 | 0000 | 5E | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    21 |    | MREQ |      | RFSH |    |    |     |     |      | 0003 | 5E | 0006 | 0000 | 5E | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    22 |    |      |      |      |    |    |     |     |      | 0003 | 5E | 0006 | 0000 | 5E | FFFF | FFFF | FFFF | FF FF | FF FF | IM 2         |
+|    23 | M1 | MREQ |      |      | RD |    |     |     |      | 0006 | 5E | 0007 | 0000 | 5E | FFFF | FFFF | FFFF | FF FF | FF FF | XOR A        |
+|    24 |    |      |      |      |    |    |     |     |      | 0006 | AF | 0007 | 0000 | AF | FFFF | FFFF | FFFF | FF FF | FF FF | XOR A        |
+|    25 |    | MREQ |      | RFSH |    |    |     |     |      | 0004 | AF | 0007 | 0000 | AF | FFFF | FFFF | FFFF | FF FF | FF FF | XOR A        |
+|    26 |    |      |      |      |    |    |     |     |      | 0004 | AF | 0007 | 0000 | AF | FFFF | FFFF | FFFF | FF FF | FF FF | XOR A        |
+|    27 | M1 | MREQ |      |      | RD |    |     |     |      | 0007 | AF | 0008 | 0000 | AF | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    28 |    |      |      |      |    |    |     |     |      | 0007 | ED | 0008 | 0000 | ED | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    29 |    | MREQ |      | RFSH |    |    |     |     |      | 0005 | ED | 0008 | 0000 | ED | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    30 |    |      |      |      |    |    |     |     |      | 0005 | ED | 0008 | 0000 | ED | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    31 | M1 | MREQ |      |      | RD |    |     |     |      | 0008 | ED | 0009 | 0000 | ED | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    32 |    |      |      |      |    |    |     |     |      | 0008 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    33 |    | MREQ |      | RFSH |    |    |     |     |      | 0006 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    34 |    |      |      |      |    |    |     |     |      | 0006 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    35 |    |      |      |      |    |    |     |     |      | 0006 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | FF FF | FF FF | LD I,A       |
+|    36 | M1 | MREQ |      |      | RD |    |     |     |      | 0009 | 47 | 000A | 0000 | 47 | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    37 |    |      |      |      |    |    |     |     |      | 0009 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    38 |    | MREQ |      | RFSH |    |    |     |     |      | 0007 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    39 |    |      |      |      |    |    |     |     |      | 0007 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    40 |    |      |      |      |    |    |     |     |      | 0007 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    41 |    | MREQ |      |      | RD |    |     |     |      | 000A | CD | 000B | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    42 |    |      |      |      |    |    |     |     |      | 000A | 1E | 000B | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    43 |    |      |      |      |    |    |     |     |      | 000A | 1E | 000B | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    44 |    | MREQ |      |      | RD |    |     |     |      | 000B | 1E | 000C | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    45 |    |      |      |      |    |    |     |     |      | 000B | 00 | 000C | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    46 |    |      |      |      |    |    |     |     |      | 000B | 00 | 000C | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    47 |    |      |      |      |    |    |     |     |      | 000B | 00 | 000C | 0000 | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    48 |    | MREQ |      |      |    | WR |     |     |      | FFFF | 00 | 000C | FFFF | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    49 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 000C | FFFF | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    50 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 000C | FFFF | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    51 |    | MREQ |      |      |    | WR |     |     |      | FFFE | 0C | 001E | FFFE | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    52 |    |      |      |      |    |    |     |     |      | FFFE | 0C | 001E | FFFE | CD | 0044 | FFFF | FFFF | FF FF | FF FF | CALL 001Eh   |
+|    53 | M1 | MREQ |      |      | RD |    |     |     |      | 001E | 0C | 001F | FFFE | CD | 0044 | FFFF | FFFF | FF FF | FF FF | LD HL,0050h  |
+|    54 |    |      |      |      |    |    |     |     |      | 001E | 21 | 001F | FFFE | 21 | 0044 | FFFF | FFFF | FF FF | FF FF | LD HL,0050h  |
+|    55 |    | MREQ |      | RFSH |    |    |     |     |      | 0008 | 21 | 001F | FFFE | 21 | 0044 | FFFF | FFFF | FF FF | FF FF | LD HL,0050h  |
+|    56 |    |      |      |      |    |    |     |     |      | 0008 | 21 | 001F | FFFE | 21 | 0044 | FFFF | FFFF | FF FF | FF FF | LD HL,0050h  |
+|    57 |    |      |      |      |    |    |     |     |      | 0008 | 21 | 001F | FFFE | 21 | 0044 | FFFF | FFFF | FF FF | FF FF | LD HL,0050h  |
+|    58 |    | MREQ |      |      | RD |    |     |     |      | 001F | 21 | 0020 | FFFE | 21 | 0044 | FFFF | FFFF | FF FF | FF FF | LD HL,0050h  |
+|    59 |    |      |      |      |    |    |     |     |      | 001F | 50 | 0020 | FFFE | 21 | 0044 | FFFF | FF50 | FF FF | FF FF | LD HL,0050h  |
+|    60 |    |      |      |      |    |    |     |     |      | 001F | 50 | 0020 | FFFE | 21 | 0044 | FFFF | FF50 | FF FF | FF FF | LD HL,0050h  |
+|    61 |    | MREQ |      |      | RD |    |     |     |      | 0020 | 50 | 0021 | FFFE | 21 | 0044 | FFFF | FF50 | FF FF | FF FF | LD HL,0050h  |
+|    62 |    |      |      |      |    |    |     |     |      | 0020 | 00 | 0021 | FFFE | 21 | 0044 | FFFF | 0050 | FF FF | FF FF | LD HL,0050h  |
+|    63 | M1 | MREQ |      |      | RD |    |     |     |      | 0021 | 00 | 0022 | FFFE | 21 | 0044 | FFFF | 0050 | FF FF | FF FF | LD B,03h     |
+|    64 |    |      |      |      |    |    |     |     |      | 0021 | 06 | 0022 | FFFE | 06 | 0044 | FFFF | 0050 | FF FF | FF FF | LD B,03h     |
+|    65 |    | MREQ |      | RFSH |    |    |     |     |      | 0009 | 06 | 0022 | FFFE | 06 | 0044 | FFFF | 0050 | FF FF | FF FF | LD B,03h     |
+|    66 |    |      |      |      |    |    |     |     |      | 0009 | 06 | 0022 | FFFE | 06 | 0044 | FFFF | 0050 | FF FF | FF FF | LD B,03h     |
+|    67 |    |      |      |      |    |    |     |     |      | 0009 | 06 | 0022 | FFFE | 06 | 0044 | FFFF | 0050 | FF FF | FF FF | LD B,03h     |
+|    68 |    | MREQ |      |      | RD |    |     |     |      | 0022 | 06 | 0023 | FFFE | 06 | 0044 | FFFF | 0050 | FF FF | FF FF | LD B,03h     |
+|    69 |    |      |      |      |    |    |     |     |      | 0022 | 03 | 0023 | FFFE | 06 | 0044 | 03FF | 0050 | FF FF | FF FF | LD B,03h     |
+|    70 | M1 | MREQ |      |      | RD |    |     |     |      | 0023 | 03 | 0024 | FFFE | 06 | 0044 | 03FF | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    71 |    |      |      |      |    |    |     |     |      | 0023 | 0E | 0024 | FFFE | 0E | 0044 | 03FF | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    72 |    | MREQ |      | RFSH |    |    |     |     |      | 000A | 0E | 0024 | FFFE | 0E | 0044 | 03FF | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    73 |    |      |      |      |    |    |     |     |      | 000A | 0E | 0024 | FFFE | 0E | 0044 | 03FF | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    74 |    |      |      |      |    |    |     |     |      | 000A | 0E | 0024 | FFFE | 0E | 0044 | 03FF | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    75 |    | MREQ |      |      | RD |    |     |     |      | 0024 | 0E | 0025 | FFFE | 0E | 0044 | 03FF | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    76 |    |      |      |      |    |    |     |     |      | 0024 | 1D | 0025 | FFFE | 0E | 0044 | 031D | 0050 | FF FF | FF FF | LD C,1Dh     |
+|    77 | M1 | MREQ |      |      | RD |    |     |     |      | 0025 | 1D | 0026 | FFFE | 0E | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    78 |    |      |      |      |    |    |     |     |      | 0025 | ED | 0026 | FFFE | ED | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    79 |    | MREQ |      | RFSH |    |    |     |     |      | 000B | ED | 0026 | FFFE | ED | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    80 |    |      |      |      |    |    |     |     |      | 000B | ED | 0026 | FFFE | ED | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    81 | M1 | MREQ |      |      | RD |    |     |     |      | 0026 | ED | 0027 | FFFE | ED | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    82 |    |      |      |      |    |    |     |     |      | 0026 | B3 | 0027 | FFFE | B3 | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    83 |    | MREQ |      | RFSH |    |    |     |     |      | 000C | B3 | 0027 | FFFE | B3 | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    84 |    |      |      |      |    |    |     |     |      | 000C | B3 | 0027 | FFFE | B3 | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    85 |    |      |      |      |    |    |     |     |      | 000C | B3 | 0027 | FFFE | B3 | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    86 |    |      |      |      |    |    |     |     |      | 000C | B3 | 0027 | FFFE | B3 | 0044 | 031D | 0050 | FF FF | FF FF | OTIR         |
+|    87 |    | MREQ |      |      | RD |    |     |     |      | 0050 | B3 | 0027 | FFFE | B3 | 0044 | 031D | 0051 | FF FF | FF FF | OTIR         |
+|    88 |    |      |      |      |    |    |     |     |      | 0050 | CF | 0027 | FFFE | B3 | 0044 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    89 |    |      |      |      |    |    |     |     |      | 0050 | CF | 0027 | FFFE | B3 | 0044 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    90 |    |      | IORQ |      |    | WR |     |     |      | 021D | CF | 0027 | FFFE | B3 | 0044 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    91 |    |      |      |      |    |    |     |     |      | 021D | CF | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    92 |    |      |      |      |    |    |     |     |      | 021D | CF | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    93 |    |      |      |      |    |    |     |     |      | 021D | CF | 0025 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    94 |    |      |      |      |    |    |     |     |      | 021D | CF | 0025 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    95 |    |      |      |      |    |    |     |     |      | 021D | CF | 0025 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    96 |    |      |      |      |    |    |     |     |      | 021D | CF | 0025 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    97 |    |      |      |      |    |    |     |     |      | 021D | CF | 0025 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    98 | M1 | MREQ |      |      | RD |    |     |     |      | 0025 | CF | 0026 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|    99 |    |      |      |      |    |    |     |     |      | 0025 | ED | 0026 | FFFE | ED | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   100 |    | MREQ |      | RFSH |    |    |     |     |      | 000D | ED | 0026 | FFFE | ED | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   101 |    |      |      |      |    |    |     |     |      | 000D | ED | 0026 | FFFE | ED | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   102 | M1 | MREQ |      |      | RD |    |     |     |      | 0026 | ED | 0027 | FFFE | ED | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   103 |    |      |      |      |    |    |     |     |      | 0026 | B3 | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   104 |    | MREQ |      | RFSH |    |    |     |     |      | 000E | B3 | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   105 |    |      |      |      |    |    |     |     |      | 000E | B3 | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   106 |    |      |      |      |    |    |     |     |      | 000E | B3 | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   107 |    |      |      |      |    |    |     |     |      | 000E | B3 | 0027 | FFFE | B3 | 0013 | 021D | 0051 | FF FF | FF FF | OTIR         |
+|   108 |    | MREQ |      |      | RD |    |     |     |      | 0051 | B3 | 0027 | FFFE | B3 | 0013 | 021D | 0052 | FF FF | FF FF | OTIR         |
+|   109 |    |      |      |      |    |    |     |     |      | 0051 | FF | 0027 | FFFE | B3 | 0013 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   110 |    |      |      |      |    |    |     |     |      | 0051 | FF | 0027 | FFFE | B3 | 0013 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   111 |    |      | IORQ |      |    | WR |     |     |      | 011D | FF | 0027 | FFFE | B3 | 0013 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   112 |    |      |      |      |    |    |     |     |      | 011D | FF | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   113 |    |      |      |      |    |    |     |     |      | 011D | FF | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   114 |    |      |      |      |    |    |     |     |      | 011D | FF | 0025 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   115 |    |      |      |      |    |    |     |     |      | 011D | FF | 0025 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   116 |    |      |      |      |    |    |     |     |      | 011D | FF | 0025 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   117 |    |      |      |      |    |    |     |     |      | 011D | FF | 0025 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   118 |    |      |      |      |    |    |     |     |      | 011D | FF | 0025 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   119 | M1 | MREQ |      |      | RD |    |     |     |      | 0025 | FF | 0026 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   120 |    |      |      |      |    |    |     |     |      | 0025 | ED | 0026 | FFFE | ED | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   121 |    | MREQ |      | RFSH |    |    |     |     |      | 000F | ED | 0026 | FFFE | ED | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   122 |    |      |      |      |    |    |     |     |      | 000F | ED | 0026 | FFFE | ED | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   123 | M1 | MREQ |      |      | RD |    |     |     |      | 0026 | ED | 0027 | FFFE | ED | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   124 |    |      |      |      |    |    |     |     |      | 0026 | B3 | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   125 |    | MREQ |      | RFSH |    |    |     |     |      | 0010 | B3 | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   126 |    |      |      |      |    |    |     |     |      | 0010 | B3 | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   127 |    |      |      |      |    |    |     |     |      | 0010 | B3 | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   128 |    |      |      |      |    |    |     |     |      | 0010 | B3 | 0027 | FFFE | B3 | 0017 | 011D | 0052 | FF FF | FF FF | OTIR         |
+|   129 |    | MREQ |      |      | RD |    |     |     |      | 0052 | B3 | 0027 | FFFE | B3 | 0017 | 011D | 0053 | FF FF | FF FF | OTIR         |
+|   130 |    |      |      |      |    |    |     |     |      | 0052 | 07 | 0027 | FFFE | B3 | 0017 | 001D | 0053 | FF FF | FF FF | OTIR         |
+|   131 |    |      |      |      |    |    |     |     |      | 0052 | 07 | 0027 | FFFE | B3 | 0017 | 001D | 0053 | FF FF | FF FF | OTIR         |
+|   132 |    |      | IORQ |      |    | WR |     |     |      | 001D | 07 | 0027 | FFFE | B3 | 0017 | 001D | 0053 | FF FF | FF FF | OTIR         |
+|   133 |    |      |      |      |    |    |     |     |      | 001D | 07 | 0027 | FFFE | B3 | 0040 | 001D | 0053 | FF FF | FF FF | OTIR         |
+|   134 |    |      |      |      |    |    |     |     |      | 001D | 07 | 0027 | FFFE | B3 | 0040 | 001D | 0053 | FF FF | FF FF | OTIR         |
+|   135 | M1 | MREQ |      |      | RD |    |     |     |      | 0027 | 07 | 0028 | FFFE | B3 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   136 |    |      |      |      |    |    |     |     |      | 0027 | 21 | 0028 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   137 |    | MREQ |      | RFSH |    |    |     |     |      | 0011 | 21 | 0028 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   138 |    |      |      |      |    |    |     |     |      | 0011 | 21 | 0028 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   139 |    |      |      |      |    |    |     |     |      | 0011 | 21 | 0028 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   140 |    | MREQ |      |      | RD |    |     |     |      | 0028 | 21 | 0029 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   141 |    |      |      |      |    |    |     |     |      | 0028 | 53 | 0029 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   142 |    |      |      |      |    |    |     |     |      | 0028 | 53 | 0029 | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   143 |    | MREQ |      |      | RD |    |     |     |      | 0029 | 53 | 002A | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   144 |    |      |      |      |    |    |     |     |      | 0029 | 00 | 002A | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD HL,0053h  |
+|   145 | M1 | MREQ |      |      | RD |    |     |     |      | 002A | 00 | 002B | FFFE | 21 | 0040 | 001D | 0053 | FF FF | FF FF | LD B,03h     |
+|   146 |    |      |      |      |    |    |     |     |      | 002A | 06 | 002B | FFFE | 06 | 0040 | 001D | 0053 | FF FF | FF FF | LD B,03h     |
+|   147 |    | MREQ |      | RFSH |    |    |     |     |      | 0012 | 06 | 002B | FFFE | 06 | 0040 | 001D | 0053 | FF FF | FF FF | LD B,03h     |
+|   148 |    |      |      |      |    |    |     |     |      | 0012 | 06 | 002B | FFFE | 06 | 0040 | 001D | 0053 | FF FF | FF FF | LD B,03h     |
+|   149 |    |      |      |      |    |    |     |     |      | 0012 | 06 | 002B | FFFE | 06 | 0040 | 001D | 0053 | FF FF | FF FF | LD B,03h     |
+|   150 |    | MREQ |      |      | RD |    |     |     |      | 002B | 06 | 002C | FFFE | 06 | 0040 | 001D | 0053 | FF FF | FF FF | LD B,03h     |
+|   151 |    |      |      |      |    |    |     |     |      | 002B | 03 | 002C | FFFE | 06 | 0040 | 031D | 0053 | FF FF | FF FF | LD B,03h     |
+|   152 | M1 | MREQ |      |      | RD |    |     |     |      | 002C | 03 | 002D | FFFE | 06 | 0040 | 031D | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   153 |    |      |      |      |    |    |     |     |      | 002C | 0E | 002D | FFFE | 0E | 0040 | 031D | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   154 |    | MREQ |      | RFSH |    |    |     |     |      | 0013 | 0E | 002D | FFFE | 0E | 0040 | 031D | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   155 |    |      |      |      |    |    |     |     |      | 0013 | 0E | 002D | FFFE | 0E | 0040 | 031D | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   156 |    |      |      |      |    |    |     |     |      | 0013 | 0E | 002D | FFFE | 0E | 0040 | 031D | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   157 |    | MREQ |      |      | RD |    |     |     |      | 002D | 0E | 002E | FFFE | 0E | 0040 | 031D | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   158 |    |      |      |      |    |    |     |     |      | 002D | 1F | 002E | FFFE | 0E | 0040 | 031F | 0053 | FF FF | FF FF | LD C,1Fh     |
+|   159 | M1 | MREQ |      |      | RD |    |     |     |      | 002E | 1F | 002F | FFFE | 0E | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   160 |    |      |      |      |    |    |     |     |      | 002E | ED | 002F | FFFE | ED | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   161 |    | MREQ |      | RFSH |    |    |     |     |      | 0014 | ED | 002F | FFFE | ED | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   162 |    |      |      |      |    |    |     |     |      | 0014 | ED | 002F | FFFE | ED | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   163 | M1 | MREQ |      |      | RD |    |     |     |      | 002F | ED | 0030 | FFFE | ED | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   164 |    |      |      |      |    |    |     |     |      | 002F | B3 | 0030 | FFFE | B3 | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   165 |    | MREQ |      | RFSH |    |    |     |     |      | 0015 | B3 | 0030 | FFFE | B3 | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   166 |    |      |      |      |    |    |     |     |      | 0015 | B3 | 0030 | FFFE | B3 | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   167 |    |      |      |      |    |    |     |     |      | 0015 | B3 | 0030 | FFFE | B3 | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   168 |    |      |      |      |    |    |     |     |      | 0015 | B3 | 0030 | FFFE | B3 | 0040 | 031F | 0053 | FF FF | FF FF | OTIR         |
+|   169 |    | MREQ |      |      | RD |    |     |     |      | 0053 | B3 | 0030 | FFFE | B3 | 0040 | 031F | 0054 | FF FF | FF FF | OTIR         |
+|   170 |    |      |      |      |    |    |     |     |      | 0053 | CF | 0030 | FFFE | B3 | 0040 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   171 |    |      |      |      |    |    |     |     |      | 0053 | CF | 0030 | FFFE | B3 | 0040 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   172 |    |      | IORQ |      |    | WR |     |     |      | 021F | CF | 0030 | FFFE | B3 | 0040 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   173 |    |      |      |      |    |    |     |     |      | 021F | CF | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   174 |    |      |      |      |    |    |     |     |      | 021F | CF | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   175 |    |      |      |      |    |    |     |     |      | 021F | CF | 002E | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   176 |    |      |      |      |    |    |     |     |      | 021F | CF | 002E | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   177 |    |      |      |      |    |    |     |     |      | 021F | CF | 002E | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   178 |    |      |      |      |    |    |     |     |      | 021F | CF | 002E | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   179 |    |      |      |      |    |    |     |     |      | 021F | CF | 002E | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   180 | M1 | MREQ |      |      | RD |    |     |     |      | 002E | CF | 002F | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   181 |    |      |      |      |    |    |     |     |      | 002E | ED | 002F | FFFE | ED | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   182 |    | MREQ |      | RFSH |    |    |     |     |      | 0016 | ED | 002F | FFFE | ED | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   183 |    |      |      |      |    |    |     |     |      | 0016 | ED | 002F | FFFE | ED | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   184 | M1 | MREQ |      |      | RD |    |     |     |      | 002F | ED | 0030 | FFFE | ED | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   185 |    |      |      |      |    |    |     |     |      | 002F | B3 | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   186 |    | MREQ |      | RFSH |    |    |     |     |      | 0017 | B3 | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   187 |    |      |      |      |    |    |     |     |      | 0017 | B3 | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   188 |    |      |      |      |    |    |     |     |      | 0017 | B3 | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   189 |    |      |      |      |    |    |     |     |      | 0017 | B3 | 0030 | FFFE | B3 | 0013 | 021F | 0054 | FF FF | FF FF | OTIR         |
+|   190 |    | MREQ |      |      | RD |    |     |     |      | 0054 | B3 | 0030 | FFFE | B3 | 0013 | 021F | 0055 | FF FF | FF FF | OTIR         |
+|   191 |    |      |      |      |    |    |     |     |      | 0054 | 00 | 0030 | FFFE | B3 | 0013 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   192 |    |      |      |      |    |    |     |     |      | 0054 | 00 | 0030 | FFFE | B3 | 0013 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   193 |    |      | IORQ |      |    | WR |     |     |      | 011F | 00 | 0030 | FFFE | B3 | 0013 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   194 |    |      |      |      |    |    |     |     |      | 011F | 00 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   195 |    |      |      |      |    |    |     |     |      | 011F | 00 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   196 |    |      |      |      |    |    |     |     |      | 011F | 00 | 002E | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   197 |    |      |      |      |    |    |     |     |      | 011F | 00 | 002E | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   198 |    |      |      |      |    |    |     |     |      | 011F | 00 | 002E | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   199 |    |      |      |      |    |    |     |     |      | 011F | 00 | 002E | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   200 |    |      |      |      |    |    |     |     |      | 011F | 00 | 002E | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   201 | M1 | MREQ |      |      | RD |    |     |     |      | 002E | 00 | 002F | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   202 |    |      |      |      |    |    |     |     |      | 002E | ED | 002F | FFFE | ED | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   203 |    | MREQ |      | RFSH |    |    |     |     |      | 0018 | ED | 002F | FFFE | ED | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   204 |    |      |      |      |    |    |     |     |      | 0018 | ED | 002F | FFFE | ED | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   205 | M1 | MREQ |      |      | RD |    |     |     |      | 002F | ED | 0030 | FFFE | ED | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   206 |    |      |      |      |    |    |     |     |      | 002F | B3 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   207 |    | MREQ |      | RFSH |    |    |     |     |      | 0019 | B3 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   208 |    |      |      |      |    |    |     |     |      | 0019 | B3 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   209 |    |      |      |      |    |    |     |     |      | 0019 | B3 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   210 |    |      |      |      |    |    |     |     |      | 0019 | B3 | 0030 | FFFE | B3 | 0000 | 011F | 0055 | FF FF | FF FF | OTIR         |
+|   211 |    | MREQ |      |      | RD |    |     |     |      | 0055 | B3 | 0030 | FFFE | B3 | 0000 | 011F | 0056 | FF FF | FF FF | OTIR         |
+|   212 |    |      |      |      |    |    |     |     |      | 0055 | 07 | 0030 | FFFE | B3 | 0000 | 001F | 0056 | FF FF | FF FF | OTIR         |
+|   213 |    |      |      |      |    |    |     |     |      | 0055 | 07 | 0030 | FFFE | B3 | 0000 | 001F | 0056 | FF FF | FF FF | OTIR         |
+|   214 |    |      | IORQ |      |    | WR |     |     |      | 001F | 07 | 0030 | FFFE | B3 | 0000 | 001F | 0056 | FF FF | FF FF | OTIR         |
+|   215 |    |      |      |      |    |    |     |     |      | 001F | 07 | 0030 | FFFE | B3 | 0044 | 001F | 0056 | FF FF | FF FF | OTIR         |
+|   216 |    |      |      |      |    |    |     |     |      | 001F | 07 | 0030 | FFFE | B3 | 0044 | 001F | 0056 | FF FF | FF FF | OTIR         |
+|   217 | M1 | MREQ |      |      | RD |    |     |     |      | 0030 | 07 | 0031 | FFFE | B3 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   218 |    |      |      |      |    |    |     |     |      | 0030 | 21 | 0031 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   219 |    | MREQ |      | RFSH |    |    |     |     |      | 001A | 21 | 0031 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   220 |    |      |      |      |    |    |     |     |      | 001A | 21 | 0031 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   221 |    |      |      |      |    |    |     |     |      | 001A | 21 | 0031 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   222 |    | MREQ |      |      | RD |    |     |     |      | 0031 | 21 | 0032 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   223 |    |      |      |      |    |    |     |     |      | 0031 | 56 | 0032 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   224 |    |      |      |      |    |    |     |     |      | 0031 | 56 | 0032 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   225 |    | MREQ |      |      | RD |    |     |     |      | 0032 | 56 | 0033 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   226 |    |      |      |      |    |    |     |     |      | 0032 | 00 | 0033 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD HL,0056h  |
+|   227 | M1 | MREQ |      |      | RD |    |     |     |      | 0033 | 00 | 0034 | FFFE | 21 | 0044 | 001F | 0056 | FF FF | FF FF | LD B,03h     |
+|   228 |    |      |      |      |    |    |     |     |      | 0033 | 06 | 0034 | FFFE | 06 | 0044 | 001F | 0056 | FF FF | FF FF | LD B,03h     |
+|   229 |    | MREQ |      | RFSH |    |    |     |     |      | 001B | 06 | 0034 | FFFE | 06 | 0044 | 001F | 0056 | FF FF | FF FF | LD B,03h     |
+|   230 |    |      |      |      |    |    |     |     |      | 001B | 06 | 0034 | FFFE | 06 | 0044 | 001F | 0056 | FF FF | FF FF | LD B,03h     |
+|   231 |    |      |      |      |    |    |     |     |      | 001B | 06 | 0034 | FFFE | 06 | 0044 | 001F | 0056 | FF FF | FF FF | LD B,03h     |
+|   232 |    | MREQ |      |      | RD |    |     |     |      | 0034 | 06 | 0035 | FFFE | 06 | 0044 | 001F | 0056 | FF FF | FF FF | LD B,03h     |
+|   233 |    |      |      |      |    |    |     |     |      | 0034 | 03 | 0035 | FFFE | 06 | 0044 | 031F | 0056 | FF FF | FF FF | LD B,03h     |
+|   234 | M1 | MREQ |      |      | RD |    |     |     |      | 0035 | 03 | 0036 | FFFE | 06 | 0044 | 031F | 0056 | FF FF | FF FF | LD C,10h     |
+|   235 |    |      |      |      |    |    |     |     |      | 0035 | 0E | 0036 | FFFE | 0E | 0044 | 031F | 0056 | FF FF | FF FF | LD C,10h     |
+|   236 |    | MREQ |      | RFSH |    |    |     |     |      | 001C | 0E | 0036 | FFFE | 0E | 0044 | 031F | 0056 | FF FF | FF FF | LD C,10h     |
+|   237 |    |      |      |      |    |    |     |     |      | 001C | 0E | 0036 | FFFE | 0E | 0044 | 031F | 0056 | FF FF | FF FF | LD C,10h     |
+|   238 |    |      |      |      |    |    |     |     |      | 001C | 0E | 0036 | FFFE | 0E | 0044 | 031F | 0056 | FF FF | FF FF | LD C,10h     |
+|   239 |    | MREQ |      |      | RD |    |     |     |      | 0036 | 0E | 0037 | FFFE | 0E | 0044 | 031F | 0056 | FF FF | FF FF | LD C,10h     |
+|   240 |    |      |      |      |    |    |     |     |      | 0036 | 10 | 0037 | FFFE | 0E | 0044 | 0310 | 0056 | FF FF | FF FF | LD C,10h     |
+|   241 | M1 | MREQ |      |      | RD |    |     |     |      | 0037 | 10 | 0038 | FFFE | 0E | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   242 |    |      |      |      |    |    |     |     |      | 0037 | ED | 0038 | FFFE | ED | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   243 |    | MREQ |      | RFSH |    |    |     |     |      | 001D | ED | 0038 | FFFE | ED | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   244 |    |      |      |      |    |    |     |     |      | 001D | ED | 0038 | FFFE | ED | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   245 | M1 | MREQ |      |      | RD |    |     |     |      | 0038 | ED | 0039 | FFFE | ED | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   246 |    |      |      |      |    |    |     |     |      | 0038 | B3 | 0039 | FFFE | B3 | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   247 |    | MREQ |      | RFSH |    |    |     |     |      | 001E | B3 | 0039 | FFFE | B3 | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   248 |    |      |      |      |    |    |     |     |      | 001E | B3 | 0039 | FFFE | B3 | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   249 |    |      |      |      |    |    |     |     |      | 001E | B3 | 0039 | FFFE | B3 | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   250 |    |      |      |      |    |    |     |     |      | 001E | B3 | 0039 | FFFE | B3 | 0044 | 0310 | 0056 | FF FF | FF FF | OTIR         |
+|   251 |    | MREQ |      |      | RD |    |     |     |      | 0056 | B3 | 0039 | FFFE | B3 | 0044 | 0310 | 0057 | FF FF | FF FF | OTIR         |
+|   252 |    |      |      |      |    |    |     |     |      | 0056 | 48 | 0039 | FFFE | B3 | 0044 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   253 |    |      |      |      |    |    |     |     |      | 0056 | 48 | 0039 | FFFE | B3 | 0044 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   254 |    |      | IORQ |      |    | WR |     |     |      | 0210 | 48 | 0039 | FFFE | B3 | 0044 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   255 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   256 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   257 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0037 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   258 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0037 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   259 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0037 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   260 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0037 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   261 |    |      |      |      |    |    |     |     |      | 0210 | 48 | 0037 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   262 | M1 | MREQ |      |      | RD |    |     |     |      | 0037 | 48 | 0038 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   263 |    |      |      |      |    |    |     |     |      | 0037 | ED | 0038 | FFFE | ED | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   264 |    | MREQ |      | RFSH |    |    |     |     |      | 001F | ED | 0038 | FFFE | ED | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   265 |    |      |      |      |    |    |     |     |      | 001F | ED | 0038 | FFFE | ED | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   266 | M1 | MREQ |      |      | RD |    |     |     |      | 0038 | ED | 0039 | FFFE | ED | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   267 |    |      |      |      |    |    |     |     |      | 0038 | B3 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   268 |    | MREQ |      | RFSH |    |    |     |     |      | 0020 | B3 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   269 |    |      |      |      |    |    |     |     |      | 0020 | B3 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   270 |    |      |      |      |    |    |     |     |      | 0020 | B3 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   271 |    |      |      |      |    |    |     |     |      | 0020 | B3 | 0039 | FFFE | B3 | 0004 | 0210 | 0057 | FF FF | FF FF | OTIR         |
+|   272 |    | MREQ |      |      | RD |    |     |     |      | 0057 | B3 | 0039 | FFFE | B3 | 0004 | 0210 | 0058 | FF FF | FF FF | OTIR         |
+|   273 |    |      |      |      |    |    |     |     |      | 0057 | 87 | 0039 | FFFE | B3 | 0004 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   274 |    |      |      |      |    |    |     |     |      | 0057 | 87 | 0039 | FFFE | B3 | 0004 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   275 |    |      | IORQ |      |    | WR |     |     |      | 0110 | 87 | 0039 | FFFE | B3 | 0004 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   276 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   277 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   278 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0037 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   279 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0037 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   280 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0037 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   281 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0037 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   282 |    |      |      |      |    |    |     |     |      | 0110 | 87 | 0037 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   283 | M1 | MREQ |      |      | RD |    |     |     |      | 0037 | 87 | 0038 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   284 |    |      |      |      |    |    |     |     |      | 0037 | ED | 0038 | FFFE | ED | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   285 |    | MREQ |      | RFSH |    |    |     |     |      | 0021 | ED | 0038 | FFFE | ED | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   286 |    |      |      |      |    |    |     |     |      | 0021 | ED | 0038 | FFFE | ED | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   287 | M1 | MREQ |      |      | RD |    |     |     |      | 0038 | ED | 0039 | FFFE | ED | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   288 |    |      |      |      |    |    |     |     |      | 0038 | B3 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   289 |    | MREQ |      | RFSH |    |    |     |     |      | 0022 | B3 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   290 |    |      |      |      |    |    |     |     |      | 0022 | B3 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   291 |    |      |      |      |    |    |     |     |      | 0022 | B3 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   292 |    |      |      |      |    |    |     |     |      | 0022 | B3 | 0039 | FFFE | B3 | 0006 | 0110 | 0058 | FF FF | FF FF | OTIR         |
+|   293 |    | MREQ |      |      | RD |    |     |     |      | 0058 | B3 | 0039 | FFFE | B3 | 0006 | 0110 | 0059 | FF FF | FF FF | OTIR         |
+|   294 |    |      |      |      |    |    |     |     |      | 0058 | 08 | 0039 | FFFE | B3 | 0006 | 0010 | 0059 | FF FF | FF FF | OTIR         |
+|   295 |    |      |      |      |    |    |     |     |      | 0058 | 08 | 0039 | FFFE | B3 | 0006 | 0010 | 0059 | FF FF | FF FF | OTIR         |
+|   296 |    |      | IORQ |      |    | WR |     |     |      | 0010 | 08 | 0039 | FFFE | B3 | 0006 | 0010 | 0059 | FF FF | FF FF | OTIR         |
+|   297 |    |      |      |      |    |    |     |     |      | 0010 | 08 | 0039 | FFFE | B3 | 0040 | 0010 | 0059 | FF FF | FF FF | OTIR         |
+|   298 |    |      |      |      |    |    |     |     |      | 0010 | 08 | 0039 | FFFE | B3 | 0040 | 0010 | 0059 | FF FF | FF FF | OTIR         |
+|   299 | M1 | MREQ |      |      | RD |    |     |     |      | 0039 | 08 | 003A | FFFE | B3 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   300 |    |      |      |      |    |    |     |     |      | 0039 | C9 | 003A | FFFE | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   301 |    | MREQ |      | RFSH |    |    |     |     |      | 0023 | C9 | 003A | FFFE | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   302 |    |      |      |      |    |    |     |     |      | 0023 | C9 | 003A | FFFE | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   303 |    |      |      |      |    |    |     |     |      | 0023 | C9 | 003A | FFFE | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   304 |    | MREQ |      |      | RD |    |     |     |      | FFFE | C9 | 003A | FFFF | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   305 |    |      |      |      |    |    |     |     |      | FFFE | 0C | 003A | FFFF | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   306 |    |      |      |      |    |    |     |     |      | FFFE | 0C | 003A | FFFF | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   307 |    | MREQ |      |      | RD |    |     |     |      | FFFF | 0C | 003A | 0000 | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   308 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 000C | 0000 | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | RET          |
+|   309 | M1 | MREQ |      |      | RD |    |     |     |      | 000C | 00 | 000D | 0000 | C9 | 0040 | 0010 | 0059 | FF FF | FF FF | XOR A        |
+|   310 |    |      |      |      |    |    |     |     |      | 000C | AF | 000D | 0000 | AF | 0040 | 0010 | 0059 | FF FF | FF FF | XOR A        |
+|   311 |    | MREQ |      | RFSH |    |    |     |     |      | 0024 | AF | 000D | 0000 | AF | 0040 | 0010 | 0059 | FF FF | FF FF | XOR A        |
+|   312 |    |      |      |      |    |    |     |     |      | 0024 | AF | 000D | 0000 | AF | 0040 | 0010 | 0059 | FF FF | FF FF | XOR A        |
+|   313 | M1 | MREQ |      |      | RD |    |     |     |      | 000D | AF | 000E | 0000 | AF | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   314 |    |      |      |      |    |    |     |     |      | 000D | 32 | 000E | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   315 |    | MREQ |      | RFSH |    |    |     |     |      | 0025 | 32 | 000E | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   316 |    |      |      |      |    |    |     |     |      | 0025 | 32 | 000E | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   317 |    |      |      |      |    |    |     |     |      | 0025 | 32 | 000E | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   318 |    | MREQ |      |      | RD |    |     |     |      | 000E | 32 | 000F | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   319 |    |      |      |      |    |    |     |     |      | 000E | 80 | 000F | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   320 |    |      |      |      |    |    |     |     |      | 000E | 80 | 000F | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   321 |    | MREQ |      |      | RD |    |     |     |      | 000F | 80 | 0010 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   322 |    |      |      |      |    |    |     |     |      | 000F | 00 | 0010 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   323 |    |      |      |      |    |    |     |     |      | 000F | 00 | 0010 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   324 |    | MREQ |      |      |    | WR |     |     |      | 0080 | 00 | 0010 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | FF FF | LD (0080h),A |
+|   325 |    |      |      |      |    |    |     |     |      | 0080 | 00 | 0010 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0080h),A |
+|   326 | M1 | MREQ |      |      | RD |    |     |     |      | 0010 | 00 | 0011 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   327 |    |      |      |      |    |    |     |     |      | 0010 | 32 | 0011 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   328 |    | MREQ |      | RFSH |    |    |     |     |      | 0026 | 32 | 0011 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   329 |    |      |      |      |    |    |     |     |      | 0026 | 32 | 0011 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   330 |    |      |      |      |    |    |     |     |      | 0026 | 32 | 0011 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   331 |    | MREQ |      |      | RD |    |     |     |      | 0011 | 32 | 0012 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   332 |    |      |      |      |    |    |     |     |      | 0011 | 81 | 0012 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   333 |    |      |      |      |    |    |     |     |      | 0011 | 81 | 0012 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   334 |    | MREQ |      |      | RD |    |     |     |      | 0012 | 81 | 0013 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   335 |    |      |      |      |    |    |     |     |      | 0012 | 00 | 0013 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   336 |    |      |      |      |    |    |     |     |      | 0012 | 00 | 0013 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   337 |    | MREQ |      |      |    | WR |     |     |      | 0081 | 00 | 0013 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 FF | LD (0081h),A |
+|   338 |    |      |      |      |    |    |     |     |      | 0081 | 00 | 0013 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 00 | LD (0081h),A |
+|   339 | M1 | MREQ |      |      | RD |    |     |     |      | 0013 | 00 | 0014 | 0000 | 32 | 0044 | 0010 | 0059 | FF FF | 00 00 | EI           |
+|   340 |    |      |      |      |    |    |     |     |      | 0013 | FB | 0014 | 0000 | FB | 0044 | 0010 | 0059 | FF FF | 00 00 | EI           |
+|   341 |    | MREQ |      | RFSH |    |    |     |     |      | 0027 | FB | 0014 | 0000 | FB | 0044 | 0010 | 0059 | FF FF | 00 00 | EI           |
+|   342 |    |      |      |      |    |    |     |     |      | 0027 | FB | 0014 | 0000 | FB | 0044 | 0010 | 0059 | FF FF | 00 00 | EI           |
+|   343 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0014 | FB | 0015 | 0000 | FB | 0044 | 0010 | 0059 | FF FF | 00 00 | LD C,1Ch     |
+|                                                                                                                                                 | <- set io|   344 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 0E | 0044 | 0010 | 0059 | 12 FF | 00 00 | LD C,1Ch     |
+|   345 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0028 | 0E | 0015 | 0000 | 0E | 0044 | 0010 | 0059 | 12 FF | 00 00 | LD C,1Ch     |
+|   346 |    |      |      |      |    |    |     |     | IFF1 | 0028 | 0E | 0015 | 0000 | 0E | 0044 | 0010 | 0059 | 12 FF | 00 00 | LD C,1Ch     |
+|   347 |    |      |      |      |    |    |     |     | IFF1 | 0028 | 0E | 0015 | 0000 | 0E | 0044 | 0010 | 0059 | 12 FF | 00 00 | LD C,1Ch     |
+|   348 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0015 | 0E | 0016 | 0000 | 0E | 0044 | 0010 | 0059 | 12 FF | 00 00 | LD C,1Ch     |
+|   349 |    |      |      |      |    |    |     |     | IFF1 | 0015 | 1C | 0016 | 0000 | 0E | 0044 | 001C | 0059 | 12 FF | 00 00 | LD C,1Ch     |
+|   350 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0016 | 1C | 0017 | 0000 | 0E | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   351 |    |      |      |      |    |    |     |     | IFF1 | 0016 | ED | 0017 | 0000 | ED | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   352 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0029 | ED | 0017 | 0000 | ED | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   353 |    |      |      |      |    |    |     |     | IFF1 | 0029 | ED | 0017 | 0000 | ED | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   354 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0017 | ED | 0018 | 0000 | ED | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   355 |    |      |      |      |    |    |     |     | IFF1 | 0017 | 40 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   356 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 002A | 40 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   357 |    |      |      |      |    |    |     |     | IFF1 | 002A | 40 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   358 |    |      |      |      |    |    |     |     | IFF1 | 002A | 40 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   359 |    |      |      |      |    |    |     |     | IFF1 | 002A | 40 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   360 |    |      | IORQ |      | RD |    |     |     | IFF1 | 001C | 40 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   361 |    |      |      |      |    |    |     |     | IFF1 | 001C | 12 | 0018 | 0000 | 40 | 0044 | 001C | 0059 | 12 FF | 00 00 | IN B,(C)     |
+|   362 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0018 | 12 | 0019 | 0000 | 40 | 0004 | 121C | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   363 |    |      |      |      |    |    |     |     | IFF1 | 0018 | 0E | 0019 | 0000 | 0E | 0004 | 121C | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   364 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 002B | 0E | 0019 | 0000 | 0E | 0004 | 121C | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   365 |    |      |      |      |    |    |     |     | IFF1 | 002B | 0E | 0019 | 0000 | 0E | 0004 | 121C | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   366 |    |      |      |      |    |    |     |     | IFF1 | 002B | 0E | 0019 | 0000 | 0E | 0004 | 121C | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   367 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0019 | 0E | 001A | 0000 | 0E | 0004 | 121C | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   368 |    |      |      |      |    |    |     |     | IFF1 | 0019 | 1E | 001A | 0000 | 0E | 0004 | 121E | 0059 | 12 FF | 00 00 | LD C,1Eh     |
+|   369 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001A | 1E | 001B | 0000 | 0E | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   370 |    |      |      |      |    |    |     |     | IFF1 | 001A | ED | 001B | 0000 | ED | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   371 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 002C | ED | 001B | 0000 | ED | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   372 |    |      |      |      |    |    |     |     | IFF1 | 002C | ED | 001B | 0000 | ED | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   373 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001B | ED | 001C | 0000 | ED | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   374 |    |      |      |      |    |    |     |     | IFF1 | 001B | 41 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   375 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 002D | 41 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   376 |    |      |      |      |    |    |     |     | IFF1 | 002D | 41 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   377 |    |      |      |      |    |    |     |     | IFF1 | 002D | 41 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   378 |    |      | IORQ |      |    | WR |     |     | IFF1 | 121E | 12 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 FF | 00 00 | OUT (C),B    |
+|   379 |    |      |      |      |    |    |     |     | IFF1 | 121E | 12 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 12 | 00 00 | OUT (C),B    |
+|   380 |    |      |      |      |    |    |     |     | IFF1 | 121E | 12 | 001C | 0000 | 41 | 0004 | 121E | 0059 | 12 12 | 00 00 | OUT (C),B    |
+|   381 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001C | 12 | 001D | 0000 | 41 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   382 |    |      |      |      |    |    |     |     | IFF1 | 001C | 18 | 001D | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   383 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 002E | 18 | 001D | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   384 |    |      |      |      |    |    |     |     | IFF1 | 002E | 18 | 001D | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   385 |    |      |      |      |    |    |     |     | IFF1 | 002E | 18 | 001D | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   386 |    | MREQ |      |      | RD |    |     |     | IFF1 | 001D | 18 | 001E | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   387 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 001E | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   388 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   389 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   390 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   391 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   392 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | JR 0014h     |
+|   393 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0014 | F6 | 0015 | 0000 | 18 | 0004 | 121E | 0059 | 12 12 | 00 00 | LD C,1Ch     |
+|                                                                                                                                                 | <- set io|   394 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 0E | 0004 | 121E | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   395 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 002F | 0E | 0015 | 0000 | 0E | 0004 | 121E | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   396 |    |      |      |      |    |    |     |     | IFF1 | 002F | 0E | 0015 | 0000 | 0E | 0004 | 121E | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   397 |    |      |      |      |    |    |     |     | IFF1 | 002F | 0E | 0015 | 0000 | 0E | 0004 | 121E | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   398 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0015 | 0E | 0016 | 0000 | 0E | 0004 | 121E | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|                                                                                                                                                 | <- set z80_int|   399 |    |      |      |      |    |    | INT |     | IFF1 | 0015 | 1C | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   400 |    |      |      |      |    |    | INT |     | IFF1 | 0015 | 1C | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   401 |    |      |      |      |    |    | INT |     |      | 0015 | 1C | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   402 | M1 |      | IORQ |      |    |    | INT |     |      | 0015 | 1C | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   403 |    |      |      |      |    |    |     |     |      | 0015 | 48 | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   404 |    | MREQ |      | RFSH |    |    |     |     |      | 0030 | 48 | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   405 |    |      |      |      |    |    |     |     |      | 0030 | 48 | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   406 |    |      |      |      |    |    |     |     |      | 0030 | 48 | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   407 |    |      |      |      |    |    |     |     |      | 0030 | 48 | 0016 | 0000 | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   408 |    | MREQ |      |      |    | WR |     |     |      | FFFF | 00 | 0016 | FFFF | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   409 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 0016 | FFFF | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   410 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 0016 | FFFF | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   411 |    | MREQ |      |      |    | WR |     |     |      | FFFE | 16 | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   412 |    |      |      |      |    |    |     |     |      | FFFE | 16 | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   413 |    |      |      |      |    |    |     |     |      | FFFE | 16 | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   414 |    | MREQ |      |      | RD |    |     |     |      | 0048 | 16 | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   415 |    |      |      |      |    |    |     |     |      | 0048 | 6E | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   416 |    |      |      |      |    |    |     |     |      | 0048 | 6E | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   417 |    | MREQ |      |      | RD |    |     |     |      | 0049 | 6E | 0016 | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|   418 |    |      |      |      |    |    |     |     |      | 0049 | 00 | 006E | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | LD C,1Ch     |
+|                                                                                                                                                 | <- INT SrvRtn|   419 | M1 | MREQ |      |      | RD |    |     |     |      | 006E | 00 | 006F | FFFE | 0E | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   420 |    |      |      |      |    |    |     |     |      | 006E | F5 | 006F | FFFE | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   421 |    | MREQ |      | RFSH |    |    |     |     |      | 0031 | F5 | 006F | FFFE | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   422 |    |      |      |      |    |    |     |     |      | 0031 | F5 | 006F | FFFE | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   423 |    |      |      |      |    |    |     |     |      | 0031 | F5 | 006F | FFFE | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   424 |    |      |      |      |    |    |     |     |      | 0031 | F5 | 006F | FFFE | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   425 |    | MREQ |      |      |    | WR |     |     |      | FFFD | 00 | 006F | FFFD | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   426 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006F | FFFD | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   427 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006F | FFFD | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   428 |    | MREQ |      |      |    | WR |     |     |      | FFFC | 04 | 006F | FFFC | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   429 |    |      |      |      |    |    |     |     |      | FFFC | 04 | 006F | FFFC | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | PUSH AF      |
+|   430 | M1 | MREQ |      |      | RD |    |     |     |      | 006F | 04 | 0070 | FFFC | F5 | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   431 |    |      |      |      |    |    |     |     |      | 006F | 3A | 0070 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   432 |    | MREQ |      | RFSH |    |    |     |     |      | 0032 | 3A | 0070 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   433 |    |      |      |      |    |    |     |     |      | 0032 | 3A | 0070 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   434 |    |      |      |      |    |    |     |     |      | 0032 | 3A | 0070 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   435 |    | MREQ |      |      | RD |    |     |     |      | 0070 | 3A | 0071 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   436 |    |      |      |      |    |    |     |     |      | 0070 | 80 | 0071 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   437 |    |      |      |      |    |    |     |     |      | 0070 | 80 | 0071 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   438 |    | MREQ |      |      | RD |    |     |     |      | 0071 | 80 | 0072 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   439 |    |      |      |      |    |    |     |     |      | 0071 | 00 | 0072 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   440 |    |      |      |      |    |    |     |     |      | 0071 | 00 | 0072 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   441 |    | MREQ |      |      | RD |    |     |     |      | 0080 | 00 | 0072 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   442 |    |      |      |      |    |    |     |     |      | 0080 | 00 | 0072 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | LD A,(0080h) |
+|   443 | M1 | MREQ |      |      | RD |    |     |     |      | 0072 | 00 | 0073 | FFFC | 3A | 0004 | 121C | 0059 | 34 12 | 00 00 | INC A        |
+|   444 |    |      |      |      |    |    |     |     |      | 0072 | 3C | 0073 | FFFC | 3C | 0004 | 121C | 0059 | 34 12 | 00 00 | INC A        |
+|   445 |    | MREQ |      | RFSH |    |    |     |     |      | 0033 | 3C | 0073 | FFFC | 3C | 0004 | 121C | 0059 | 34 12 | 00 00 | INC A        |
+|   446 |    |      |      |      |    |    |     |     |      | 0033 | 3C | 0073 | FFFC | 3C | 0004 | 121C | 0059 | 34 12 | 00 00 | INC A        |
+|   447 | M1 | MREQ |      |      | RD |    |     |     |      | 0073 | 3C | 0074 | FFFC | 3C | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   448 |    |      |      |      |    |    |     |     |      | 0073 | 32 | 0074 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   449 |    | MREQ |      | RFSH |    |    |     |     |      | 0034 | 32 | 0074 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   450 |    |      |      |      |    |    |     |     |      | 0034 | 32 | 0074 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   451 |    |      |      |      |    |    |     |     |      | 0034 | 32 | 0074 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   452 |    | MREQ |      |      | RD |    |     |     |      | 0074 | 32 | 0075 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   453 |    |      |      |      |    |    |     |     |      | 0074 | 80 | 0075 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   454 |    |      |      |      |    |    |     |     |      | 0074 | 80 | 0075 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   455 |    | MREQ |      |      | RD |    |     |     |      | 0075 | 80 | 0076 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   456 |    |      |      |      |    |    |     |     |      | 0075 | 00 | 0076 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   457 |    |      |      |      |    |    |     |     |      | 0075 | 00 | 0076 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   458 |    | MREQ |      |      |    | WR |     |     |      | 0080 | 01 | 0076 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 00 00 | LD (0080h),A |
+|   459 |    |      |      |      |    |    |     |     |      | 0080 | 01 | 0076 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 01 00 | LD (0080h),A |
+|   460 | M1 | MREQ |      |      | RD |    |     |     |      | 0076 | 01 | 0077 | FFFC | 32 | 0100 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   461 |    |      |      |      |    |    |     |     |      | 0076 | F1 | 0077 | FFFC | F1 | 0100 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   462 |    | MREQ |      | RFSH |    |    |     |     |      | 0035 | F1 | 0077 | FFFC | F1 | 0100 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   463 |    |      |      |      |    |    |     |     |      | 0035 | F1 | 0077 | FFFC | F1 | 0100 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   464 |    |      |      |      |    |    |     |     |      | 0035 | F1 | 0077 | FFFC | F1 | 0100 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   465 |    | MREQ |      |      | RD |    |     |     |      | FFFC | F1 | 0077 | FFFD | F1 | 0100 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   466 |    |      |      |      |    |    |     |     |      | FFFC | 04 | 0077 | FFFD | F1 | 0104 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   467 |    |      |      |      |    |    |     |     |      | FFFC | 04 | 0077 | FFFD | F1 | 0104 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   468 |    | MREQ |      |      | RD |    |     |     |      | FFFD | 04 | 0077 | FFFE | F1 | 0104 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   469 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 0077 | FFFE | F1 | 0004 | 121C | 0059 | 34 12 | 01 00 | POP AF       |
+|   470 | M1 | MREQ |      |      | RD |    |     |     |      | 0077 | 00 | 0078 | FFFE | F1 | 0004 | 121C | 0059 | 34 12 | 01 00 | EI           |
+|   471 |    |      |      |      |    |    |     |     |      | 0077 | FB | 0078 | FFFE | FB | 0004 | 121C | 0059 | 34 12 | 01 00 | EI           |
+|   472 |    | MREQ |      | RFSH |    |    |     |     |      | 0036 | FB | 0078 | FFFE | FB | 0004 | 121C | 0059 | 34 12 | 01 00 | EI           |
+|   473 |    |      |      |      |    |    |     |     |      | 0036 | FB | 0078 | FFFE | FB | 0004 | 121C | 0059 | 34 12 | 01 00 | EI           |
+|   474 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0078 | FB | 0079 | FFFE | FB | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   475 |    |      |      |      |    |    |     |     | IFF1 | 0078 | ED | 0079 | FFFE | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   476 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0037 | ED | 0079 | FFFE | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   477 |    |      |      |      |    |    |     |     | IFF1 | 0037 | ED | 0079 | FFFE | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   478 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0079 | ED | 007A | FFFE | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   479 |    |      |      |      |    |    |     |     | IFF1 | 0079 | 4D | 007A | FFFE | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   480 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0038 | 4D | 007A | FFFE | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   481 |    |      |      |      |    |    |     |     | IFF1 | 0038 | 4D | 007A | FFFE | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   482 |    |      |      |      |    |    |     |     | IFF1 | 0038 | 4D | 007A | FFFE | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   483 |    | MREQ |      |      | RD |    |     |     | IFF1 | FFFE | 4D | 007A | FFFF | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   484 |    |      |      |      |    |    |     |     | IFF1 | FFFE | 16 | 007A | FFFF | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   485 |    |      |      |      |    |    |     |     | IFF1 | FFFE | 16 | 007A | FFFF | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   486 |    | MREQ |      |      | RD |    |     |     | IFF1 | FFFF | 16 | 007A | 0000 | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   487 |    |      |      |      |    |    |     |     | IFF1 | FFFF | 00 | 0016 | 0000 | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | RETI         |
+|   488 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0016 | 00 | 0017 | 0000 | 4D | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   489 |    |      |      |      |    |    |     |     | IFF1 | 0016 | ED | 0017 | 0000 | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   490 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0039 | ED | 0017 | 0000 | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   491 |    |      |      |      |    |    |     |     | IFF1 | 0039 | ED | 0017 | 0000 | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   492 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0017 | ED | 0018 | 0000 | ED | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   493 |    |      |      |      |    |    |     |     | IFF1 | 0017 | 40 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   494 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 003A | 40 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   495 |    |      |      |      |    |    |     |     | IFF1 | 003A | 40 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   496 |    |      |      |      |    |    |     |     | IFF1 | 003A | 40 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   497 |    |      |      |      |    |    |     |     | IFF1 | 003A | 40 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   498 |    |      | IORQ |      | RD |    |     |     | IFF1 | 121C | 40 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   499 |    |      |      |      |    |    |     |     | IFF1 | 121C | 34 | 0018 | 0000 | 40 | 0004 | 121C | 0059 | 34 12 | 01 00 | IN B,(C)     |
+|   500 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0018 | 34 | 0019 | 0000 | 40 | 0020 | 341C | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   501 |    |      |      |      |    |    |     |     | IFF1 | 0018 | 0E | 0019 | 0000 | 0E | 0020 | 341C | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   502 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 003B | 0E | 0019 | 0000 | 0E | 0020 | 341C | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   503 |    |      |      |      |    |    |     |     | IFF1 | 003B | 0E | 0019 | 0000 | 0E | 0020 | 341C | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   504 |    |      |      |      |    |    |     |     | IFF1 | 003B | 0E | 0019 | 0000 | 0E | 0020 | 341C | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   505 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0019 | 0E | 001A | 0000 | 0E | 0020 | 341C | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   506 |    |      |      |      |    |    |     |     | IFF1 | 0019 | 1E | 001A | 0000 | 0E | 0020 | 341E | 0059 | 34 12 | 01 00 | LD C,1Eh     |
+|   507 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001A | 1E | 001B | 0000 | 0E | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   508 |    |      |      |      |    |    |     |     | IFF1 | 001A | ED | 001B | 0000 | ED | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   509 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 003C | ED | 001B | 0000 | ED | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   510 |    |      |      |      |    |    |     |     | IFF1 | 003C | ED | 001B | 0000 | ED | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   511 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001B | ED | 001C | 0000 | ED | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   512 |    |      |      |      |    |    |     |     | IFF1 | 001B | 41 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   513 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 003D | 41 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   514 |    |      |      |      |    |    |     |     | IFF1 | 003D | 41 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   515 |    |      |      |      |    |    |     |     | IFF1 | 003D | 41 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   516 |    |      | IORQ |      |    | WR |     |     | IFF1 | 341E | 34 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 12 | 01 00 | OUT (C),B    |
+|   517 |    |      |      |      |    |    |     |     | IFF1 | 341E | 34 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 34 | 01 00 | OUT (C),B    |
+|   518 |    |      |      |      |    |    |     |     | IFF1 | 341E | 34 | 001C | 0000 | 41 | 0020 | 341E | 0059 | 34 34 | 01 00 | OUT (C),B    |
+|   519 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001C | 34 | 001D | 0000 | 41 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   520 |    |      |      |      |    |    |     |     | IFF1 | 001C | 18 | 001D | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   521 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 003E | 18 | 001D | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   522 |    |      |      |      |    |    |     |     | IFF1 | 003E | 18 | 001D | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   523 |    |      |      |      |    |    |     |     | IFF1 | 003E | 18 | 001D | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   524 |    | MREQ |      |      | RD |    |     |     | IFF1 | 001D | 18 | 001E | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   525 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 001E | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   526 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   527 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   528 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   529 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   530 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | JR 0014h     |
+|   531 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0014 | F6 | 0015 | 0000 | 18 | 0020 | 341E | 0059 | 34 34 | 01 00 | LD C,1Ch     |
+|                                                                                                                                                 | <- set io|   532 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 0E | 0020 | 341E | 0059 | 56 34 | 01 00 | LD C,1Ch     |
+|   533 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 003F | 0E | 0015 | 0000 | 0E | 0020 | 341E | 0059 | 56 34 | 01 00 | LD C,1Ch     |
+|   534 |    |      |      |      |    |    |     |     | IFF1 | 003F | 0E | 0015 | 0000 | 0E | 0020 | 341E | 0059 | 56 34 | 01 00 | LD C,1Ch     |
+|   535 |    |      |      |      |    |    |     |     | IFF1 | 003F | 0E | 0015 | 0000 | 0E | 0020 | 341E | 0059 | 56 34 | 01 00 | LD C,1Ch     |
+|   536 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0015 | 0E | 0016 | 0000 | 0E | 0020 | 341E | 0059 | 56 34 | 01 00 | LD C,1Ch     |
+|   537 |    |      |      |      |    |    |     |     | IFF1 | 0015 | 1C | 0016 | 0000 | 0E | 0020 | 341C | 0059 | 56 34 | 01 00 | LD C,1Ch     |
+|   538 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0016 | 1C | 0017 | 0000 | 0E | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   539 |    |      |      |      |    |    |     |     | IFF1 | 0016 | ED | 0017 | 0000 | ED | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   540 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0040 | ED | 0017 | 0000 | ED | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   541 |    |      |      |      |    |    |     |     | IFF1 | 0040 | ED | 0017 | 0000 | ED | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   542 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0017 | ED | 0018 | 0000 | ED | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   543 |    |      |      |      |    |    |     |     | IFF1 | 0017 | 40 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   544 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0041 | 40 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   545 |    |      |      |      |    |    |     |     | IFF1 | 0041 | 40 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   546 |    |      |      |      |    |    |     |     | IFF1 | 0041 | 40 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   547 |    |      |      |      |    |    |     |     | IFF1 | 0041 | 40 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   548 |    |      | IORQ |      | RD |    |     |     | IFF1 | 341C | 40 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   549 |    |      |      |      |    |    |     |     | IFF1 | 341C | 56 | 0018 | 0000 | 40 | 0020 | 341C | 0059 | 56 34 | 01 00 | IN B,(C)     |
+|   550 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0018 | 56 | 0019 | 0000 | 40 | 0004 | 561C | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|   551 |    |      |      |      |    |    |     |     | IFF1 | 0018 | 0E | 0019 | 0000 | 0E | 0004 | 561C | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|   552 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0042 | 0E | 0019 | 0000 | 0E | 0004 | 561C | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|   553 |    |      |      |      |    |    |     |     | IFF1 | 0042 | 0E | 0019 | 0000 | 0E | 0004 | 561C | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|   554 |    |      |      |      |    |    |     |     | IFF1 | 0042 | 0E | 0019 | 0000 | 0E | 0004 | 561C | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|   555 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0019 | 0E | 001A | 0000 | 0E | 0004 | 561C | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|                                                                                                                                                 | <- set z80_nmi|   556 |    |      |      |      |    |    |     | MNI | IFF1 | 0019 | 1E | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | LD C,1Eh     |
+|   557 | M1 | MREQ |      |      | RD |    |     | MNI | IFF1 | 001A | 1E | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|                                                                                                                                                 | <- set z80_nmi|   558 |    |      |      |      |    |    |     |     |      | 001A | ED | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   559 |    | MREQ |      | RFSH |    |    |     |     |      | 0043 | ED | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   560 |    |      |      |      |    |    |     |     |      | 0043 | ED | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   561 |    |      |      |      |    |    |     |     |      | 0043 | ED | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   562 |    |      |      |      |    |    |     |     |      | 0043 | ED | 001A | 0000 | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   563 |    | MREQ |      |      |    | WR |     |     |      | FFFF | 00 | 001A | FFFF | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   564 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 001A | FFFF | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   565 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 001A | FFFF | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   566 |    | MREQ |      |      |    | WR |     |     |      | FFFE | 1A | 0066 | FFFE | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|   567 |    |      |      |      |    |    |     |     |      | FFFE | 1A | 0066 | FFFE | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | OUT (C),B    |
+|                                                                                                                                                 | <- NMI SrvRtn|   568 | M1 | MREQ |      |      | RD |    |     |     |      | 0066 | 1A | 0067 | FFFE | 0E | 0004 | 561E | 0059 | 56 34 | 01 00 | EXX          |
+|   569 |    |      |      |      |    |    |     |     |      | 0066 | D9 | 0067 | FFFE | D9 | 0004 | 561E | 0059 | 56 34 | 01 00 | EXX          |
+|   570 |    | MREQ |      | RFSH |    |    |     |     |      | 0044 | D9 | 0067 | FFFE | D9 | 0004 | 561E | 0059 | 56 34 | 01 00 | EXX          |
+|   571 |    |      |      |      |    |    |     |     |      | 0044 | D9 | 0067 | FFFE | D9 | 0004 | 561E | 0059 | 56 34 | 01 00 | EXX          |
+|   572 | M1 | MREQ |      |      | RD |    |     |     |      | 0067 | D9 | 0068 | FFFE | D9 | 0004 | FFFF | FFFF | 56 34 | 01 00 | LD HL,0081h  |
+|   573 |    |      |      |      |    |    |     |     |      | 0067 | 21 | 0068 | FFFE | 21 | 0004 | FFFF | FFFF | 56 34 | 01 00 | LD HL,0081h  |
+|   574 |    | MREQ |      | RFSH |    |    |     |     |      | 0045 | 21 | 0068 | FFFE | 21 | 0004 | FFFF | FFFF | 56 34 | 01 00 | LD HL,0081h  |
+|   575 |    |      |      |      |    |    |     |     |      | 0045 | 21 | 0068 | FFFE | 21 | 0004 | FFFF | FFFF | 56 34 | 01 00 | LD HL,0081h  |
+|   576 |    |      |      |      |    |    |     |     |      | 0045 | 21 | 0068 | FFFE | 21 | 0004 | FFFF | FFFF | 56 34 | 01 00 | LD HL,0081h  |
+|   577 |    | MREQ |      |      | RD |    |     |     |      | 0068 | 21 | 0069 | FFFE | 21 | 0004 | FFFF | FFFF | 56 34 | 01 00 | LD HL,0081h  |
+|   578 |    |      |      |      |    |    |     |     |      | 0068 | 81 | 0069 | FFFE | 21 | 0004 | FFFF | FF81 | 56 34 | 01 00 | LD HL,0081h  |
+|   579 |    |      |      |      |    |    |     |     |      | 0068 | 81 | 0069 | FFFE | 21 | 0004 | FFFF | FF81 | 56 34 | 01 00 | LD HL,0081h  |
+|   580 |    | MREQ |      |      | RD |    |     |     |      | 0069 | 81 | 006A | FFFE | 21 | 0004 | FFFF | FF81 | 56 34 | 01 00 | LD HL,0081h  |
+|                                                                                                                                                 | <- set z80_nmi|   581 |    |      |      |      |    |    |     | MNI |      | 0069 | 00 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | LD HL,0081h  |
+|   582 | M1 | MREQ |      |      | RD |    |     | MNI |      | 006A | 00 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|                                                                                                                                                 | <- set z80_nmi|   583 |    |      |      |      |    |    |     |     |      | 006A | 34 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   584 |    | MREQ |      | RFSH |    |    |     |     |      | 0046 | 34 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   585 |    |      |      |      |    |    |     |     |      | 0046 | 34 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   586 |    |      |      |      |    |    |     |     |      | 0046 | 34 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   587 |    |      |      |      |    |    |     |     |      | 0046 | 34 | 006A | FFFE | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   588 |    | MREQ |      |      |    | WR |     |     |      | FFFD | 00 | 006A | FFFD | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   589 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006A | FFFD | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   590 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006A | FFFD | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   591 |    | MREQ |      |      |    | WR |     |     |      | FFFC | 6A | 0066 | FFFC | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   592 |    |      |      |      |    |    |     |     |      | FFFC | 6A | 0066 | FFFC | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | INC (HL)     |
+|                                                                                                                                                 | <- NMI SrvRtn|   593 | M1 | MREQ |      |      | RD |    |     |     |      | 0066 | 6A | 0067 | FFFC | 21 | 0004 | FFFF | 0081 | 56 34 | 01 00 | EXX          |
+|   594 |    |      |      |      |    |    |     |     |      | 0066 | D9 | 0067 | FFFC | D9 | 0004 | FFFF | 0081 | 56 34 | 01 00 | EXX          |
+|   595 |    | MREQ |      | RFSH |    |    |     |     |      | 0047 | D9 | 0067 | FFFC | D9 | 0004 | FFFF | 0081 | 56 34 | 01 00 | EXX          |
+|   596 |    |      |      |      |    |    |     |     |      | 0047 | D9 | 0067 | FFFC | D9 | 0004 | FFFF | 0081 | 56 34 | 01 00 | EXX          |
+|   597 | M1 | MREQ |      |      | RD |    |     |     |      | 0067 | D9 | 0068 | FFFC | D9 | 0004 | 561E | 0059 | 56 34 | 01 00 | LD HL,0081h  |
+|   598 |    |      |      |      |    |    |     |     |      | 0067 | 21 | 0068 | FFFC | 21 | 0004 | 561E | 0059 | 56 34 | 01 00 | LD HL,0081h  |
+|   599 |    | MREQ |      | RFSH |    |    |     |     |      | 0048 | 21 | 0068 | FFFC | 21 | 0004 | 561E | 0059 | 56 34 | 01 00 | LD HL,0081h  |
+|   600 |    |      |      |      |    |    |     |     |      | 0048 | 21 | 0068 | FFFC | 21 | 0004 | 561E | 0059 | 56 34 | 01 00 | LD HL,0081h  |
+|   601 |    |      |      |      |    |    |     |     |      | 0048 | 21 | 0068 | FFFC | 21 | 0004 | 561E | 0059 | 56 34 | 01 00 | LD HL,0081h  |
+|   602 |    | MREQ |      |      | RD |    |     |     |      | 0068 | 21 | 0069 | FFFC | 21 | 0004 | 561E | 0059 | 56 34 | 01 00 | LD HL,0081h  |
+|   603 |    |      |      |      |    |    |     |     |      | 0068 | 81 | 0069 | FFFC | 21 | 0004 | 561E | 0081 | 56 34 | 01 00 | LD HL,0081h  |
+|   604 |    |      |      |      |    |    |     |     |      | 0068 | 81 | 0069 | FFFC | 21 | 0004 | 561E | 0081 | 56 34 | 01 00 | LD HL,0081h  |
+|   605 |    | MREQ |      |      | RD |    |     |     |      | 0069 | 81 | 006A | FFFC | 21 | 0004 | 561E | 0081 | 56 34 | 01 00 | LD HL,0081h  |
+|   606 |    |      |      |      |    |    |     |     |      | 0069 | 00 | 006A | FFFC | 21 | 0004 | 561E | 0081 | 56 34 | 01 00 | LD HL,0081h  |
+|   607 | M1 | MREQ |      |      | RD |    |     |     |      | 006A | 00 | 006B | FFFC | 21 | 0004 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   608 |    |      |      |      |    |    |     |     |      | 006A | 34 | 006B | FFFC | 34 | 0004 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   609 |    | MREQ |      | RFSH |    |    |     |     |      | 0049 | 34 | 006B | FFFC | 34 | 0004 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   610 |    |      |      |      |    |    |     |     |      | 0049 | 34 | 006B | FFFC | 34 | 0004 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   611 |    |      |      |      |    |    |     |     |      | 0049 | 34 | 006B | FFFC | 34 | 0004 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   612 |    | MREQ |      |      | RD |    |     |     |      | 0081 | 34 | 006B | FFFC | 34 | 0004 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   613 |    |      |      |      |    |    |     |     |      | 0081 | 00 | 006B | FFFC | 34 | 0000 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   614 |    |      |      |      |    |    |     |     |      | 0081 | 00 | 006B | FFFC | 34 | 0000 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   615 |    |      |      |      |    |    |     |     |      | 0081 | 00 | 006B | FFFC | 34 | 0000 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   616 |    | MREQ |      |      |    | WR |     |     |      | 0081 | 01 | 006B | FFFC | 34 | 0000 | 561E | 0081 | 56 34 | 01 00 | INC (HL)     |
+|   617 |    |      |      |      |    |    |     |     |      | 0081 | 01 | 006B | FFFC | 34 | 0000 | 561E | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   618 | M1 | MREQ |      |      | RD |    |     |     |      | 006B | 01 | 006C | FFFC | 34 | 0000 | 561E | 0081 | 56 34 | 01 01 | EXX          |
+|   619 |    |      |      |      |    |    |     |     |      | 006B | D9 | 006C | FFFC | D9 | 0000 | 561E | 0081 | 56 34 | 01 01 | EXX          |
+|   620 |    | MREQ |      | RFSH |    |    |     |     |      | 004A | D9 | 006C | FFFC | D9 | 0000 | 561E | 0081 | 56 34 | 01 01 | EXX          |
+|   621 |    |      |      |      |    |    |     |     |      | 004A | D9 | 006C | FFFC | D9 | 0000 | 561E | 0081 | 56 34 | 01 01 | EXX          |
+|   622 | M1 | MREQ |      |      | RD |    |     |     |      | 006C | D9 | 006D | FFFC | D9 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   623 |    |      |      |      |    |    |     |     |      | 006C | ED | 006D | FFFC | ED | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   624 |    | MREQ |      | RFSH |    |    |     |     |      | 004B | ED | 006D | FFFC | ED | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   625 |    |      |      |      |    |    |     |     |      | 004B | ED | 006D | FFFC | ED | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   626 | M1 | MREQ |      |      | RD |    |     |     |      | 006D | ED | 006E | FFFC | ED | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   627 |    |      |      |      |    |    |     |     |      | 006D | 45 | 006E | FFFC | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   628 |    | MREQ |      | RFSH |    |    |     |     |      | 004C | 45 | 006E | FFFC | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   629 |    |      |      |      |    |    |     |     |      | 004C | 45 | 006E | FFFC | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   630 |    |      |      |      |    |    |     |     |      | 004C | 45 | 006E | FFFC | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   631 |    | MREQ |      |      | RD |    |     |     |      | FFFC | 45 | 006E | FFFD | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   632 |    |      |      |      |    |    |     |     |      | FFFC | 6A | 006E | FFFD | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   633 |    |      |      |      |    |    |     |     |      | FFFC | 6A | 006E | FFFD | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   634 |    | MREQ |      |      | RD |    |     |     |      | FFFD | 6A | 006E | FFFE | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   635 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006A | FFFE | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | RETN         |
+|   636 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 006A | 00 | 006B | FFFE | 45 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   637 |    |      |      |      |    |    |     |     | IFF1 | 006A | 34 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   638 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 004D | 34 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   639 |    |      |      |      |    |    |     |     | IFF1 | 004D | 34 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   640 |    |      |      |      |    |    |     |     | IFF1 | 004D | 34 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   641 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0081 | 34 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   642 |    |      |      |      |    |    |     |     | IFF1 | 0081 | 01 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   643 |    |      |      |      |    |    |     |     | IFF1 | 0081 | 01 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   644 |    |      |      |      |    |    |     |     | IFF1 | 0081 | 01 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   645 |    | MREQ |      |      |    | WR |     |     | IFF1 | 0081 | 02 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 01 | INC (HL)     |
+|   646 |    |      |      |      |    |    |     |     | IFF1 | 0081 | 02 | 006B | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 02 | INC (HL)     |
+|   647 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 006B | 02 | 006C | FFFE | 34 | 0000 | FFFF | 0081 | 56 34 | 01 02 | EXX          |
+|   648 |    |      |      |      |    |    |     |     | IFF1 | 006B | D9 | 006C | FFFE | D9 | 0000 | FFFF | 0081 | 56 34 | 01 02 | EXX          |
+|   649 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 004E | D9 | 006C | FFFE | D9 | 0000 | FFFF | 0081 | 56 34 | 01 02 | EXX          |
+|   650 |    |      |      |      |    |    |     |     | IFF1 | 004E | D9 | 006C | FFFE | D9 | 0000 | FFFF | 0081 | 56 34 | 01 02 | EXX          |
+|   651 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 006C | D9 | 006D | FFFE | D9 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   652 |    |      |      |      |    |    |     |     | IFF1 | 006C | ED | 006D | FFFE | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   653 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 004F | ED | 006D | FFFE | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   654 |    |      |      |      |    |    |     |     | IFF1 | 004F | ED | 006D | FFFE | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   655 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 006D | ED | 006E | FFFE | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   656 |    |      |      |      |    |    |     |     | IFF1 | 006D | 45 | 006E | FFFE | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   657 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0050 | 45 | 006E | FFFE | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   658 |    |      |      |      |    |    |     |     | IFF1 | 0050 | 45 | 006E | FFFE | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   659 |    |      |      |      |    |    |     |     | IFF1 | 0050 | 45 | 006E | FFFE | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   660 |    | MREQ |      |      | RD |    |     |     | IFF1 | FFFE | 45 | 006E | FFFF | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   661 |    |      |      |      |    |    |     |     | IFF1 | FFFE | 1A | 006E | FFFF | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   662 |    |      |      |      |    |    |     |     | IFF1 | FFFE | 1A | 006E | FFFF | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   663 |    | MREQ |      |      | RD |    |     |     | IFF1 | FFFF | 1A | 006E | 0000 | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   664 |    |      |      |      |    |    |     |     | IFF1 | FFFF | 00 | 001A | 0000 | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | RETN         |
+|   665 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001A | 00 | 001B | 0000 | 45 | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   666 |    |      |      |      |    |    |     |     | IFF1 | 001A | ED | 001B | 0000 | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   667 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0051 | ED | 001B | 0000 | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   668 |    |      |      |      |    |    |     |     | IFF1 | 0051 | ED | 001B | 0000 | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   669 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001B | ED | 001C | 0000 | ED | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   670 |    |      |      |      |    |    |     |     | IFF1 | 001B | 41 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   671 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0052 | 41 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   672 |    |      |      |      |    |    |     |     | IFF1 | 0052 | 41 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   673 |    |      |      |      |    |    |     |     | IFF1 | 0052 | 41 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   674 |    |      | IORQ |      |    | WR |     |     | IFF1 | 561E | 56 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 34 | 01 02 | OUT (C),B    |
+|   675 |    |      |      |      |    |    |     |     | IFF1 | 561E | 56 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 56 | 01 02 | OUT (C),B    |
+|   676 |    |      |      |      |    |    |     |     | IFF1 | 561E | 56 | 001C | 0000 | 41 | 0000 | 561E | 0081 | 56 56 | 01 02 | OUT (C),B    |
+|   677 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001C | 56 | 001D | 0000 | 41 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   678 |    |      |      |      |    |    |     |     | IFF1 | 001C | 18 | 001D | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   679 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0053 | 18 | 001D | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   680 |    |      |      |      |    |    |     |     | IFF1 | 0053 | 18 | 001D | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   681 |    |      |      |      |    |    |     |     | IFF1 | 0053 | 18 | 001D | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   682 |    | MREQ |      |      | RD |    |     |     | IFF1 | 001D | 18 | 001E | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   683 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 001E | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   684 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   685 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   686 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   687 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   688 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | JR 0014h     |
+|   689 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0014 | F6 | 0015 | 0000 | 18 | 0000 | 561E | 0081 | 56 56 | 01 02 | LD C,1Ch     |
+|                                                                                                                                                 | <- set io|   690 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 0E | 0000 | 561E | 0081 | 78 56 | 01 02 | LD C,1Ch     |
+|   691 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0054 | 0E | 0015 | 0000 | 0E | 0000 | 561E | 0081 | 78 56 | 01 02 | LD C,1Ch     |
+|   692 |    |      |      |      |    |    |     |     | IFF1 | 0054 | 0E | 0015 | 0000 | 0E | 0000 | 561E | 0081 | 78 56 | 01 02 | LD C,1Ch     |
+|   693 |    |      |      |      |    |    |     |     | IFF1 | 0054 | 0E | 0015 | 0000 | 0E | 0000 | 561E | 0081 | 78 56 | 01 02 | LD C,1Ch     |
+|   694 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0015 | 0E | 0016 | 0000 | 0E | 0000 | 561E | 0081 | 78 56 | 01 02 | LD C,1Ch     |
+|   695 |    |      |      |      |    |    |     |     | IFF1 | 0015 | 1C | 0016 | 0000 | 0E | 0000 | 561C | 0081 | 78 56 | 01 02 | LD C,1Ch     |
+|   696 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0016 | 1C | 0017 | 0000 | 0E | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   697 |    |      |      |      |    |    |     |     | IFF1 | 0016 | ED | 0017 | 0000 | ED | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   698 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0055 | ED | 0017 | 0000 | ED | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   699 |    |      |      |      |    |    |     |     | IFF1 | 0055 | ED | 0017 | 0000 | ED | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   700 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0017 | ED | 0018 | 0000 | ED | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   701 |    |      |      |      |    |    |     |     | IFF1 | 0017 | 40 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   702 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0056 | 40 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   703 |    |      |      |      |    |    |     |     | IFF1 | 0056 | 40 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   704 |    |      |      |      |    |    |     |     | IFF1 | 0056 | 40 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   705 |    |      |      |      |    |    |     |     | IFF1 | 0056 | 40 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   706 |    |      | IORQ |      | RD |    |     |     | IFF1 | 561C | 40 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   707 |    |      |      |      |    |    |     |     | IFF1 | 561C | 78 | 0018 | 0000 | 40 | 0000 | 561C | 0081 | 78 56 | 01 02 | IN B,(C)     |
+|   708 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0018 | 78 | 0019 | 0000 | 40 | 002C | 781C | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   709 |    |      |      |      |    |    |     |     | IFF1 | 0018 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   710 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0057 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   711 |    |      |      |      |    |    |     |     | IFF1 | 0057 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   712 |    |      |      |      |    |    |     |     | IFF1 | 0057 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   713 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0019 | 0E | 001A | 0000 | 0E | 002C | 781C | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|                                                                                                                                                 | <- set z80_int|   714 |    |      |      |      |    |    | INT |     | IFF1 | 0019 | 1E | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   715 |    |      |      |      |    |    | INT |     | IFF1 | 0019 | 1E | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   716 |    |      |      |      |    |    | INT |     |      | 0019 | 1E | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   717 | M1 |      | IORQ |      |    |    | INT |     |      | 0019 | 1E | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   718 |    |      |      |      |    |    |     |     |      | 0019 | 48 | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   719 |    | MREQ |      | RFSH |    |    |     |     |      | 0058 | 48 | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   720 |    |      |      |      |    |    |     |     |      | 0058 | 48 | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   721 |    |      |      |      |    |    |     |     |      | 0058 | 48 | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   722 |    |      |      |      |    |    |     |     |      | 0058 | 48 | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   723 |    | MREQ |      |      |    | WR |     |     |      | FFFF | 00 | 001A | FFFF | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   724 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 001A | FFFF | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   725 |    |      |      |      |    |    |     |     |      | FFFF | 00 | 001A | FFFF | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   726 |    | MREQ |      |      |    | WR |     |     |      | FFFE | 1A | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   727 |    |      |      |      |    |    |     |     |      | FFFE | 1A | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   728 |    |      |      |      |    |    |     |     |      | FFFE | 1A | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   729 |    | MREQ |      |      | RD |    |     |     |      | 0048 | 1A | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   730 |    |      |      |      |    |    |     |     |      | 0048 | 6E | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   731 |    |      |      |      |    |    |     |     |      | 0048 | 6E | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   732 |    | MREQ |      |      | RD |    |     |     |      | 0049 | 6E | 001A | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|   733 |    |      |      |      |    |    |     |     |      | 0049 | 00 | 006E | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | LD C,1Eh     |
+|                                                                                                                                                 | <- INT SrvRtn|   734 | M1 | MREQ |      |      | RD |    |     |     |      | 006E | 00 | 006F | FFFE | 0E | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   735 |    |      |      |      |    |    |     |     |      | 006E | F5 | 006F | FFFE | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   736 |    | MREQ |      | RFSH |    |    |     |     |      | 0059 | F5 | 006F | FFFE | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   737 |    |      |      |      |    |    |     |     |      | 0059 | F5 | 006F | FFFE | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   738 |    |      |      |      |    |    |     |     |      | 0059 | F5 | 006F | FFFE | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   739 |    |      |      |      |    |    |     |     |      | 0059 | F5 | 006F | FFFE | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   740 |    | MREQ |      |      |    | WR |     |     |      | FFFD | 00 | 006F | FFFD | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   741 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006F | FFFD | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   742 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 006F | FFFD | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   743 |    | MREQ |      |      |    | WR |     |     |      | FFFC | 2C | 006F | FFFC | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   744 |    |      |      |      |    |    |     |     |      | FFFC | 2C | 006F | FFFC | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | PUSH AF      |
+|   745 | M1 | MREQ |      |      | RD |    |     |     |      | 006F | 2C | 0070 | FFFC | F5 | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   746 |    |      |      |      |    |    |     |     |      | 006F | 3A | 0070 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   747 |    | MREQ |      | RFSH |    |    |     |     |      | 005A | 3A | 0070 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   748 |    |      |      |      |    |    |     |     |      | 005A | 3A | 0070 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   749 |    |      |      |      |    |    |     |     |      | 005A | 3A | 0070 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   750 |    | MREQ |      |      | RD |    |     |     |      | 0070 | 3A | 0071 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   751 |    |      |      |      |    |    |     |     |      | 0070 | 80 | 0071 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   752 |    |      |      |      |    |    |     |     |      | 0070 | 80 | 0071 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   753 |    | MREQ |      |      | RD |    |     |     |      | 0071 | 80 | 0072 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   754 |    |      |      |      |    |    |     |     |      | 0071 | 00 | 0072 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   755 |    |      |      |      |    |    |     |     |      | 0071 | 00 | 0072 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   756 |    | MREQ |      |      | RD |    |     |     |      | 0080 | 00 | 0072 | FFFC | 3A | 002C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   757 |    |      |      |      |    |    |     |     |      | 0080 | 01 | 0072 | FFFC | 3A | 012C | 781E | 0081 | 78 56 | 01 02 | LD A,(0080h) |
+|   758 | M1 | MREQ |      |      | RD |    |     |     |      | 0072 | 01 | 0073 | FFFC | 3A | 012C | 781E | 0081 | 78 56 | 01 02 | INC A        |
+|   759 |    |      |      |      |    |    |     |     |      | 0072 | 3C | 0073 | FFFC | 3C | 012C | 781E | 0081 | 78 56 | 01 02 | INC A        |
+|   760 |    | MREQ |      | RFSH |    |    |     |     |      | 005B | 3C | 0073 | FFFC | 3C | 012C | 781E | 0081 | 78 56 | 01 02 | INC A        |
+|   761 |    |      |      |      |    |    |     |     |      | 005B | 3C | 0073 | FFFC | 3C | 012C | 781E | 0081 | 78 56 | 01 02 | INC A        |
+|   762 | M1 | MREQ |      |      | RD |    |     |     |      | 0073 | 3C | 0074 | FFFC | 3C | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   763 |    |      |      |      |    |    |     |     |      | 0073 | 32 | 0074 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   764 |    | MREQ |      | RFSH |    |    |     |     |      | 005C | 32 | 0074 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   765 |    |      |      |      |    |    |     |     |      | 005C | 32 | 0074 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   766 |    |      |      |      |    |    |     |     |      | 005C | 32 | 0074 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   767 |    | MREQ |      |      | RD |    |     |     |      | 0074 | 32 | 0075 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   768 |    |      |      |      |    |    |     |     |      | 0074 | 80 | 0075 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   769 |    |      |      |      |    |    |     |     |      | 0074 | 80 | 0075 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   770 |    | MREQ |      |      | RD |    |     |     |      | 0075 | 80 | 0076 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   771 |    |      |      |      |    |    |     |     |      | 0075 | 00 | 0076 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   772 |    |      |      |      |    |    |     |     |      | 0075 | 00 | 0076 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   773 |    | MREQ |      |      |    | WR |     |     |      | 0080 | 02 | 0076 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 01 02 | LD (0080h),A |
+|   774 |    |      |      |      |    |    |     |     |      | 0080 | 02 | 0076 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 02 02 | LD (0080h),A |
+|   775 | M1 | MREQ |      |      | RD |    |     |     |      | 0076 | 02 | 0077 | FFFC | 32 | 0200 | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   776 |    |      |      |      |    |    |     |     |      | 0076 | F1 | 0077 | FFFC | F1 | 0200 | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   777 |    | MREQ |      | RFSH |    |    |     |     |      | 005D | F1 | 0077 | FFFC | F1 | 0200 | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   778 |    |      |      |      |    |    |     |     |      | 005D | F1 | 0077 | FFFC | F1 | 0200 | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   779 |    |      |      |      |    |    |     |     |      | 005D | F1 | 0077 | FFFC | F1 | 0200 | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   780 |    | MREQ |      |      | RD |    |     |     |      | FFFC | F1 | 0077 | FFFD | F1 | 0200 | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   781 |    |      |      |      |    |    |     |     |      | FFFC | 2C | 0077 | FFFD | F1 | 022C | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   782 |    |      |      |      |    |    |     |     |      | FFFC | 2C | 0077 | FFFD | F1 | 022C | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   783 |    | MREQ |      |      | RD |    |     |     |      | FFFD | 2C | 0077 | FFFE | F1 | 022C | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   784 |    |      |      |      |    |    |     |     |      | FFFD | 00 | 0077 | FFFE | F1 | 002C | 781E | 0081 | 78 56 | 02 02 | POP AF       |
+|   785 | M1 | MREQ |      |      | RD |    |     |     |      | 0077 | 00 | 0078 | FFFE | F1 | 002C | 781E | 0081 | 78 56 | 02 02 | EI           |
+|   786 |    |      |      |      |    |    |     |     |      | 0077 | FB | 0078 | FFFE | FB | 002C | 781E | 0081 | 78 56 | 02 02 | EI           |
+|   787 |    | MREQ |      | RFSH |    |    |     |     |      | 005E | FB | 0078 | FFFE | FB | 002C | 781E | 0081 | 78 56 | 02 02 | EI           |
+|   788 |    |      |      |      |    |    |     |     |      | 005E | FB | 0078 | FFFE | FB | 002C | 781E | 0081 | 78 56 | 02 02 | EI           |
+|   789 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0078 | FB | 0079 | FFFE | FB | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   790 |    |      |      |      |    |    |     |     | IFF1 | 0078 | ED | 0079 | FFFE | ED | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   791 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 005F | ED | 0079 | FFFE | ED | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   792 |    |      |      |      |    |    |     |     | IFF1 | 005F | ED | 0079 | FFFE | ED | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   793 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0079 | ED | 007A | FFFE | ED | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   794 |    |      |      |      |    |    |     |     | IFF1 | 0079 | 4D | 007A | FFFE | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   795 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0060 | 4D | 007A | FFFE | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   796 |    |      |      |      |    |    |     |     | IFF1 | 0060 | 4D | 007A | FFFE | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   797 |    |      |      |      |    |    |     |     | IFF1 | 0060 | 4D | 007A | FFFE | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   798 |    | MREQ |      |      | RD |    |     |     | IFF1 | FFFE | 4D | 007A | FFFF | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   799 |    |      |      |      |    |    |     |     | IFF1 | FFFE | 1A | 007A | FFFF | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   800 |    |      |      |      |    |    |     |     | IFF1 | FFFE | 1A | 007A | FFFF | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   801 |    | MREQ |      |      | RD |    |     |     | IFF1 | FFFF | 1A | 007A | 0000 | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   802 |    |      |      |      |    |    |     |     | IFF1 | FFFF | 00 | 001A | 0000 | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | RETI         |
+|   803 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001A | 00 | 001B | 0000 | 4D | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   804 |    |      |      |      |    |    |     |     | IFF1 | 001A | ED | 001B | 0000 | ED | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   805 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0061 | ED | 001B | 0000 | ED | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   806 |    |      |      |      |    |    |     |     | IFF1 | 0061 | ED | 001B | 0000 | ED | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   807 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001B | ED | 001C | 0000 | ED | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   808 |    |      |      |      |    |    |     |     | IFF1 | 001B | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   809 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0062 | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   810 |    |      |      |      |    |    |     |     | IFF1 | 0062 | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   811 |    |      |      |      |    |    |     |     | IFF1 | 0062 | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   812 |    |      | IORQ |      |    | WR |     |     | IFF1 | 781E | 78 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 56 | 02 02 | OUT (C),B    |
+|   813 |    |      |      |      |    |    |     |     | IFF1 | 781E | 78 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   814 |    |      |      |      |    |    |     |     | IFF1 | 781E | 78 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   815 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001C | 78 | 001D | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   816 |    |      |      |      |    |    |     |     | IFF1 | 001C | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   817 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0063 | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   818 |    |      |      |      |    |    |     |     | IFF1 | 0063 | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   819 |    |      |      |      |    |    |     |     | IFF1 | 0063 | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   820 |    | MREQ |      |      | RD |    |     |     | IFF1 | 001D | 18 | 001E | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   821 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 001E | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   822 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   823 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   824 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   825 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   826 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   827 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0014 | F6 | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|                                                                                                                                                 | <- set z80_wait|   828 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   829 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   830 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   831 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   832 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   833 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|                                                                                                                                                 | <- set z80_wait|   834 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   835 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0064 | 0E | 0015 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   836 |    |      |      |      |    |    |     |     | IFF1 | 0064 | 0E | 0015 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   837 |    |      |      |      |    |    |     |     | IFF1 | 0064 | 0E | 0015 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   838 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0015 | 0E | 0016 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   839 |    |      |      |      |    |    |     |     | IFF1 | 0015 | 1C | 0016 | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   840 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0016 | 1C | 0017 | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   841 |    |      |      |      |    |    |     |     | IFF1 | 0016 | ED | 0017 | 0000 | ED | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   842 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0065 | ED | 0017 | 0000 | ED | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|                                                                                                                                                 | <- z80_busrq (not implemented)|   843 |    |      |      |      |    |    |     |     | IFF1 | 0065 | ED | 0017 | 0000 | ED | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   844 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0017 | ED | 0018 | 0000 | ED | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   845 |    |      |      |      |    |    |     |     | IFF1 | 0017 | 40 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   846 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0066 | 40 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   847 |    |      |      |      |    |    |     |     | IFF1 | 0066 | 40 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   848 |    |      |      |      |    |    |     |     | IFF1 | 0066 | 40 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|                                                                                                                                                 | <- z80_busrq (not implemented)|   849 |    |      |      |      |    |    |     |     | IFF1 | 0066 | 40 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   850 |    |      | IORQ |      | RD |    |     |     | IFF1 | 781C | 40 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   851 |    |      |      |      |    |    |     |     | IFF1 | 781C | 78 | 0018 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | IN B,(C)     |
+|   852 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0018 | 78 | 0019 | 0000 | 40 | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   853 |    |      |      |      |    |    |     |     | IFF1 | 0018 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   854 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0067 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   855 |    |      |      |      |    |    |     |     | IFF1 | 0067 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   856 |    |      |      |      |    |    |     |     | IFF1 | 0067 | 0E | 0019 | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   857 |    | MREQ |      |      | RD |    |     |     | IFF1 | 0019 | 0E | 001A | 0000 | 0E | 002C | 781C | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   858 |    |      |      |      |    |    |     |     | IFF1 | 0019 | 1E | 001A | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Eh     |
+|   859 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001A | 1E | 001B | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   860 |    |      |      |      |    |    |     |     | IFF1 | 001A | ED | 001B | 0000 | ED | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   861 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0068 | ED | 001B | 0000 | ED | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   862 |    |      |      |      |    |    |     |     | IFF1 | 0068 | ED | 001B | 0000 | ED | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   863 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001B | ED | 001C | 0000 | ED | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   864 |    |      |      |      |    |    |     |     | IFF1 | 001B | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   865 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 0069 | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   866 |    |      |      |      |    |    |     |     | IFF1 | 0069 | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   867 |    |      |      |      |    |    |     |     | IFF1 | 0069 | 41 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   868 |    |      | IORQ |      |    | WR |     |     | IFF1 | 781E | 78 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   869 |    |      |      |      |    |    |     |     | IFF1 | 781E | 78 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   870 |    |      |      |      |    |    |     |     | IFF1 | 781E | 78 | 001C | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | OUT (C),B    |
+|   871 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 001C | 78 | 001D | 0000 | 41 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   872 |    |      |      |      |    |    |     |     | IFF1 | 001C | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   873 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 006A | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   874 |    |      |      |      |    |    |     |     | IFF1 | 006A | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   875 |    |      |      |      |    |    |     |     | IFF1 | 006A | 18 | 001D | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   876 |    | MREQ |      |      | RD |    |     |     | IFF1 | 001D | 18 | 001E | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   877 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 001E | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   878 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   879 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   880 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   881 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   882 |    |      |      |      |    |    |     |     | IFF1 | 001D | F6 | 0014 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | JR 0014h     |
+|   883 | M1 | MREQ |      |      | RD |    |     |     | IFF1 | 0014 | F6 | 0015 | 0000 | 18 | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   884 |    |      |      |      |    |    |     |     | IFF1 | 0014 | 0E | 0015 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|   885 |    | MREQ |      | RFSH |    |    |     |     | IFF1 | 006B | 0E | 0015 | 0000 | 0E | 002C | 781E | 0081 | 78 78 | 02 02 | LD C,1Ch     |
+|                                                                                                                                                 | <- set z80_reset|   886 | M1 | MREQ |      |      | RD |    |     |     |      | 0000 | 00 | 0001 | FFFF | 00 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   887 |    |      |      |      |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   888 |    | MREQ |      | RFSH |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   889 |    |      |      |      |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   890 | M1 | MREQ |      |      | RD |    |     |     |      | 0001 | F3 | 0002 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   891 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|                                                                                                                                                 | <- set z80_reset|   892 | M1 | MREQ |      |      | RD |    |     |     |      | 0000 | 00 | 0001 | FFFF | 00 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   893 |    |      |      |      |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   894 |    | MREQ |      | RFSH |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   895 |    |      |      |      |    |    |     |     |      | 0000 | F3 | 0001 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | DI           |
+|   896 | M1 | MREQ |      |      | RD |    |     |     |      | 0001 | F3 | 0002 | FFFF | F3 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   897 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   898 |    | MREQ |      | RFSH |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   899 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   900 |    |      |      |      |    |    |     |     |      | 0001 | 31 | 0002 | FFFF | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   901 |    | MREQ |      |      | RD |    |     |     |      | 0002 | 31 | 0003 | FFFF | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   902 |    |      |      |      |    |    |     |     |      | 0002 | 00 | 0003 | FF00 | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   903 |    |      |      |      |    |    |     |     |      | 0002 | 00 | 0003 | FF00 | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   904 |    | MREQ |      |      | RD |    |     |     |      | 0003 | 00 | 0004 | FF00 | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   905 |    |      |      |      |    |    |     |     |      | 0003 | 00 | 0004 | 0000 | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | LD SP,0000h  |
+|   906 | M1 | MREQ |      |      | RD |    |     |     |      | 0004 | 00 | 0005 | 0000 | 31 | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   907 |    |      |      |      |    |    |     |     |      | 0004 | ED | 0005 | 0000 | ED | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   908 |    | MREQ |      | RFSH |    |    |     |     |      | 0002 | ED | 0005 | 0000 | ED | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   909 |    |      |      |      |    |    |     |     |      | 0002 | ED | 0005 | 0000 | ED | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   910 | M1 | MREQ |      |      | RD |    |     |     |      | 0005 | ED | 0006 | 0000 | ED | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   911 |    |      |      |      |    |    |     |     |      | 0005 | 5E | 0006 | 0000 | 5E | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   912 |    | MREQ |      | RFSH |    |    |     |     |      | 0003 | 5E | 0006 | 0000 | 5E | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   913 |    |      |      |      |    |    |     |     |      | 0003 | 5E | 0006 | 0000 | 5E | FFFF | FFFF | FFFF | 78 78 | 02 02 | IM 2         |
+|   914 | M1 | MREQ |      |      | RD |    |     |     |      | 0006 | 5E | 0007 | 0000 | 5E | FFFF | FFFF | FFFF | 78 78 | 02 02 | XOR A        |
+|   915 |    |      |      |      |    |    |     |     |      | 0006 | AF | 0007 | 0000 | AF | FFFF | FFFF | FFFF | 78 78 | 02 02 | XOR A        |
+|   916 |    | MREQ |      | RFSH |    |    |     |     |      | 0004 | AF | 0007 | 0000 | AF | FFFF | FFFF | FFFF | 78 78 | 02 02 | XOR A        |
+|   917 |    |      |      |      |    |    |     |     |      | 0004 | AF | 0007 | 0000 | AF | FFFF | FFFF | FFFF | 78 78 | 02 02 | XOR A        |
+|   918 | M1 | MREQ |      |      | RD |    |     |     |      | 0007 | AF | 0008 | 0000 | AF | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   919 |    |      |      |      |    |    |     |     |      | 0007 | ED | 0008 | 0000 | ED | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   920 |    | MREQ |      | RFSH |    |    |     |     |      | 0005 | ED | 0008 | 0000 | ED | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   921 |    |      |      |      |    |    |     |     |      | 0005 | ED | 0008 | 0000 | ED | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   922 | M1 | MREQ |      |      | RD |    |     |     |      | 0008 | ED | 0009 | 0000 | ED | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   923 |    |      |      |      |    |    |     |     |      | 0008 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   924 |    | MREQ |      | RFSH |    |    |     |     |      | 0006 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   925 |    |      |      |      |    |    |     |     |      | 0006 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   926 |    |      |      |      |    |    |     |     |      | 0006 | 47 | 0009 | 0000 | 47 | 0044 | FFFF | FFFF | 78 78 | 02 02 | LD I,A       |
+|   927 | M1 | MREQ |      |      | RD |    |     |     |      | 0009 | 47 | 000A | 0000 | 47 | 0044 | FFFF | FFFF | 78 78 | 02 02 | CALL 001Eh   |
+|   928 |    |      |      |      |    |    |     |     |      | 0009 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | 78 78 | 02 02 | CALL 001Eh   |
+|   929 |    | MREQ |      | RFSH |    |    |     |     |      | 0007 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | 78 78 | 02 02 | CALL 001Eh   |
+|   930 |    |      |      |      |    |    |     |     |      | 0007 | CD | 000A | 0000 | CD | 0044 | FFFF | FFFF | 78 78 | 02 02 | CALL 001Eh   |

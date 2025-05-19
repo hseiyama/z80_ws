@@ -24,8 +24,7 @@ typedef struct {
 #define Z80CTC_GET_PIN(p) ((pins & Z80CTC_##p) == Z80CTC_##p)
 #define Z80CTC_SET_PIN(p,v) {pins = (pins & ~Z80CTC_##p) | (((v) & 1ULL) << Z80CTC_BIT_##p);}
 
-// 64 KB memory with test program at address 0x0000
-static uint8_t mem[(1<<16)] = {
+static const uint8_t cpu_rom[] = {
 	// AKI80MON_REVB05
 	0xC3, 0x96, 0x00, 0xC3, 0x2A, 0x01, 0x00, 0x00, 0xC3, 0x89, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0xC3, 0x7B, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC3, 0x84, 0x2E, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2065,6 +2064,8 @@ static uint8_t mem[(1<<16)] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 };
 
+static uint8_t cpu_memory[0x10000];
+
 static HANDLE hMap;
 static io_t *io_info;
 
@@ -2078,6 +2079,7 @@ void main(void) {
 	uint8_t ctc_zcto0;
 
 	// initialize variable
+	memcpy(cpu_memory, cpu_rom, sizeof(cpu_rom));
 	ctc_zcto0 = 0;
 
 	// share memory open
@@ -2105,10 +2107,10 @@ void main(void) {
 		// handle memory read or write access
 		if (pins & Z80_MREQ) {
 			if (pins & Z80_RD) {
-				Z80_SET_DATA(pins, mem[Z80_GET_ADDR(pins)]);
+				Z80_SET_DATA(pins, cpu_memory[Z80_GET_ADDR(pins)]);
 			}
 			else if (pins & Z80_WR) {
-				mem[Z80_GET_ADDR(pins)] = Z80_GET_DATA(pins);
+				cpu_memory[Z80_GET_ADDR(pins)] = Z80_GET_DATA(pins);
 			}
 		}
 		// handle io read or write access
@@ -2161,6 +2163,10 @@ void main(void) {
 
 		// reset pin active
 		if (io_info->pin_reset != 0) {
+			// initialize variable
+			memcpy(cpu_memory, cpu_rom, sizeof(cpu_rom));
+			ctc_zcto0 = 0;
+			// initialize Z80 family emulator
 			uint64_t pins = z80_reset(&cpu);
 			z80pio_init(&pio);
 			z80ctc_init(&ctc);
