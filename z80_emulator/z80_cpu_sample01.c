@@ -372,19 +372,19 @@ static uint64_t scene_update(z80_t* cpu_state, uint64_t pins, uint16_t tick) {
 		scene_idx++;
 	}
 	if (pin_M1 && pin_IORQ) {
-		Z80_SET_DATA(pins, cpu_getIntVec());
 		Z80_SET_PIN(INT, false);
+		Z80_SET_DATA(pins, cpu_getIntVec());
 	}
 
 	return pins;
 }
 
-// set  interrupt vector
+// set interrupt vector
 static void cpu_setIntVec(uint8_t val) {
 	int_vector = val;
 }
 
-// get  interrupt vector
+// get interrupt vector
 static uint8_t cpu_getIntVec(void) {
 	return int_vector;
 }
