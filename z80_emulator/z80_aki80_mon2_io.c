@@ -116,8 +116,8 @@ void main(void) {
 		// save previous value
 		io_info_prev = *io_info;
 
-		// wait 0.1s
-		sleep(0.1);
+		// wait 10ms
+		usleep(10000);
 	}
 
 	// share memory close
