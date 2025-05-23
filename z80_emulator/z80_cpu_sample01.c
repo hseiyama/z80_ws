@@ -11,7 +11,7 @@
 #define DASM_MAX_STRLEN		(32)
 #define DASM_MAX_BINLEN		(16)
 #define DASM_ASM_STRLEN		(12)
-#define LOG_STRLEN			(145)
+#define LOG_STRLEN			(sizeof(tile_line) - 4)
 
 // pin kind
 enum {
@@ -148,6 +148,10 @@ static const scene_t scene_tbl[] = {
 	{	891,	PIN_Z80_RESET,	0x0000,		false	}	// no use value
 };
 
+// title string
+static const char tile_line[] = "+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n";
+static const char tile_item[] = "| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n";
+
 static uint8_t cpu_memory[0x10000];
 static uint8_t cpu_io[0x100];
 static uint8_t int_vector = 0xE0;
@@ -184,9 +188,8 @@ void main(void) {
 	val_Asm = dasm_info.str_buf;	// assembler string
 
 	// print title
-	printf("+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n");
-	printf("| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n");
-	printf("+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n");
+	printf(tile_line);
+	printf(tile_item);
 
 	// z80_init
 	uint64_t pins = z80_init(&cpu_state);
@@ -220,6 +223,8 @@ void main(void) {
 		if (z80_opdone_wrp(&cpu_state, pins)) {
 			// disassemble the instruction
 			dasm_disasm(AddressBus);
+			// print line
+			printf(tile_line);
 		}
 
 		// print item
@@ -309,18 +314,28 @@ static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
 	uint16_t AddressBus = Z80_GET_ADDR(pins);
 	uint16_t IntVecAddress = (cpu_state->i << 8) | cpu_getIntVec();
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
+	bool pin_M1 = Z80_GET_PIN(M1);
+	bool pin_IORQ = Z80_GET_PIN(IORQ);
 	bool opdone = false;
 
 	if (z80_opdone(cpu_state)) {
 		// nmi event
 		if (0x0066 == AddressBus) {
-			printf("|%*s| <- NMI SrvRtn\r", LOG_STRLEN, "");
+			printf("|%*s| <- NMI SrvRoutine\r", LOG_STRLEN, "");
 		}
 		// int event
 		if ((IntIsrAddress == AddressBus) && (2 == cpu_state->im)) {
-			printf("|%*s| <- INT SrvRtn\r", LOG_STRLEN, "");
+			printf("|%*s| <- INT SrvRoutine\r", LOG_STRLEN, "");
 		}
 		opdone = true;
+	}
+	// int ack cycle
+	if (cpu_state->int_ack) {
+		printf(tile_line);
+	}
+	// int acknowledge
+	if (pin_M1 && pin_IORQ) {
+		printf("|%*s| <- INT Acknowledge\r", LOG_STRLEN, "");
 	}
 
 	return opdone;

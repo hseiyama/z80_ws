@@ -363,6 +363,7 @@ typedef struct {
     uint16_t af2, bc2, de2, hl2; // shadow register bank
     uint8_t im;
     bool iff1, iff2;
+    bool int_ack; // interrupt acknowledge
 } z80_t;
 
 // initialize a new Z80 instance and return initial pin mask
@@ -977,6 +978,7 @@ static inline uint64_t _z80_fetch(z80_t* cpu, uint64_t pins) {
                 pins &= ~Z80_HALT;
                 cpu->pc++;
             }
+            cpu->int_ack = true;
             // NOTE: PC is not incremented, and no pins are activated here
             return pins;
         } else {
@@ -1067,6 +1069,7 @@ uint64_t z80_prefetch(z80_t* cpu, uint16_t new_pc) {
 
 uint64_t z80_tick(z80_t* cpu, uint64_t pins) {
     pins &= ~(Z80_CTRL_PIN_MASK|Z80_RETI);
+    cpu->int_ack = false;
     switch (cpu->step) {
         // <% decoder
         case    0: _fetch(); // NOP (0)

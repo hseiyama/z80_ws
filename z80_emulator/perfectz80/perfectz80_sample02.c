@@ -11,7 +11,7 @@
 #define DASM_MAX_STRLEN		(32)
 #define DASM_MAX_BINLEN		(16)
 #define DASM_ASM_STRLEN		(12)
-#define LOG_STRLEN			(145)
+#define LOG_STRLEN			(sizeof(tile_line) - 4)
 
 // pin kind
 enum {
@@ -145,6 +145,10 @@ static const scene_t scene_tbl[] = {
 	{	897,	PIN_Z80_RESET,	0x0000,		false	}
 };
 
+// title string
+static const char tile_line[] = "+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n";
+static const char tile_item[] = "| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n";
+
 // dasm informaion
 static dasm_t dasm_info;
 // scene informaion
@@ -175,9 +179,8 @@ void main(void) {
 	val_Asm = dasm_info.str_buf;	// assembler string
 
 	// print title
-	printf("+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n");
-	printf("| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n");
-	printf("+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n");
+	printf(tile_line);
+	printf(tile_item);
 
 	// cpu_initAndResetChip
 	cpu_state = cpu_initAndResetChip();
@@ -212,6 +215,8 @@ void main(void) {
 		if (z80_opdone(cpu_state)) {
 			// disassemble the instruction
 			dasm_disasm(AddressBus);
+			// print line
+			printf(tile_line);
 		}
 
 		// print item
@@ -284,10 +289,12 @@ static void dasm_disasm(uint16_t op_addr) {
 static bool z80_opdone(void* cpu_state) {
 	static bool prefix_active = false;
 	static bool pin_M1_pre = false;
+	static bool pin_IORQ_pre = false;
 	uint16_t AddressBus = cpu_readAddressBus(cpu_state);
 	uint16_t IntVecAddress = (cpu_readI(cpu_state) << 8) | cpu_getIntVec();
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
 	bool pin_M1 = !cpu_readM1(cpu_state);
+	bool pin_IORQ = !cpu_readIORQ(cpu_state);
 	uint8_t val_IM = cpu_readIM(cpu_state);
 	bool opdone = false;
 
@@ -298,12 +305,12 @@ static bool z80_opdone(void* cpu_state) {
 		// nmi event
 		if (0x0066 == AddressBus) {
 			opdone = true;
-			printf("|%*s| <- NMI SrvRtn\r", LOG_STRLEN, "");
+			printf("|%*s| <- NMI SrvRoutine\r", LOG_STRLEN, "");
 		}
 		// int event
 		if ((IntIsrAddress == AddressBus) && (2 == val_IM)) {
 			opdone = true;
-			printf("|%*s| <- INT SrvRtn\r", LOG_STRLEN, "");
+			printf("|%*s| <- INT SrvRoutine\r", LOG_STRLEN, "");
 		}
 		// judge CB/DD/ED/FD prefix
 		switch (cpu_memory[AddressBus]) {
@@ -318,7 +325,11 @@ static bool z80_opdone(void* cpu_state) {
 			break;
 		}
 	}
+	if (pin_M1 && pin_IORQ && !pin_IORQ_pre) {
+		printf("|%*s| <- INT Acknowledge\r", LOG_STRLEN, "");
+	}
 	pin_M1_pre = pin_M1;
+	pin_IORQ_pre = pin_IORQ;
 
 	return opdone;
 }
