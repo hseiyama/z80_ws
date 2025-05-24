@@ -371,23 +371,29 @@ static inline void handleBus(void *state) {
             // interrupt acknowledge cycle, put interrupt vector on data bus
             cpu_writeDataBus(state, int_vector);
         }
-//      if (!isNodeHigh(state, _rd)) {
-//          cpu_writeDataBus(state, ioRead(cpu_readAddressBus(state)));
-//      }
-//      if (!isNodeHigh(state, _wr)) {
-//          ioWrite(cpu_readAddressBus(state), cpu_readDataBus(state));
-//      }
+        // adjust half timing during reset
+        if (!isNodeHigh(state, _reset)) {
+            if (!isNodeHigh(state, _rd)) {
+                cpu_writeDataBus(state, ioRead(cpu_readAddressBus(state)));
+            }
+            if (!isNodeHigh(state, _wr)) {
+                ioWrite(cpu_readAddressBus(state), cpu_readDataBus(state));
+            }
+        }
     }
     // FIXME: integer request cycle (put interrupt vector on data bus)
 }
 
 static inline void handleBus2(void *state) {
     if (!isNodeHigh(state, _iorq)) {
-        if (!isNodeHigh(state, _rd)) {
-            cpu_writeDataBus(state, ioRead(cpu_readAddressBus(state)));
-        }
-        if (!isNodeHigh(state, _wr)) {
-            ioWrite(cpu_readAddressBus(state), cpu_readDataBus(state));
+        // adjust half timing during execution
+        if (isNodeHigh(state, _reset)) {
+            if (!isNodeHigh(state, _rd)) {
+                cpu_writeDataBus(state, ioRead(cpu_readAddressBus(state)));
+            }
+            if (!isNodeHigh(state, _wr)) {
+                ioWrite(cpu_readAddressBus(state), cpu_readDataBus(state));
+            }
         }
     }
 }

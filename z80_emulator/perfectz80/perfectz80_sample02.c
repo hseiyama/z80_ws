@@ -11,7 +11,7 @@
 #define DASM_MAX_STRLEN		(32)
 #define DASM_MAX_BINLEN		(16)
 #define DASM_ASM_STRLEN		(12)
-#define LOG_STRLEN			(sizeof(tile_line) - 4)
+#define LOG_STRLEN			(sizeof(title_line) - 4)
 
 // pin kind
 enum {
@@ -146,8 +146,8 @@ static const scene_t scene_tbl[] = {
 };
 
 // title string
-static const char tile_line[] = "+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n";
-static const char tile_item[] = "| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n";
+static const char title_line[] = "+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n";
+static const char title_item[] = "| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n";
 
 // dasm informaion
 static dasm_t dasm_info;
@@ -179,8 +179,8 @@ void main(void) {
 	val_Asm = dasm_info.str_buf;	// assembler string
 
 	// print title
-	printf(tile_line);
-	printf(tile_item);
+	printf(title_line);
+	printf(title_item);
 
 	// cpu_initAndResetChip
 	cpu_state = cpu_initAndResetChip();
@@ -216,7 +216,7 @@ void main(void) {
 			// disassemble the instruction
 			dasm_disasm(AddressBus);
 			// print line
-			printf(tile_line);
+			printf(title_line);
 		}
 
 		// print item

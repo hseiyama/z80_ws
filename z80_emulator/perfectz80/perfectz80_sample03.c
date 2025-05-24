@@ -2,26 +2,26 @@
 //  Main source file.
 //------------------------------------------------------------------------------
 #include <stdio.h> // printf
+#include <string.h> // memcpy
+#include <conio.h> // kbhit getch
+#include <ctype.h> // tolower
+#include <stdlib.h> // exit
 #define CHIPS_IMPL
-#define CHIPS_UTIL_IMPL
-#include "z80.h"
+#include "perfectz80.h"
 #include "z80dasm.h"
 
-#define TICK_CYCLE_END		(930)
 #define DASM_MAX_STRLEN		(32)
 #define DASM_MAX_BINLEN		(16)
 #define DASM_ASM_STRLEN		(12)
-#define LOG_STRLEN			(sizeof(title_line) - 4)
+#define LOG_STRLEN			(sizeof(title_line) - 3)
 
-// pin kind
+// trace kind
 enum {
-	PIN_Z80_WAIT = 0,	// Wait Requested
-	PIN_Z80_INT,		// Interrupt Request
-	PIN_Z80_NMI,		// Non-Maskable Interrupt
-	PIN_Z80_RESET,		// Cpu Reset
-	PIN_Z80_BUSRQ,		// Bus Requested
-	SET_MEM_VAL,		// Set Memory Value
-	SET_IO_VAL			// Set IO Value
+	TRACE_STOP = 0,		// Trace Stop
+	TRACE_HALF,			// Trace Half clock
+	TRACE_CLCK,			// Trace one Clock
+	TRACE_STEP,			// Trace Step instruction
+	TRACE_LOOP			// Trace Loop
 };
 
 typedef struct {
@@ -31,16 +31,6 @@ typedef struct {
 	int bin_pos;
 	uint8_t bin_buf[DASM_MAX_BINLEN];
 } dasm_t;
-
-typedef struct {
-	uint16_t tick;
-	uint8_t kind;
-	uint16_t addr;
-	uint8_t value;
-} scene_t;
-
-#define Z80_GET_PIN(p) ((pins & Z80_##p) == Z80_##p)
-#define Z80_SET_PIN(p,v) {pins = (pins & ~Z80_##p) | (((v) & 1ULL) << Z80_PIN_##p);}
 
 static const uint8_t cpu_rom[] = {
 	0xF3, 0x31, 0x00, 0x00, 0xED, 0x5E, 0xAF, 0xED, 0x47, 0xCD, 0x1E, 0x00, 0xAF, 0x32, 0x80, 0x00,
@@ -127,108 +117,90 @@ static const uint8_t cpu_rom[] = {
 	// 0081: FF                NMICNT: DS      1
 };
 
-// scene table
-static const scene_t scene_tbl[] = {
-	//	tick	kind			addr		value
-	{	343,	SET_IO_VAL,		0x001C,		0x12	},
-	{	393,	SET_IO_VAL,		0x001C,		0x34	},
-	{	398,	PIN_Z80_INT,	0x0000,		0x00	},	// no use value
-	{	531,	SET_IO_VAL,		0x001C,		0x56	},
-	{	555,	PIN_Z80_NMI,	0x0000,		true	},
-	{	557,	PIN_Z80_NMI,	0x0000,		false	},
-	{	580,	PIN_Z80_NMI,	0x0000,		true	},
-	{	582,	PIN_Z80_NMI,	0x0000,		false	},
-	{	689,	SET_IO_VAL,		0x001C,		0x78	},
-	{	713,	PIN_Z80_INT,	0x0000,		0x00	},	// no use value
-	{	827,	PIN_Z80_WAIT,	0x0000,		true	},	// adjust half timing
-	{	833,	PIN_Z80_WAIT,	0x0000,		false	},	// adjust half timing
-	{	842,	PIN_Z80_BUSRQ,	0x0000,		true	},	// not implemented
-	{	848,	PIN_Z80_BUSRQ,	0x0000,		false	},	// not implemented
-	{	885,	PIN_Z80_RESET,	0x0000,		true	},	// no use value
-	{	891,	PIN_Z80_RESET,	0x0000,		false	}	// no use value
-};
-
 // title string
-static const char title_line[] = "+-------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+\n";
-static const char title_item[] = "| Tick  | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |\n";
-
-static uint8_t cpu_memory[0x10000];
-static uint8_t cpu_io[0x100];
-static uint8_t int_vector = 0xE0;
+static const char title_line[] = "+--------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+";
+static const char title_item[] = "| Tick   | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |";
+static const char work_clear[] = "|                                                               |";
 
 // dasm informaion
 static dasm_t dasm_info;
-// scene informaion
-static uint16_t scene_idx;
+// trace informaion
+static uint8_t trace_op;
 
 static void dasm_init(void);
 static uint8_t _dasm_in_cb(void* user_data);
 static void _dasm_out_cb(char c, void* user_data);
 static void dasm_disasm(uint16_t op_addr);
-static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins);
-static void scene_init(void);
-static uint64_t scene_update(z80_t* cpu_state, uint64_t pins, uint16_t tick);
-static void cpu_setIntVec(uint8_t val);
-static uint8_t cpu_getIntVec(void);
+static bool z80_opdone(void* cpu_state);
+static uint8_t cpu_readIM(void* cpu_state);
+static void trace_init(void);
+static void trace_update(void* cpu_state, uint16_t tick);
+static int conv_hex(char c);
+static void cmd_help(void);
 
 void main(void) {
-	z80_t cpu_state;
+	void* cpu_state;
 	uint16_t tick;
 	char *val_Asm;
 
 	// initialize dasm
 	dasm_init();
-	// initialize scene
-	scene_init();
+	// initialize trace
+	trace_init();
 
 	// Initialize
 	tick = 0;
 	memcpy(cpu_memory, cpu_rom, sizeof(cpu_rom));
-	memset(cpu_io, 0xFF, sizeof(cpu_io));
 	val_Asm = dasm_info.str_buf;	// assembler string
 
+	// command help message
+	cmd_help();
+
 	// print title
-	printf(title_line);
-	printf(title_item);
+	printf(title_line); printf("\n");
+	printf(title_item); printf("\n");
 
-	// z80_init
-	uint64_t pins = z80_init(&cpu_state);
+	// cpu_initAndResetChip
+	cpu_state = cpu_initAndResetChip();
 
-	for (int i = 0; i < TICK_CYCLE_END; i++) {
-		// update scene
-		pins = scene_update(&cpu_state, pins, tick);
-		// z80_tick
-		pins = z80_tick(&cpu_state, pins);
+	while (true) {
+		// update trace
+		trace_update(cpu_state, tick);
+		// cpu_step
+		cpu_step(cpu_state);
 
 		// read
-		tick ++;
-		bool pin_M1 = Z80_GET_PIN(M1);
-		bool pin_MREQ = Z80_GET_PIN(MREQ);
-		bool pin_IORQ = Z80_GET_PIN(IORQ);
-		bool pin_RFSH = Z80_GET_PIN(RFSH);
-		bool pin_RD = Z80_GET_PIN(RD);
-		bool pin_WR = Z80_GET_PIN(WR);
-		bool pin_INT = Z80_GET_PIN(INT);
-		bool pin_NMI = Z80_GET_PIN(NMI);
-		bool pin_IFF1 = cpu_state.iff1;
-		uint16_t AddressBus = Z80_GET_ADDR(pins);
-		uint8_t DataBus = Z80_GET_DATA(pins);
-		uint16_t val_PC = cpu_state.pc;
-		uint16_t val_SP = cpu_state.sp;
-		uint8_t val_IR = cpu_state.opcode;
-		uint16_t val_AF = cpu_state.af;
-		uint16_t val_BC = cpu_state.bc;
-		uint16_t val_HL = cpu_state.hl;
+		bool pin_CLK = cpu_readCLK(cpu_state);
+		tick += pin_CLK;
+		bool pin_M1 = !cpu_readM1(cpu_state);
+		bool pin_MREQ = !cpu_readMREQ(cpu_state);
+		bool pin_IORQ = !cpu_readIORQ(cpu_state);
+		bool pin_RFSH = !cpu_readRFSH(cpu_state);
+		bool pin_RD = !cpu_readRD(cpu_state);
+		bool pin_WR = !cpu_readWR(cpu_state);
+		bool pin_INT = !cpu_readINT(cpu_state);
+		bool pin_NMI = !cpu_readNMI(cpu_state);
+		bool pin_IFF1 = cpu_read_node(cpu_state, 231);
+		uint16_t AddressBus = cpu_readAddressBus(cpu_state);
+		uint8_t DataBus = cpu_readDataBus(cpu_state);
+		uint16_t val_PC = cpu_readPC(cpu_state);
+		uint16_t val_SP = cpu_readSP(cpu_state);
+		uint8_t val_IR = cpu_readIR(cpu_state);
+		uint16_t val_AF = (cpu_readA(cpu_state) << 8) | cpu_readF(cpu_state);
+		uint16_t val_BC = (cpu_readB(cpu_state) << 8) | cpu_readC(cpu_state);
+		uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
 		// judge opcode fetch machine cycle
-		if (z80_opdone_wrp(&cpu_state, pins)) {
+		if (z80_opdone(cpu_state)) {
 			// disassemble the instruction
 			dasm_disasm(AddressBus);
 			// print line
-			printf(title_line);
+			printf(title_line); printf("\n");
+			// trace operation
+			if (TRACE_STEP == trace_op) { trace_op = TRACE_STOP; }
 		}
 
 		// print item
-		printf("|%6d |", tick);
+		printf("|%5d/%-2d|", tick, pin_CLK);
 		pin_M1 ? printf(" M1 |") : printf("    |");
 		pin_MREQ ? printf(" MREQ |") : printf("      |");
 		pin_IORQ ? printf(" IORQ |") : printf("      |");
@@ -251,25 +223,15 @@ void main(void) {
 		printf(" %s |", val_Asm);
 		printf("\n");
 
-		// handle memory read or write access
-		if (pin_MREQ) {
-			if (pin_RD) {
-				Z80_SET_DATA(pins, cpu_memory[Z80_GET_ADDR(pins)]);
-			}
-			else if (pin_WR) {
-				cpu_memory[Z80_GET_ADDR(pins)] = Z80_GET_DATA(pins);
-			}
-		}
-		// handle io read or write access
-		else if (pin_IORQ) {
-			if (pin_RD) {
-				Z80_SET_DATA(pins, cpu_io[Z80_GET_ADDR(pins) & 0xFF]);
-			}
-			else if (pin_WR) {
-				cpu_io[Z80_GET_ADDR(pins) & 0xFF] = Z80_GET_DATA(pins);
-			}
+		// trace operation
+		if (TRACE_HALF == trace_op) { trace_op = TRACE_STOP; }
+		if (TRACE_CLCK == trace_op) {
+			if (0 == pin_CLK) { trace_op = TRACE_STOP; }
 		}
 	}
+
+	// cpu_destroyChip
+	cpu_destroyChip(cpu_state);
 }
 
 // initialize dasm
@@ -310,96 +272,199 @@ static void dasm_disasm(uint16_t op_addr) {
 }
 
 // judge opcode fetch machine cycle
-static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
-	uint16_t AddressBus = Z80_GET_ADDR(pins);
-	uint16_t IntVecAddress = (cpu_state->i << 8) | cpu_getIntVec();
+static bool z80_opdone(void* cpu_state) {
+	static bool prefix_active = false;
+	static bool pin_M1_pre = false;
+	static bool pin_IORQ_pre = false;
+	uint16_t AddressBus = cpu_readAddressBus(cpu_state);
+	uint16_t IntVecAddress = (cpu_readI(cpu_state) << 8) | cpu_getIntVec();
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
-	bool pin_M1 = Z80_GET_PIN(M1);
-	bool pin_IORQ = Z80_GET_PIN(IORQ);
+	bool pin_M1 = !cpu_readM1(cpu_state);
+	bool pin_IORQ = !cpu_readIORQ(cpu_state);
+	uint8_t val_IM = cpu_readIM(cpu_state);
 	bool opdone = false;
 
-	if (z80_opdone(cpu_state)) {
+	if (pin_M1 && !pin_M1_pre) {
+		if (!prefix_active) {
+			opdone = true;
+		}
 		// nmi event
 		if (0x0066 == AddressBus) {
+			opdone = true;
 			printf("|%*s| <- NMI SrvRoutine\r", LOG_STRLEN, "");
 		}
 		// int event
-		if ((IntIsrAddress == AddressBus) && (2 == cpu_state->im)) {
+		if ((IntIsrAddress == AddressBus) && (2 == val_IM)) {
+			opdone = true;
 			printf("|%*s| <- INT SrvRoutine\r", LOG_STRLEN, "");
 		}
-		opdone = true;
+		// judge CB/DD/ED/FD prefix
+		switch (cpu_memory[AddressBus]) {
+		case 0xCB:
+		case 0xDD:
+		case 0xED:
+		case 0xFD:
+			prefix_active = true;
+			break;
+		default:
+			prefix_active = false;
+			break;
+		}
 	}
-	// int ack cycle
-	if (cpu_state->int_ack) {
-		printf(title_line);
-	}
-	// int acknowledge
-	if (pin_M1 && pin_IORQ) {
+	// int ack event
+	if (pin_M1 && pin_IORQ && !pin_IORQ_pre) {
 		printf("|%*s| <- INT Acknowledge\r", LOG_STRLEN, "");
 	}
+	pin_M1_pre = pin_M1;
+	pin_IORQ_pre = pin_IORQ;
 
 	return opdone;
 }
 
-// initialize scene
-static void scene_init(void) {
-	scene_idx = 0;
+// read IM
+static uint8_t cpu_readIM(void* cpu_state) {
+	// see https://github.com/floooh/v6502r/issues/3
+	uint8_t im = (cpu_read_node(cpu_state, 205) ? 1 : 0) | (cpu_read_node(cpu_state, 179) ? 2 : 0);
+	if (im > 0) {
+		im -= 1;
+	}
+	return im;
 }
 
-// update scene
-static uint64_t scene_update(z80_t* cpu_state, uint64_t pins, uint16_t tick) {
-	bool pin_M1 = Z80_GET_PIN(M1);
-	bool pin_IORQ = Z80_GET_PIN(IORQ);
+// initialize trace
+static void trace_init(void) {
+	trace_op = TRACE_STOP;
+}
 
-	while ((scene_idx < (sizeof(scene_tbl) / sizeof(scene_t)))
-	&&     (scene_tbl[scene_idx].tick <= tick                )) {
-		switch (scene_tbl[scene_idx].kind) {
-		case PIN_Z80_WAIT:
-			Z80_SET_PIN(WAIT, scene_tbl[scene_idx].value);
-			printf("|%*s| <- set z80_wait\r", LOG_STRLEN, "");
+// update trace
+static void trace_update(void* cpu_state, uint16_t tick) {
+	bool pin_M1 = !cpu_readM1(cpu_state);
+	bool pin_IORQ = !cpu_readIORQ(cpu_state);
+
+	// check any key
+	if (kbhit()) {
+		trace_op = TRACE_STOP;
+	}
+	// trace operation
+	while (TRACE_STOP == trace_op) {
+		// print cpu state
+		printf(work_clear); printf("\r");
+		printf("]");
+		if (!cpu_readHALT(cpu_state)) { printf(" HALT"); }
+		if (!cpu_readBUSAK(cpu_state)) { printf(" BUSAK"); }
+		if (!cpu_readWAIT(cpu_state)) { printf(" WAIT"); }
+		if (!cpu_readINT(cpu_state)) { printf(" INT"); }
+		if (!cpu_readNMI(cpu_state)) { printf(" NMI"); }
+		if (!cpu_readRESET(cpu_state)) { printf(" RESET"); }
+		if (!cpu_readBUSRQ(cpu_state)) { printf(" BUSRQ"); }
+		printf("\r");
+
+		// wait input key
+		switch (tolower(getch())) {
+		case 'h':
+			trace_op = TRACE_HALF;
 			break;
-		case PIN_Z80_INT:
-			Z80_SET_PIN(INT, true);
+		case 'c':
+			trace_op = TRACE_CLCK;
+			break;
+		case 's':
+			trace_op = TRACE_STEP;
+			break;
+		case 'l':
+			trace_op = TRACE_LOOP;
+			break;
+		case 'p':
+			// print title
+			printf(title_item); printf("\r");
+			break;
+		case 'w':
+			cpu_writeWAIT(cpu_state, !cpu_readWAIT(cpu_state));
+			printf("|%*s| <- set z80_wait \r", LOG_STRLEN, "");
+			break;
+		case 'i':
+			cpu_writeINT(cpu_state, !cpu_readINT(cpu_state));
 			cpu_setIntVec(0x48);
-			printf("|%*s| <- set z80_int\r", LOG_STRLEN, "");
+			printf("|%*s| <- set z80_int  \r", LOG_STRLEN, "");
 			break;
-		case PIN_Z80_NMI:
-			Z80_SET_PIN(NMI, scene_tbl[scene_idx].value);
-			printf("|%*s| <- set z80_nmi\r", LOG_STRLEN, "");
+		case 'n':
+			cpu_writeNMI(cpu_state, !cpu_readNMI(cpu_state));
+			printf("|%*s| <- set z80_nmi  \r", LOG_STRLEN, "");
 			break;
-		case PIN_Z80_RESET:
-			pins = z80_reset(cpu_state);
+		case 'r':
+			cpu_writeRESET(cpu_state, !cpu_readRESET(cpu_state));
 			printf("|%*s| <- set z80_reset\r", LOG_STRLEN, "");
 			break;
-		case PIN_Z80_BUSRQ:
-			// not implemented
-			printf("|%*s| <- z80_busrq (not implemented)\r", LOG_STRLEN, "");
+		case 'b':
+			cpu_writeBUSRQ(cpu_state, !cpu_readBUSRQ(cpu_state));
+			printf("|%*s| <- set z80_busrq\r", LOG_STRLEN, "");
 			break;
-		case SET_MEM_VAL:
-			cpu_memory[scene_tbl[scene_idx].addr] = scene_tbl[scene_idx].value;
-			printf("|%*s| <- set memory\r", LOG_STRLEN, "");
+		case 'e':
+			printf("|%*s| <- set io       \r", LOG_STRLEN, "");
+			printf(work_clear); printf("\r");
+			printf("] cpu_io[0x1C]=0x");
+			int value;
+			if ((value = conv_hex(getche())) >= 0) {
+				uint8_t io_value = value;
+				if ((value = conv_hex(getche())) >= 0) {
+					io_value = (io_value << 4) + value;
+					cpu_io[0x1C] = io_value;
+					printf("\r");
+					printf(work_clear);
+					printf(" cpu_io[0x1C]=0x%02X OK\r", io_value);
+				}
+				else {
+					printf("\r");
+					printf(work_clear);
+					printf(" Error\r");
+				}
+			}
+			else {
+				printf("\r");
+				printf(work_clear);
+				printf(" Error\r");
+			}
 			break;
-		case SET_IO_VAL:
-			cpu_io[scene_tbl[scene_idx].addr & 0xFF] = scene_tbl[scene_idx].value;
-			printf("|%*s| <- set io\r", LOG_STRLEN, "");
+		case 'q':
+			exit(0);
 			break;
 		}
-		scene_idx++;
 	}
+	// interrupt acknowledge
 	if (pin_M1 && pin_IORQ) {
-		Z80_SET_PIN(INT, false);
-		Z80_SET_DATA(pins, cpu_getIntVec());
+		cpu_writeINT(cpu_state, !false);
+	}
+}
+
+// convert char to hex
+static int conv_hex(char c) {
+	int value = 0;
+
+	char code = tolower(c);
+	if (('0' <= code) && (code <= '9')) {
+		value = code - '0';
+	}
+	else if (('a' <= code) && (code <= 'f')) {
+		value = code - 'a' + 10;
+	}
+	else {
+		value = -1;
 	}
 
-	return pins;
+	return value;
 }
 
-// set interrupt vector
-static void cpu_setIntVec(uint8_t val) {
-	int_vector = val;
-}
-
-// get interrupt vector
-static uint8_t cpu_getIntVec(void) {
-	return int_vector;
+// command help message
+static void cmd_help(void) {
+	printf("H :trace Half clock\n");
+	printf("C :trace one Clock\n");
+	printf("S :trace Step instruction\n");
+	printf("L :trace Loop\n");
+	printf("P :Print title\n");
+	printf("W :toggle WAIT\n");
+	printf("I :toggle INT\n");
+	printf("N :toggle NMI\n");
+	printf("R :toggle RESET\n");
+	printf("B :toggle BUSRQ\n");
+	printf("E :Edit io value\n");
+	printf("Q :Quit\n");
 }
