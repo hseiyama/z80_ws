@@ -33,12 +33,12 @@ typedef struct {
 } dasm_t;
 
 static const uint8_t cpu_rom[] = {
-	0xF3, 0x31, 0x00, 0x00, 0xED, 0x5E, 0xAF, 0xED, 0x47, 0xCD, 0x1E, 0x00, 0xAF, 0x32, 0x80, 0x00,
-	0x32, 0x81, 0x00, 0xFB, 0x0E, 0x1C, 0xED, 0x40, 0x0E, 0x1E, 0xED, 0x41, 0x18, 0xF6, 0x21, 0x50,
-	0x00, 0x06, 0x03, 0x0E, 0x1D, 0xED, 0xB3, 0x21, 0x53, 0x00, 0x06, 0x03, 0x0E, 0x1F, 0xED, 0xB3,
-	0x21, 0x56, 0x00, 0x06, 0x03, 0x0E, 0x10, 0xED, 0xB3, 0xC9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+	0xF3, 0x31, 0x00, 0x00, 0xED, 0x5E, 0xAF, 0xED, 0x47, 0xCD, 0x2B, 0x00, 0xAF, 0x32, 0x80, 0x00,
+	0x32, 0x81, 0x00, 0xFB, 0xDB, 0x1C, 0xFE, 0xAA, 0x28, 0x08, 0x07, 0x47, 0x0E, 0x1E, 0xED, 0x41,
+	0x18, 0xF2, 0x00, 0x76, 0x3E, 0x55, 0xD3, 0x1C, 0x00, 0x18, 0xE9, 0x21, 0x50, 0x00, 0x06, 0x03,
+	0x0E, 0x10, 0xED, 0xB3, 0xC9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x6E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0xCF, 0xFF, 0x07, 0xCF, 0x00, 0x07, 0x48, 0x87, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+	0x48, 0x87, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xD9, 0x21, 0x81, 0x00, 0x34, 0xD9, 0xED, 0x45, 0xF5, 0x3A,
 	0x80, 0x00, 0x3C, 0x32, 0x80, 0x00, 0xF1, 0xFB, 0xED, 0x4D, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 	0xFF, 0xFF
@@ -49,54 +49,48 @@ static const uint8_t cpu_rom[] = {
 	// 0004: ED5E     [22]             IM      2
 	// 0006: AF       [26]             XOR     A
 	// 0007: ED47     [35]             LD      I, A
-	// 0009: CD1E00   [52]             CALL    IOSET
+	// 0009: CD2B00   [52]             CALL    IOSET
 	// 000C: AF       [56]             XOR     A
 	// 000D: 328000   [69]             LD      (CT0CNT), A
 	// 0010: 328100   [82]             LD      (NMICNT), A
 	// 0013: FB       [86]             EI
 	// 0014:                   LOOP:
-	// 0014: 0E1C     [ 7]             LD      C, PIOA
-	// 0016: ED40     [19]             IN      B, (C)
-	// 0018: 0E1E     [26]             LD      C, PIOB
-	// 001A: ED41     [38]             OUT     (C), B
-	// 001C: 18F6     [50]             JR      LOOP
-	// 001E:                   IOSET:
-	// 001E: 215000   [10]             LD      HL, PIOACD              ;PIOAコマンドセットアップ
-	// 0021: 0603     [17]             LD      B, PAEND - PIOACD
-	// 0023: 0E1D     [24]             LD      C, PIOA + 1             ;PIOAコマンドアドレス(1DH)
-	// 0025: EDB3     [40|21]          OTIR
-	// 0027: 215300   [50]             LD      HL, PIOBCD              ;PIOBコマンドセットアップ
-	// 002A: 0603     [57]             LD      B, PBEND - PIOBCD
-	// 002C: 0E1F     [64]             LD      C, PIOB + 1             ;PIOBコマンドアドレス(1FH)
-	// 002E: EDB3     [80|21]          OTIR
-	// 0030: 215600   [90]             LD      HL, CTC0CD              ;CTC0コマンドセットアップ
-	// 0033: 0603     [97]             LD      B, C0END - CTC0CD
-	// 0035: 0E10     [104]            LD      C, CTC0
-	// 0037: EDB3     [120|21]         OTIR
-	// 0039: C9       [130]            RET
-	// 003A: FFFFFFFF                  ORG     ENTRY + 04H
-	// 003E: FF...             
+	// 0014: DB1C     [11]             IN      A, (PIOA)
+	// 0016: FEAA     [18]             CP      0AAH
+	// 0018: 2808     [25|30]          JR      Z, BREAK
+	// 001A: 07       [29]             RLCA
+	// 001B: 47       [33]             LD      B, A
+	// 001C: 0E1E     [40]             LD      C, PIOB
+	// 001E: ED41     [52]             OUT     (C), B
+	// 0020: 18F2     [64]             JR      LOOP
+	// 0022:                   BREAK:
+	// 0022: 00       [ 4]             NOP
+	// 0023: 76       [ 8]             HALT
+	// 0024: 3E55     [15]             LD      A, 55H
+	// 0026: D31C     [26]             OUT     (PIOA), A
+	// 0028: 00       [30]             NOP
+	// 0029: 18E9     [42]             JR      LOOP
+	// 002B:                   IOSET:
+	// 002B: 215000   [10]             LD      HL, CTC0CD              ;CTC0コマンドセットアップ
+	// 002E: 0603     [17]             LD      B, C0END - CTC0CD
+	// 0030: 0E10     [24]             LD      C, CTC0
+	// 0032: EDB3     [40|21]          OTIR
+	// 0034: C9       [50]             RET
+	// 0035: FFFFFFFF                  ORG     ENTRY + 04H
+	// 0039: FF...             
 	// 0044: 0000                      DW      0000H           ; 4: PIOA割り込み
 	// 0046: 0000                      DW      0000H           ; 6: PIOB割り込み
 	// 0048: 6E00                      DW      INTCT0          ; 8: CTC0割り込み
 	// 004A: 0000                      DW      0000H           ;10: CTC1割り込み
 	// 004C: 0000                      DW      0000H           ;12: CTC2割り込み
 	// 004E: 0000                      DW      0000H           ;14: CTC3割り込み
-	// 0050: CF                PIOACD: DB      0CFH            ;PIOAモードワード                       **001111 (モード3)
-	// 0051: FF                        DB      0FFH            ;PIOAデータディレクションワード         (全ビット入力)
-	// 0052: 07                        DB      07H             ;PIOAインタラプトコントロールワード     ****0111 (割込み無効)
-	// 0053:                   PAEND   EQU     $
-	// 0053: CF                PIOBCD: DB      0CFH            ;PIOBモードワード                       **001111 (モード3)
-	// 0054: 00                        DB      00H             ;PIOBデータディレクションワード         (全ビット出力)
-	// 0055: 07                        DB      07H             ;PIOBインタラプトコントロールワード     ****0111 (割込み無効)
-	// 0056:                   PBEND   EQU     $
-	// 0056:                   CTC0CD:
-	// 0056: 48                        DB      ENTRY + 8       ;CTC0インタラプトベクタ                 *****000 (全チャネル用)
-	// 0057: 87                        DB      87H             ;CTC0チャンネルコントロールワード       *******1 (タイマモード)
-	// 0058: 08                        DB      08H             ;CTC0タイムコンスタントレジスタ         (8)
-	// 0059:                   C0END   EQU     $
-	// 0059: FFFFFFFF                  ORG     0066H
-	// 005D: FF...             
+	// 0050:                   CTC0CD:
+	// 0050: 48                        DB      ENTRY + 8       ;CTC0インタラプトベクタ                 *****000 (全チャネル用)
+	// 0051: 87                        DB      87H             ;CTC0チャンネルコントロールワード       *******1 (タイマモード)
+	// 0052: 08                        DB      08H             ;CTC0タイムコンスタントレジスタ         (8)
+	// 0053:                   C0END   EQU     $
+	// 0053: FFFFFFFF                  ORG     0066H
+	// 0057: FF...             
 	// 0066:                   NMI:
 	// 0066: D9       [ 4]             EXX
 	// 0067: 218100   [14]             LD      HL, NMICNT
