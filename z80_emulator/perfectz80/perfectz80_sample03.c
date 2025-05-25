@@ -32,6 +32,8 @@ typedef struct {
 	uint8_t bin_buf[DASM_MAX_BINLEN];
 } dasm_t;
 
+#define LOG_MSG(m) { printf("\r"); printf(work_clear); printf(m); }
+
 static const uint8_t cpu_rom[] = {
 	0xF3, 0x31, 0x00, 0x00, 0xED, 0x5E, 0xAF, 0xED, 0x47, 0xCD, 0x2B, 0x00, 0xAF, 0x32, 0x80, 0x00,
 	0x32, 0x81, 0x00, 0xFB, 0xDB, 0x1C, 0xFE, 0xAA, 0x28, 0x08, 0x07, 0x47, 0x0E, 0x1E, 0xED, 0x41,
@@ -115,6 +117,8 @@ static const uint8_t cpu_rom[] = {
 static const char title_line[] = "+--------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+";
 static const char title_item[] = "| Tick   | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |";
 static const char work_clear[] = "|                                                               |";
+// F register state
+static const char freg_state[] = "SZ.H.PNC";
 
 // dasm informaion
 static dasm_t dasm_info;
@@ -327,13 +331,18 @@ static uint8_t cpu_readIM(void* cpu_state) {
 
 // initialize trace
 static void trace_init(void) {
-	trace_op = TRACE_STOP;
+	trace_op = TRACE_HALF;
 }
 
 // update trace
 static void trace_update(void* cpu_state, uint16_t tick) {
 	bool pin_M1 = !cpu_readM1(cpu_state);
 	bool pin_IORQ = !cpu_readIORQ(cpu_state);
+	uint8_t val_A = cpu_readA(cpu_state);
+	uint8_t val_F = cpu_readF(cpu_state);
+	uint16_t val_DE = (cpu_readD(cpu_state) << 8) | cpu_readE(cpu_state);
+	uint16_t val_IX = cpu_readIX(cpu_state);
+	uint16_t val_IY = cpu_readIY(cpu_state);
 
 	// check any key
 	if (kbhit()) {
@@ -407,16 +416,30 @@ static void trace_update(void* cpu_state, uint16_t tick) {
 					printf(" cpu_io[0x1C]=0x%02X OK\r", io_value);
 				}
 				else {
-					printf("\r");
-					printf(work_clear);
-					printf(" Error\r");
+					LOG_MSG(" Error\r");
 				}
 			}
 			else {
-				printf("\r");
-				printf(work_clear);
-				printf(" Error\r");
+					LOG_MSG(" Error\r");
 			}
+			break;
+		case 'f':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			printf(work_clear);
+			printf(" A=%02X", val_A);
+			printf(" F=");
+			for (int i = 0; i < 8; i++) {
+				if (((val_F >> (7 - i)) & 0x01) == 0x01) {
+					printf("%c", freg_state[i]);
+				}
+				else {
+					printf(".");
+				}
+			}
+			printf(" DE=%04X", val_DE);
+			printf(" IX=%04X", val_IX);
+			printf(" IY=%04X", val_IY);
+			printf("\r");
 			break;
 		case 'q':
 			exit(0);
@@ -460,5 +483,6 @@ static void cmd_help(void) {
 	printf("R :toggle RESET\n");
 	printf("B :toggle BUSRQ\n");
 	printf("E :Edit io value\n");
+	printf("F :F register\n");
 	printf("Q :Quit\n");
 }

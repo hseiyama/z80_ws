@@ -332,6 +332,8 @@ static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
 	// int ack cycle
 	if (cpu_state->int_ack) {
 		printf(title_line);
+		// disassemble the instruction
+		dasm_disasm(cpu_state->pc);
 	}
 	// int acknowledge
 	if (pin_M1 && pin_IORQ) {
