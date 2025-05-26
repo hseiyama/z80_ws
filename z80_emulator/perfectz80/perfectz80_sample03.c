@@ -279,6 +279,7 @@ static bool z80_opdone(void* cpu_state) {
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
 	bool pin_M1 = !cpu_readM1(cpu_state);
 	bool pin_IORQ = !cpu_readIORQ(cpu_state);
+	bool pin_RESET = !cpu_readRESET(cpu_state);
 	uint8_t val_IM = cpu_readIM(cpu_state);
 	bool opdone = false;
 
@@ -313,6 +314,13 @@ static bool z80_opdone(void* cpu_state) {
 	if (pin_M1 && pin_IORQ && !pin_IORQ_pre) {
 		printf("|%*s| <- INT Acknowledge\r", LOG_STRLEN, "");
 	}
+	// reset event
+	if (pin_RESET) {
+		prefix_active = false;
+		pin_M1_pre = false;
+		pin_IORQ_pre = false;
+	}
+	// previous value
 	pin_M1_pre = pin_M1;
 	pin_IORQ_pre = pin_IORQ;
 
@@ -340,7 +348,9 @@ static void trace_update(void* cpu_state) {
 	bool pin_IORQ = !cpu_readIORQ(cpu_state);
 	uint8_t val_A = cpu_readA(cpu_state);
 	uint8_t val_F = cpu_readF(cpu_state);
+	uint16_t val_BC = (cpu_readB(cpu_state) << 8) | cpu_readC(cpu_state);
 	uint16_t val_DE = (cpu_readD(cpu_state) << 8) | cpu_readE(cpu_state);
+	uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
 	uint16_t val_IX = cpu_readIX(cpu_state);
 	uint16_t val_IY = cpu_readIY(cpu_state);
 
@@ -364,6 +374,11 @@ static void trace_update(void* cpu_state) {
 
 		// wait input key
 		switch (tolower(getch())) {
+		case '?':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			// print help
+			LOG_MSG(" Half Clock Step Loop Print Wait Int Nmi Reset Busrq Edit Freg Quit\r");
+			break;
 		case 'h':
 			trace_op = TRACE_HALF;
 			break;
@@ -435,13 +450,19 @@ static void trace_update(void* cpu_state) {
 					printf(".");
 				}
 			}
+			printf(" BC=%04X", val_BC);
 			printf(" DE=%04X", val_DE);
+			printf(" HL=%04X", val_HL);
 			printf(" IX=%04X", val_IX);
 			printf(" IY=%04X", val_IY);
 			printf("\r");
 			break;
 		case 'q':
 			exit(0);
+			break;
+		default:
+			printf("|%*s|\r", LOG_STRLEN, "");
+			LOG_MSG(" Error\r");
 			break;
 		}
 	}
@@ -471,6 +492,7 @@ static int conv_hex(char c) {
 
 // command help message
 static void cmd_help(void) {
+	printf("? :command help\n");
 	printf("H :trace Half clock\n");
 	printf("C :trace one Clock\n");
 	printf("S :trace Step instruction\n");

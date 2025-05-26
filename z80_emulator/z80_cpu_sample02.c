@@ -297,6 +297,7 @@ static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
 	bool pin_M1 = Z80_GET_PIN(M1);
 	bool pin_IORQ = Z80_GET_PIN(IORQ);
+	bool pin_HALT = Z80_GET_PIN(HALT);
 	uint8_t val_IM = cpu_state->im;
 	bool opdone = false;
 
@@ -310,6 +311,13 @@ static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
 			printf("|%*s| <- INT SrvRoutine\r", LOG_STRLEN, "");
 		}
 		opdone = true;
+		// halt cycle
+		if (pin_HALT) {
+			printf(title_line); printf("\n");
+			// disassemble the instruction
+			dasm_disasm(cpu_state->pc);
+			opdone = false;
+		}
 	}
 	// int ack cycle
 	if (cpu_state->int_ack) {
@@ -348,7 +356,9 @@ static uint64_t trace_update(z80_t* cpu_state, uint64_t pins) {
 	bool pin_IORQ = Z80_GET_PIN(IORQ);
 	uint8_t val_A = cpu_state->a;
 	uint8_t val_F = cpu_state->f;
+	uint16_t val_BC = cpu_state->bc;
 	uint16_t val_DE = cpu_state->de;
+	uint16_t val_HL = cpu_state->hl;
 	uint16_t val_IX = cpu_state->ix;
 	uint16_t val_IY = cpu_state->iy;
 
@@ -372,6 +382,11 @@ static uint64_t trace_update(z80_t* cpu_state, uint64_t pins) {
 
 		// wait input key
 		switch (tolower(getch())) {
+		case '?':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			// print help
+			LOG_MSG(" Clock Step Loop Print Wait Int Nmi Reset Edit Freg Quit\r");
+			break;
 //		case 'h':
 //			trace_op = TRACE_HALF;
 //			break;
@@ -407,6 +422,9 @@ static uint64_t trace_update(z80_t* cpu_state, uint64_t pins) {
 			if ('y' == tolower(getche())) {
 				pins = z80_reset(cpu_state);
 				LOG_MSG(" Reset OK\r");
+			}
+			else {
+				LOG_MSG(" Cancel\r");
 			}
 			break;
 //		case 'b':
@@ -447,13 +465,19 @@ static uint64_t trace_update(z80_t* cpu_state, uint64_t pins) {
 					printf(".");
 				}
 			}
+			printf(" BC=%04X", val_BC);
 			printf(" DE=%04X", val_DE);
+			printf(" HL=%04X", val_HL);
 			printf(" IX=%04X", val_IX);
 			printf(" IY=%04X", val_IY);
 			printf("\r");
 			break;
 		case 'q':
 			exit(0);
+			break;
+		default:
+			printf("|%*s|\r", LOG_STRLEN, "");
+			LOG_MSG(" Error\r");
 			break;
 		}
 	}
@@ -486,6 +510,7 @@ static int conv_hex(char c) {
 
 // command help message
 static void cmd_help(void) {
+	printf("? :command help\n");
 //	printf("H :trace Half clock\n");
 	printf("C :trace one Clock\n");
 	printf("S :trace Step instruction\n");
