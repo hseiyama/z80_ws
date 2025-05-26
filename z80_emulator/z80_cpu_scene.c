@@ -316,6 +316,8 @@ static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
 	bool pin_M1 = Z80_GET_PIN(M1);
 	bool pin_IORQ = Z80_GET_PIN(IORQ);
+	bool pin_HALT = Z80_GET_PIN(HALT);
+	uint8_t val_IM = cpu_state->im;
 	bool opdone = false;
 
 	if (z80_opdone(cpu_state)) {
@@ -324,10 +326,17 @@ static bool z80_opdone_wrp(z80_t* cpu_state, uint64_t pins) {
 			printf("|%*s| <- NMI SrvRoutine\r", LOG_STRLEN, "");
 		}
 		// int event
-		if ((IntIsrAddress == AddressBus) && (2 == cpu_state->im)) {
+		if ((IntIsrAddress == AddressBus) && (2 == val_IM)) {
 			printf("|%*s| <- INT SrvRoutine\r", LOG_STRLEN, "");
 		}
 		opdone = true;
+		// halt cycle
+		if (pin_HALT) {
+			printf(title_line);
+			// disassemble the instruction
+			dasm_disasm(cpu_state->pc);
+			opdone = false;
+		}
 	}
 	// int ack cycle
 	if (cpu_state->int_ack) {

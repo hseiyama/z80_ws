@@ -126,7 +126,7 @@ void main(void) {
 
 // share memory open
 static int shmem_open(void) {
-	HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(io_t), "z80_aki80_mon2");
+	HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(io_t), "z80_aki80_mon");
 	if (!hMap) {
 		printf("CreateFileMapping failed: %lu\n", GetLastError());
 		return 1;

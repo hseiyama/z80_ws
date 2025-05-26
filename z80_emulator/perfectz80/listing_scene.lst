@@ -1,11 +1,11 @@
                         ; --------------------------------------
-                        ; zasm: assemble "listing_sample02.asm"
-                        ; date: 2025-05-18 18:03:42
+                        ; zasm: assemble "listing_scene.asm"
+                        ; date: 2025-05-26 23:22:02
                         ; --------------------------------------
 
 
                         ;***************************************************************
-                        ;	perfectz80_sample02用 Z80アセンブラコード
+                        ;	perfectz80_scene用 Z80アセンブラコード
                         ;***************************************************************
                         
                         ;*******************************
@@ -164,28 +164,28 @@
 
 ; +++ global symbols +++
 
-C0END   = $0059 =    89          listing_sample02.asm:103
-CT0CNT  = $0080 =   128          listing_sample02.asm:146
-CTC0    = $0010 =    16          listing_sample02.asm:16
-CTC0CD  = $0056 =    86          listing_sample02.asm:99
-ENTRY   = $0040 =    64          listing_sample02.asm:9
-INTCT0  = $006E =   110          listing_sample02.asm:132
-IOSET   = $001E =    30          listing_sample02.asm:44
-LOOP    = $0014 =    20          listing_sample02.asm:37
-NMI     = $0066 =   102          listing_sample02.asm:122 (unused)
-NMICNT  = $0081 =   129          listing_sample02.asm:147
-PAEND   = $0053 =    83          listing_sample02.asm:91
-PBEND   = $0056 =    86          listing_sample02.asm:97
-PIOA    = $001C =    28          listing_sample02.asm:13
-PIOACD  = $0050 =    80          listing_sample02.asm:86
-PIOB    = $001E =    30          listing_sample02.asm:14
-PIOBCD  = $0053 =    83          listing_sample02.asm:92
-RAM_B   = $0080 =   128          listing_sample02.asm:10
-ROM_B   = $0000 =     0          listing_sample02.asm:8
-START   = $0000 =     0          listing_sample02.asm:26 (unused)
-_end    = $0082 =   130          listing_sample02.asm:24 (unused)
-_size   = $0082 =   130          listing_sample02.asm:24 (unused)
+C0END   = $0059 =    89          listing_scene.asm:103
+CT0CNT  = $0080 =   128          listing_scene.asm:146
+CTC0    = $0010 =    16          listing_scene.asm:16
+CTC0CD  = $0056 =    86          listing_scene.asm:99
+ENTRY   = $0040 =    64          listing_scene.asm:9
+INTCT0  = $006E =   110          listing_scene.asm:132
+IOSET   = $001E =    30          listing_scene.asm:44
+LOOP    = $0014 =    20          listing_scene.asm:37
+NMI     = $0066 =   102          listing_scene.asm:122 (unused)
+NMICNT  = $0081 =   129          listing_scene.asm:147
+PAEND   = $0053 =    83          listing_scene.asm:91
+PBEND   = $0056 =    86          listing_scene.asm:97
+PIOA    = $001C =    28          listing_scene.asm:13
+PIOACD  = $0050 =    80          listing_scene.asm:86
+PIOB    = $001E =    30          listing_scene.asm:14
+PIOBCD  = $0053 =    83          listing_scene.asm:92
+RAM_B   = $0080 =   128          listing_scene.asm:10
+ROM_B   = $0000 =     0          listing_scene.asm:8
+START   = $0000 =     0          listing_scene.asm:26 (unused)
+_end    = $0082 =   130          listing_scene.asm:24 (unused)
+_size   = $0082 =   130          listing_scene.asm:24 (unused)
 
 
-total time: 0.0021 sec.
+total time: 0.0044 sec.
 no errors

@@ -1,11 +1,11 @@
                         ; --------------------------------------
-                        ; zasm: assemble "listing_sample03.asm"
-                        ; date: 2025-05-24 17:51:51
+                        ; zasm: assemble "listing_trace.asm"
+                        ; date: 2025-05-26 23:22:11
                         ; --------------------------------------
 
 
                         ;***************************************************************
-                        ;	perfectz80_sample02用 Z80アセンブラコード
+                        ;	perfectz80_trace用 Z80アセンブラコード
                         ;***************************************************************
                         
                         ;*******************************
@@ -129,25 +129,25 @@
 
 ; +++ global symbols +++
 
-BREAK   = $0022 =    34          listing_sample03.asm:46
-C0END   = $0053 =    83          listing_sample03.asm:80
-CT0CNT  = $0080 =   128          listing_sample03.asm:111
-CTC0    = $0010 =    16          listing_sample03.asm:16
-CTC0CD  = $0050 =    80          listing_sample03.asm:76
-ENTRY   = $0040 =    64          listing_sample03.asm:9
-INTCT0  = $006E =   110          listing_sample03.asm:97
-IOSET   = $002B =    43          listing_sample03.asm:54
-LOOP    = $0014 =    20          listing_sample03.asm:37
-NMI     = $0066 =   102          listing_sample03.asm:87 (unused)
-NMICNT  = $0081 =   129          listing_sample03.asm:112
-PIOA    = $001C =    28          listing_sample03.asm:13
-PIOB    = $001E =    30          listing_sample03.asm:14
-RAM_B   = $0080 =   128          listing_sample03.asm:10
-ROM_B   = $0000 =     0          listing_sample03.asm:8
-START   = $0000 =     0          listing_sample03.asm:26 (unused)
-_end    = $0082 =   130          listing_sample03.asm:24 (unused)
-_size   = $0082 =   130          listing_sample03.asm:24 (unused)
+BREAK   = $0022 =    34          listing_trace.asm:46
+C0END   = $0053 =    83          listing_trace.asm:80
+CT0CNT  = $0080 =   128          listing_trace.asm:111
+CTC0    = $0010 =    16          listing_trace.asm:16
+CTC0CD  = $0050 =    80          listing_trace.asm:76
+ENTRY   = $0040 =    64          listing_trace.asm:9
+INTCT0  = $006E =   110          listing_trace.asm:97
+IOSET   = $002B =    43          listing_trace.asm:54
+LOOP    = $0014 =    20          listing_trace.asm:37
+NMI     = $0066 =   102          listing_trace.asm:87 (unused)
+NMICNT  = $0081 =   129          listing_trace.asm:112
+PIOA    = $001C =    28          listing_trace.asm:13
+PIOB    = $001E =    30          listing_trace.asm:14
+RAM_B   = $0080 =   128          listing_trace.asm:10
+ROM_B   = $0000 =     0          listing_trace.asm:8
+START   = $0000 =     0          listing_trace.asm:26 (unused)
+_end    = $0082 =   130          listing_trace.asm:24 (unused)
+_size   = $0082 =   130          listing_trace.asm:24 (unused)
 
 
-total time: 0.0022 sec.
+total time: 0.0034 sec.
 no errors

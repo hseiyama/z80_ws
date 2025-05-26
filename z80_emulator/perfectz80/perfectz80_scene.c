@@ -295,6 +295,7 @@ static bool z80_opdone(void* cpu_state) {
 	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
 	bool pin_M1 = !cpu_readM1(cpu_state);
 	bool pin_IORQ = !cpu_readIORQ(cpu_state);
+	bool pin_RESET = !cpu_readRESET(cpu_state);
 	uint8_t val_IM = cpu_readIM(cpu_state);
 	bool opdone = false;
 
@@ -325,9 +326,17 @@ static bool z80_opdone(void* cpu_state) {
 			break;
 		}
 	}
+	// int acknowledge
 	if (pin_M1 && pin_IORQ && !pin_IORQ_pre) {
 		printf("|%*s| <- INT Acknowledge\r", LOG_STRLEN, "");
 	}
+	// reset event
+	if (pin_RESET) {
+		prefix_active = false;
+		pin_M1_pre = false;
+		pin_IORQ_pre = false;
+	}
+	// previous value
 	pin_M1_pre = pin_M1;
 	pin_IORQ_pre = pin_IORQ;
 
