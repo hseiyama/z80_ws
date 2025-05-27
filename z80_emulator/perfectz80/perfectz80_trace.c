@@ -124,6 +124,7 @@ static const char freg_state[] = "SZ.H.PNC";
 static dasm_t dasm_info;
 // trace informaion
 static uint8_t trace_op;
+static uint16_t break_addr;
 
 static void dasm_init(void);
 static uint8_t _dasm_in_cb(void* user_data);
@@ -135,6 +136,7 @@ static void trace_init(void);
 static void trace_update(void* cpu_state);
 static int conv_hex(char c);
 static void cmd_help(void);
+static int get_hexnum(uint8_t size);
 
 void main(void) {
 	void* cpu_state;
@@ -195,6 +197,7 @@ void main(void) {
 			printf(title_line); printf("\n");
 			// trace operation
 			if (TRACE_STEP == trace_op) { trace_op = TRACE_STOP; }
+			if (break_addr == AddressBus) { trace_op = TRACE_STOP; }
 		}
 
 		// print item
@@ -340,6 +343,7 @@ static uint8_t cpu_readIM(void* cpu_state) {
 // initialize trace
 static void trace_init(void) {
 	trace_op = TRACE_HALF;
+	break_addr = 0xFFFF;
 }
 
 // update trace
@@ -353,6 +357,7 @@ static void trace_update(void* cpu_state) {
 	uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
 	uint16_t val_IX = cpu_readIX(cpu_state);
 	uint16_t val_IY = cpu_readIY(cpu_state);
+	int value;
 
 	// check any key
 	if (kbhit()) {
@@ -377,7 +382,7 @@ static void trace_update(void* cpu_state) {
 		case '?':
 			printf("|%*s|\r", LOG_STRLEN, "");
 			// print help
-			LOG_MSG(" Half Clock Step Loop Print Wait Int Nmi Reset Busrq Edit Freg Quit\r");
+			LOG_MSG(" Half Clock Step Loop Print Wait Int Nmi Reset Busrq Edit Freg breaK Quit\r");
 			break;
 		case 'h':
 			trace_op = TRACE_HALF;
@@ -419,19 +424,11 @@ static void trace_update(void* cpu_state) {
 		case 'e':
 			printf("|%*s| <- set io       \r", LOG_STRLEN, "");
 			printf("] cpu_io[0x1C]=0x");
-			int value;
-			if ((value = conv_hex(getche())) >= 0) {
-				uint8_t io_value = value;
-				if ((value = conv_hex(getche())) >= 0) {
-					io_value = (io_value << 4) + value;
-					cpu_io[0x1C] = io_value;
-					printf("\r");
-					printf(work_clear);
-					printf(" cpu_io[0x1C]=0x%02X OK\r", io_value);
-				}
-				else {
-					LOG_MSG(" Error\r");
-				}
+			if ((value = get_hexnum(2)) >= 0) {
+				cpu_io[0x1C] = value;
+				printf("\r");
+				printf(work_clear);
+				printf(" cpu_io[0x1C]=0x%02X OK\r", cpu_io[0x1C]);
 			}
 			else {
 					LOG_MSG(" Error\r");
@@ -456,6 +453,29 @@ static void trace_update(void* cpu_state) {
 			printf(" IX=%04X", val_IX);
 			printf(" IY=%04X", val_IY);
 			printf("\r");
+			break;
+		case 'k':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			printf("] break_addr=0x%04X edit?(y/n)=", break_addr);
+			if ('y' == tolower(getche())) {
+				printf("\r");
+				printf(work_clear); printf("\r");
+				printf("] break_addr=0x");
+				if ((value = get_hexnum(4)) >= 0) {
+					break_addr = value;
+					printf("\r");
+					printf(work_clear);
+					printf(" break_addr=0x%04X OK\r", break_addr);
+				}
+				else {
+					LOG_MSG(" Error\r");
+				}
+			}
+			else {
+				printf("\r");
+				printf(work_clear);
+				printf(" break_addr=0x%04X\r", break_addr);
+			}
 			break;
 		case 'q':
 			exit(0);
@@ -505,5 +525,24 @@ static void cmd_help(void) {
 	printf("B :toggle BUSRQ\n");
 	printf("E :Edit io value\n");
 	printf("F :F register\n");
+	printf("K :breaK address\n");
 	printf("Q :Quit\n");
+}
+
+// get hex number (upper limit 16 bits)
+static int get_hexnum(uint8_t size) {
+	int value;
+	int rte_value = 0;
+
+	for (int i = 0; i < size; i++) {
+		if ((value = conv_hex(getche())) >= 0) {
+			rte_value = (rte_value << 4) + value;
+		}
+		else {
+			rte_value = -1;
+			break;
+		}
+	}
+
+	return rte_value;
 }
