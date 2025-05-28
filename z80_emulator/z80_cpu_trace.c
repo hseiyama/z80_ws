@@ -116,8 +116,9 @@ static const uint8_t cpu_rom[] = {
 };
 
 // title string
-static const char title_line[] = "+--------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+";
+static const char title_upln[] = "+--------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+";
 static const char title_item[] = "| Tick   | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |";
+static const char title_line[] = "+--------+----+------+------+------+----+----+-----+-----+------+-ab---+-db-+-pc---+-sp---+-ir-+-af---+-bc---+-hl---+-io----+-mem---+-asm----------+";
 static const char work_clear[] = "|                                                               |";
 // F register state
 static const char freg_state[] = "SZ.H.PNC";
@@ -147,7 +148,7 @@ static int get_hexnum(uint8_t size);
 
 void main(void) {
 	z80_t cpu_state;
-	uint16_t tick;
+	uint32_t tick;
 	char *val_Asm;
 
 	// initialize dasm
@@ -165,8 +166,9 @@ void main(void) {
 	cmd_help();
 
 	// print title
-	printf(title_line); printf("\n");
+	printf(title_upln); printf("\n");
 	printf(title_item); printf("\n");
+	printf(title_upln); printf("\n");
 
 	// z80_init
 	uint64_t pins = z80_init(&cpu_state);
@@ -201,14 +203,16 @@ void main(void) {
 			// disassemble the instruction
 			dasm_disasm(AddressBus);
 			// print line
-			printf(title_line); printf("\n");
+			if (tick > 1) {
+				printf(title_line); printf("\n");
+			}
 			// trace operation
 			if (TRACE_STEP == trace_op) { trace_op = TRACE_STOP; }
 			if (break_addr == AddressBus) { trace_op = TRACE_STOP; }
 		}
 
 		// print item
-		printf("|%7d |", tick);
+		printf("|%7d |", tick & 0x7FFFFF);
 		pin_M1 ? printf(" M1 |") : printf("    |");
 		pin_MREQ ? printf(" MREQ |") : printf("      |");
 		pin_IORQ ? printf(" IORQ |") : printf("      |");
@@ -394,7 +398,7 @@ static uint64_t trace_update(z80_t* cpu_state, uint64_t pins) {
 		case '?':
 			printf("|%*s|\r", LOG_STRLEN, "");
 			// print help
-			LOG_MSG(" Clock Step Loop Print Wait Int Nmi Reset Edit Freg breaK Quit\r");
+			LOG_MSG(" Clock Step Loop Wait Int Nmi Reset Edit Freg breaK Quit\r");
 			break;
 //		case 'h':
 //			trace_op = TRACE_HALF;
@@ -407,10 +411,6 @@ static uint64_t trace_update(z80_t* cpu_state, uint64_t pins) {
 			break;
 		case 'l':
 			trace_op = TRACE_LOOP;
-			break;
-		case 'p':
-			// print title
-			printf(title_item); printf("\r");
 			break;
 		case 'w':
 			Z80_SET_PIN(WAIT, !Z80_GET_PIN(WAIT));
@@ -539,7 +539,6 @@ static void cmd_help(void) {
 	printf("C :trace one Clock\n");
 	printf("S :trace Step instruction\n");
 	printf("L :trace Loop\n");
-	printf("P :Print title\n");
 	printf("W :toggle WAIT\n");
 	printf("I :toggle INT\n");
 	printf("N :toggle NMI\n");

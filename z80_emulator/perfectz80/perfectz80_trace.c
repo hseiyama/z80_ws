@@ -114,8 +114,9 @@ static const uint8_t cpu_rom[] = {
 };
 
 // title string
-static const char title_line[] = "+--------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+";
-static const char title_item[] = "| Tick   | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |";
+static const char title_upln[] = "+--------+----+------+------+------+----+----+-----+-----+------+------+----+------+------+----+------+------+------+-------+-------+--------------+";
+static const char title_item[] = "| Tick/c | M1 | MREQ | IORQ | RFSH | RD | WR | INT | NMI | IFF1 | AB   | DB | PC   | SP   | IR | AF   | BC   | HL   | Io    | Mem   | Asm          |";
+static const char title_line[] = "+--------+----+------+------+------+----+----+-----+-----+------+-ab---+-db-+-pc---+-sp---+-ir-+-af---+-bc---+-hl---+-io----+-mem---+-asm----------+";
 static const char work_clear[] = "|                                                               |";
 // F register state
 static const char freg_state[] = "SZ.H.PNC";
@@ -140,7 +141,7 @@ static int get_hexnum(uint8_t size);
 
 void main(void) {
 	void* cpu_state;
-	uint16_t tick;
+	uint32_t tick;
 	char *val_Asm;
 
 	// initialize dasm
@@ -157,8 +158,9 @@ void main(void) {
 	cmd_help();
 
 	// print title
-	printf(title_line); printf("\n");
+	printf(title_upln); printf("\n");
 	printf(title_item); printf("\n");
+	printf(title_upln); printf("\n");
 
 	// cpu_initAndResetChip
 	cpu_state = cpu_initAndResetChip();
@@ -194,14 +196,16 @@ void main(void) {
 			// disassemble the instruction
 			dasm_disasm(AddressBus);
 			// print line
-			printf(title_line); printf("\n");
+			if (tick > 1) {
+				printf(title_line); printf("\n");
+			}
 			// trace operation
 			if (TRACE_STEP == trace_op) { trace_op = TRACE_STOP; }
 			if (break_addr == AddressBus) { trace_op = TRACE_STOP; }
 		}
 
 		// print item
-		printf("|%5d/%-2d|", tick, pin_CLK);
+		printf("|%5d/%-2d|", (uint16_t)tick, pin_CLK);
 		pin_M1 ? printf(" M1 |") : printf("    |");
 		pin_MREQ ? printf(" MREQ |") : printf("      |");
 		pin_IORQ ? printf(" IORQ |") : printf("      |");
@@ -382,7 +386,7 @@ static void trace_update(void* cpu_state) {
 		case '?':
 			printf("|%*s|\r", LOG_STRLEN, "");
 			// print help
-			LOG_MSG(" Half Clock Step Loop Print Wait Int Nmi Reset Busrq Edit Freg breaK Quit\r");
+			LOG_MSG(" Half Clock Step Loop Wait Int Nmi Reset Busrq Edit Freg breaK Quit\r");
 			break;
 		case 'h':
 			trace_op = TRACE_HALF;
@@ -395,10 +399,6 @@ static void trace_update(void* cpu_state) {
 			break;
 		case 'l':
 			trace_op = TRACE_LOOP;
-			break;
-		case 'p':
-			// print title
-			printf(title_item); printf("\r");
 			break;
 		case 'w':
 			cpu_writeWAIT(cpu_state, !cpu_readWAIT(cpu_state));
@@ -517,7 +517,6 @@ static void cmd_help(void) {
 	printf("C :trace one Clock\n");
 	printf("S :trace Step instruction\n");
 	printf("L :trace Loop\n");
-	printf("P :Print title\n");
 	printf("W :toggle WAIT\n");
 	printf("I :toggle INT\n");
 	printf("N :toggle NMI\n");
