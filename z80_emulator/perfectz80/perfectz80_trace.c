@@ -137,7 +137,12 @@ static void trace_init(void);
 static void trace_update(void* cpu_state);
 static int conv_hex(char c);
 static void cmd_help(void);
-static int get_hexnum(uint8_t size);
+static int get_hex_key(uint8_t size);
+static int get_hex_str(char *str_buff, uint8_t size);
+static char *conv_freg(uint8_t flag);
+static void print_cpu_state(FILE *file, void* cpu_state);
+static void print_dump(FILE *file, uint8_t *data, uint32_t size);
+static void load_hexfile(FILE *file);
 
 void main(void) {
 	void* cpu_state;
@@ -164,6 +169,7 @@ void main(void) {
 
 	// cpu_initAndResetChip
 	cpu_state = cpu_initAndResetChip();
+	cpu_setIntVec(0x48);
 
 	while (true) {
 		// update trace
@@ -182,7 +188,7 @@ void main(void) {
 		bool pin_WR = !cpu_readWR(cpu_state);
 		bool pin_INT = !cpu_readINT(cpu_state);
 		bool pin_NMI = !cpu_readNMI(cpu_state);
-		bool pin_IFF1 = cpu_read_node(cpu_state, 231);
+		bool val_IFF1 = cpu_read_node(cpu_state, 231);
 		uint16_t AddressBus = cpu_readAddressBus(cpu_state);
 		uint8_t DataBus = cpu_readDataBus(cpu_state);
 		uint16_t val_PC = cpu_readPC(cpu_state);
@@ -214,7 +220,7 @@ void main(void) {
 		pin_WR ? printf(" WR |") : printf("    |");
 		pin_INT ? printf(" INT |") : printf("     |");
 		pin_NMI ? printf(" MNI |") : printf("     |");
-		pin_IFF1 ? printf(" IFF1 |") : printf("      |");
+		val_IFF1 ? printf(" IFF1 |") : printf("      |");
 		printf(" %04X |", AddressBus);
 		printf(" %02X |", DataBus);
 		printf(" %04X |", val_PC);
@@ -361,6 +367,7 @@ static void trace_update(void* cpu_state) {
 	uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
 	uint16_t val_IX = cpu_readIX(cpu_state);
 	uint16_t val_IY = cpu_readIY(cpu_state);
+	FILE *file;
 	int value;
 
 	// check any key
@@ -386,7 +393,7 @@ static void trace_update(void* cpu_state) {
 		case '?':
 			printf("|%*s|\r", LOG_STRLEN, "");
 			// print help
-			LOG_MSG(" Half Clock Step Loop Wait Int Nmi Reset Busrq Edit Freg breaK Quit\r");
+			LOG_MSG(" traceH/C/S/L Wait Int Nmi Reset Busrq Edit Freg breaK Vect Print heX Quit\r");
 			break;
 		case 'h':
 			trace_op = TRACE_HALF;
@@ -406,7 +413,6 @@ static void trace_update(void* cpu_state) {
 			break;
 		case 'i':
 			cpu_writeINT(cpu_state, !cpu_readINT(cpu_state));
-			cpu_setIntVec(0x48);
 			printf("|%*s| <- set z80_int  \r", LOG_STRLEN, "");
 			break;
 		case 'n':
@@ -424,7 +430,7 @@ static void trace_update(void* cpu_state) {
 		case 'e':
 			printf("|%*s| <- set io       \r", LOG_STRLEN, "");
 			printf("] cpu_io[0x1C]=0x");
-			if ((value = get_hexnum(2)) >= 0) {
+			if ((value = get_hex_key(2)) >= 0) {
 				cpu_io[0x1C] = value;
 				printf("\r");
 				printf(work_clear);
@@ -438,15 +444,7 @@ static void trace_update(void* cpu_state) {
 			printf("|%*s|\r", LOG_STRLEN, "");
 			printf(work_clear);
 			printf(" A=%02X", val_A);
-			printf(" F=");
-			for (int i = 0; i < 8; i++) {
-				if (((val_F >> (7 - i)) & 0x01) == 0x01) {
-					printf("%c", freg_state[i]);
-				}
-				else {
-					printf(".");
-				}
-			}
+			printf(" F=%s", conv_freg(val_F));
 			printf(" BC=%04X", val_BC);
 			printf(" DE=%04X", val_DE);
 			printf(" HL=%04X", val_HL);
@@ -461,7 +459,7 @@ static void trace_update(void* cpu_state) {
 				printf("\r");
 				printf(work_clear); printf("\r");
 				printf("] break_addr=0x");
-				if ((value = get_hexnum(4)) >= 0) {
+				if ((value = get_hex_key(4)) >= 0) {
 					break_addr = value;
 					printf("\r");
 					printf(work_clear);
@@ -475,6 +473,71 @@ static void trace_update(void* cpu_state) {
 				printf("\r");
 				printf(work_clear);
 				printf(" break_addr=0x%04X\r", break_addr);
+			}
+			break;
+		case 'v':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			printf("] int_vector=0x%02X edit?(y/n)=", cpu_getIntVec());
+			if ('y' == tolower(getche())) {
+				printf("\r");
+				printf(work_clear); printf("\r");
+				printf("] int_vector=0x");
+				if ((value = get_hex_key(2)) >= 0) {
+					cpu_setIntVec(value);
+					printf("\r");
+					printf(work_clear);
+					printf(" int_vector=0x%02X OK\r", cpu_getIntVec());
+				}
+				else {
+					LOG_MSG(" Error\r");
+				}
+			}
+			else {
+				printf("\r");
+				printf(work_clear);
+				printf(" int_vector=0x%04X\r", cpu_getIntVec());
+			}
+			break;
+		case 'p':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			// perfectz80_trace.cpu
+			if ((file = fopen("perfectz80_trace.cpu","w")) == NULL) {
+				LOG_MSG(" Error write perfectz80_trace.cpu\r");
+				break;
+			}
+			print_cpu_state(file, cpu_state);
+			fclose(file);
+			// perfectz80_trace.mem
+			if ((file = fopen("perfectz80_trace.mem","w")) == NULL) {
+				LOG_MSG(" Error write perfectz80_trace.mem\r");
+				break;
+			}
+			print_dump(file, cpu_memory, sizeof(cpu_memory));
+			fclose(file);
+			// perfectz80_trace.io
+			if ((file = fopen("perfectz80_trace.io","w")) == NULL) {
+				LOG_MSG(" Error write perfectz80_trace.io\r");
+				break;
+			}
+			print_dump(file, cpu_io, sizeof(cpu_io));
+			fclose(file);
+			LOG_MSG(" Print cpu state OK\r");
+			break;
+		case 'x':
+			printf("|%*s|\r", LOG_STRLEN, "");
+			printf("] load perfectz80_trace.hex?(y/n)=");
+			if ('y' == tolower(getche())) {
+				// perfectz80_trace.hex
+				if ((file = fopen("perfectz80_trace.hex","r")) == NULL) {
+					LOG_MSG(" Error read perfectz80_trace.hex\r");
+					break;
+				}
+				load_hexfile(file);
+				fclose(file);
+				LOG_MSG(" Load hex file OK\r");
+			}
+			else {
+				LOG_MSG(" Cancel load\r");
 			}
 			break;
 		case 'q':
@@ -525,11 +588,14 @@ static void cmd_help(void) {
 	printf("E :Edit io value\n");
 	printf("F :F register\n");
 	printf("K :breaK address\n");
+	printf("V :interrupt Vector\n");
+	printf("P :Print cpu state\n");
+	printf("X :heX file load\n");
 	printf("Q :Quit\n");
 }
 
-// get hex number (upper limit 16 bits)
-static int get_hexnum(uint8_t size) {
+// get hex by key input (upper limit 16 bits)
+static int get_hex_key(uint8_t size) {
 	int value;
 	int rte_value = 0;
 
@@ -544,4 +610,108 @@ static int get_hexnum(uint8_t size) {
 	}
 
 	return rte_value;
+}
+
+// get hex by string (upper limit 16 bits)
+static int get_hex_str(char *str_buff, uint8_t size) {
+	int value;
+	int rte_value = 0;
+
+	for (int i = 0; i < size; i++) {
+		if ((value = conv_hex(str_buff[i])) >= 0) {
+			rte_value = (rte_value << 4) + value;
+		}
+		else {
+			rte_value = -1;
+			break;
+		}
+	}
+
+	return rte_value;
+}
+
+// convert freg to string
+static char *conv_freg(uint8_t flag) {
+	static char str_buff[0x10];
+
+	for (int i = 0; i < 8; i++) {
+		if (((flag >> (7 - i)) & 0x01) == 0x01) {
+			str_buff[i] = freg_state[i];
+		}
+		else {
+			str_buff[i] = '.';
+		}
+	}
+	str_buff[8] = 0;
+
+	return str_buff;
+}
+
+// print cpu state
+static void print_cpu_state(FILE *file, void* cpu_state) {
+	uint8_t val_A = cpu_readA(cpu_state);
+	uint8_t val_F = cpu_readF(cpu_state);
+	uint16_t val_BC = (cpu_readB(cpu_state) << 8) | cpu_readC(cpu_state);
+	uint16_t val_DE = (cpu_readD(cpu_state) << 8) | cpu_readE(cpu_state);
+	uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
+	uint16_t val_IX = cpu_readIX(cpu_state);
+	uint16_t val_IY = cpu_readIY(cpu_state);
+	uint16_t val_SP = cpu_readSP(cpu_state);
+	uint16_t val_PC = cpu_readPC(cpu_state);
+	uint8_t val_I = cpu_readI(cpu_state);
+	uint8_t val_R = cpu_readR(cpu_state);
+	uint8_t val_A2 = cpu_readA2(cpu_state);
+	uint8_t val_F2 = cpu_readF2(cpu_state);
+	uint16_t val_BC2 = (cpu_readB2(cpu_state) << 8) | cpu_readC2(cpu_state);
+	uint16_t val_DE2 = (cpu_readD2(cpu_state) << 8) | cpu_readE2(cpu_state);
+	uint16_t val_HL2 = (cpu_readH2(cpu_state) << 8) | cpu_readL2(cpu_state);
+	uint8_t val_IM = cpu_readIM(cpu_state);
+	bool val_IFF1 = cpu_read_node(cpu_state, 231);
+
+	fprintf(file, "A =%02X BC =%04X DE =%04X HL =%04X", val_A, val_BC, val_DE, val_HL);
+	fprintf(file, " F =%s", conv_freg(val_F));
+	fprintf(file, " IX=%04X IY=%04X\n", val_IX, val_IY);
+	fprintf(file, "A'=%02X BC'=%04X DE'=%04X HL'=%04X", val_A2, val_BC2, val_DE2, val_HL2);
+	fprintf(file, " F'=%s", conv_freg(val_F2));
+	fprintf(file, " SP=%04X PC=%04X\n", val_SP, val_PC);
+	fprintf(file, "I=%02X R=%02X IM=%01X IFF1=%01X IFF2=_\n", val_I, val_R, val_IM, val_IFF1);
+}
+
+// print dump
+static void print_dump(FILE *file, uint8_t *data, uint32_t size) {
+	for (int i = 0; i < (size / 0x10); i++) {
+		fprintf(file, "%04X : ", i * 0x10);
+		for (int j = 0; j < 0x10; j++) {
+			fprintf(file, "%02X ", data[(i * 0x10) + j]);
+		}
+		fprintf(file, "| ");
+		for (int j = 0; j < 0x10; j++) {
+			char c = data[(i * 0x10) + j];
+			if ((c >= 0x20) && (c <= 0x7E)) {
+				fprintf(file, "%c", c);
+			}
+			else {
+				fprintf(file, ".");
+			}
+		}
+		fprintf(file, "\n");
+	}
+}
+
+// load hex file
+static void load_hexfile(FILE *file) {
+	char str_buff[0x100];
+
+	// clear cpu_memory
+	memset(cpu_memory, 0x00, sizeof(cpu_memory));
+	// set cpu_memory
+	while ((fgets(str_buff, sizeof(str_buff), file)) != NULL) {
+		if ((str_buff[0] == ':') && (memcmp(&str_buff[7], "00", 2) == 0)) {
+			int num = get_hex_str(&str_buff[1], 2);
+			int addr = get_hex_str(&str_buff[3], 4);
+			for (int i = 0; i < num; i++) {
+				cpu_memory[addr + i] = get_hex_str(&str_buff[9 + (i * 2)], 2);
+			}
+		}
+	}
 }
