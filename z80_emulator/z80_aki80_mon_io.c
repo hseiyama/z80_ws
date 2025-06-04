@@ -21,7 +21,7 @@ typedef struct {
 } io_t;
 
 static HANDLE hMap;
-static io_t *io_info;
+static io_t* io_info;
 
 static int shmem_open(void);
 static void shmem_close(void);
@@ -131,7 +131,7 @@ static int shmem_open(void) {
 		printf("CreateFileMapping failed: %lu\n", GetLastError());
 		return 1;
 	}
-	io_info = (io_t *)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(io_t));
+	io_info = (io_t*)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(io_t));
 	if (!io_info) {
 		printf("MapViewOfFile failed: %lu\n", GetLastError());
 		CloseHandle(hMap);

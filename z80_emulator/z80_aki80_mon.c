@@ -2067,7 +2067,7 @@ static const uint8_t cpu_rom[] = {
 static uint8_t cpu_memory[0x10000];
 
 static HANDLE hMap;
-static io_t *io_info;
+static io_t* io_info;
 
 static int shmem_open(void);
 static void shmem_close(void);
@@ -2167,7 +2167,7 @@ void main(void) {
 			memcpy(cpu_memory, cpu_rom, sizeof(cpu_rom));
 			ctc_zcto0 = 0;
 			// initialize Z80 family emulator
-			uint64_t pins = z80_reset(&cpu);
+			pins = z80_reset(&cpu);
 			z80pio_init(&pio);
 			z80ctc_init(&ctc);
 			io_info->pin_reset = 0;
@@ -2188,7 +2188,7 @@ static int shmem_open(void) {
 		printf("CreateFileMapping failed: %lu\n", GetLastError());
 		return 1;
 	}
-	io_info = (io_t *)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(io_t));
+	io_info = (io_t*)MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, sizeof(io_t));
 	if (!io_info) {
 		printf("MapViewOfFile failed: %lu\n", GetLastError());
 		CloseHandle(hMap);

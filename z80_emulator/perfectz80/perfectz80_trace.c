@@ -138,16 +138,16 @@ static void trace_update(void* cpu_state);
 static int conv_hex(char c);
 static void cmd_help(void);
 static int get_hex_key(uint8_t size);
-static int get_hex_str(char *str_buff, uint8_t size);
-static char *conv_freg(uint8_t flag);
-static void print_cpu_state(FILE *file, void* cpu_state);
-static void print_dump(FILE *file, uint8_t *data, uint32_t size);
-static void load_hexfile(FILE *file);
+static int get_hex_str(char* str_buff, uint8_t size);
+static char* conv_freg(uint8_t flag);
+static void print_cpu_state(FILE* file, void* cpu_state);
+static void print_dump(FILE* file, uint8_t* data, uint32_t size);
+static void load_hexfile(FILE* file);
 
 void main(void) {
 	void* cpu_state;
 	uint32_t tick;
-	char *val_Asm;
+	char* val_Asm;
 
 	// initialize dasm
 	dasm_init();
@@ -197,6 +197,7 @@ void main(void) {
 		uint16_t val_AF = (cpu_readA(cpu_state) << 8) | cpu_readF(cpu_state);
 		uint16_t val_BC = (cpu_readB(cpu_state) << 8) | cpu_readC(cpu_state);
 		uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
+
 		// judge opcode fetch machine cycle
 		if (z80_opdone(cpu_state)) {
 			// disassemble the instruction
@@ -289,7 +290,7 @@ static bool z80_opdone(void* cpu_state) {
 	static bool pin_IORQ_pre = false;
 	uint16_t AddressBus = cpu_readAddressBus(cpu_state);
 	uint16_t IntVecAddress = (cpu_readI(cpu_state) << 8) | cpu_getIntVec();
-	uint16_t IntIsrAddress = *(uint16_t *)&cpu_memory[IntVecAddress];
+	uint16_t IntIsrAddress = *(uint16_t*)&cpu_memory[IntVecAddress];
 	bool pin_M1 = !cpu_readM1(cpu_state);
 	bool pin_IORQ = !cpu_readIORQ(cpu_state);
 	bool pin_RESET = !cpu_readRESET(cpu_state);
@@ -367,7 +368,7 @@ static void trace_update(void* cpu_state) {
 	uint16_t val_HL = (cpu_readH(cpu_state) << 8) | cpu_readL(cpu_state);
 	uint16_t val_IX = cpu_readIX(cpu_state);
 	uint16_t val_IY = cpu_readIY(cpu_state);
-	FILE *file;
+	FILE* file;
 	int value;
 
 	// check any key
@@ -613,7 +614,7 @@ static int get_hex_key(uint8_t size) {
 }
 
 // get hex by string (upper limit 16 bits)
-static int get_hex_str(char *str_buff, uint8_t size) {
+static int get_hex_str(char* str_buff, uint8_t size) {
 	int value;
 	int rte_value = 0;
 
@@ -631,7 +632,7 @@ static int get_hex_str(char *str_buff, uint8_t size) {
 }
 
 // convert freg to string
-static char *conv_freg(uint8_t flag) {
+static char* conv_freg(uint8_t flag) {
 	static char str_buff[0x10];
 
 	for (int i = 0; i < 8; i++) {
@@ -648,7 +649,7 @@ static char *conv_freg(uint8_t flag) {
 }
 
 // print cpu state
-static void print_cpu_state(FILE *file, void* cpu_state) {
+static void print_cpu_state(FILE* file, void* cpu_state) {
 	uint8_t val_A = cpu_readA(cpu_state);
 	uint8_t val_F = cpu_readF(cpu_state);
 	uint16_t val_BC = (cpu_readB(cpu_state) << 8) | cpu_readC(cpu_state);
@@ -678,7 +679,7 @@ static void print_cpu_state(FILE *file, void* cpu_state) {
 }
 
 // print dump
-static void print_dump(FILE *file, uint8_t *data, uint32_t size) {
+static void print_dump(FILE* file, uint8_t* data, uint32_t size) {
 	for (int i = 0; i < (size / 0x10); i++) {
 		fprintf(file, "%04X : ", i * 0x10);
 		for (int j = 0; j < 0x10; j++) {
@@ -699,7 +700,7 @@ static void print_dump(FILE *file, uint8_t *data, uint32_t size) {
 }
 
 // load hex file
-static void load_hexfile(FILE *file) {
+static void load_hexfile(FILE* file) {
 	char str_buff[0x100];
 
 	// clear cpu_memory
